@@ -6,7 +6,6 @@ OSMC_KEYRING="/usr/share/keyrings/osmc-archive-keyring.gpg"
 OSMC_LIST="/etc/apt/sources.list.d/osmc.list"
 OSMC_APT_WEAK_CONF="/etc/apt/apt.conf.d/99osmc-allow-weak-repository"
 OSMC_REPO_LINE="deb [signed-by=${OSMC_KEYRING}] https://apt.osmc.tv bullseye-devel main"
-OSMC_APT_BASE_URL="https://ftp.fau.de/osmc/osmc/apt"
 DUMMY_DIR="${HOME}/.cache/osmc-qemu-dummy"
 DEBIAN_VERSION_ID="unknown"
 
@@ -20,40 +19,53 @@ install_armv7_toolchain_direct() {
     tmp_dir="$(mktemp -d)"
     trap 'rm -rf "${tmp_dir}"' RETURN
 
+    package_base_url=""
     package_file=""
-    for arch in amd64 all; do
-        for suffix in Packages Packages.gz; do
-            url="${OSMC_APT_BASE_URL}/dists/bullseye-devel/main/binary-${arch}/${suffix}"
-            raw_file="${tmp_dir}/${arch}-${suffix}"
-            parsed_file="${tmp_dir}/${arch}-${suffix}.parsed"
+    for base_url in https://apt.osmc.tv https://ftp.fau.de/osmc/osmc/apt; do
+        for suite in bullseye-devel bullseye jessie; do
+            for arch in amd64 all armhf; do
+                for suffix in Packages Packages.gz; do
+                    url="${base_url}/dists/${suite}/main/binary-${arch}/${suffix}"
+                    safe_name="$(printf '%s' "${base_url}-${suite}-${arch}-${suffix}" | tr -c 'A-Za-z0-9_.-' '_')"
+                    raw_file="${tmp_dir}/${safe_name}"
+                    parsed_file="${tmp_dir}/${safe_name}.parsed"
 
-            if ! wget -qO "${raw_file}" "${url}"; then
-                continue
-            fi
+                    if ! wget -qO "${raw_file}" "${url}"; then
+                        continue
+                    fi
 
-            if [ "${suffix}" = "Packages.gz" ]; then
-                gzip -dc "${raw_file}" > "${parsed_file}"
-            else
-                parsed_file="${raw_file}"
-            fi
+                    if [ "${suffix}" = "Packages.gz" ]; then
+                        if ! gzip -dc "${raw_file}" > "${parsed_file}"; then
+                            continue
+                        fi
+                    else
+                        parsed_file="${raw_file}"
+                    fi
 
-            package_file="$(awk '
-                BEGIN { RS=""; FS="\n" }
-                /^Package: armv7-toolchain-osmc$/ {
-                    for (i = 1; i <= NF; i++) {
-                        if ($i ~ /^Filename: /) {
-                            sub(/^Filename: /, "", $i)
-                            print $i
-                            exit
+                    package_file="$(awk '
+                        BEGIN { RS=""; FS="\n" }
+                        /^Package: armv7-toolchain-osmc$/ {
+                            for (i = 1; i <= NF; i++) {
+                                if ($i ~ /^Filename: /) {
+                                    sub(/^Filename: /, "", $i)
+                                    print $i
+                                    exit
+                                }
+                            }
                         }
-                    }
-                }
-            ' "${parsed_file}")"
+                    ' "${parsed_file}")"
 
-            if [ -n "${package_file}" ]; then
-                break 2
-            fi
+                    if [ -n "${package_file}" ]; then
+                        package_base_url="${base_url}"
+                        echo "Found armv7-toolchain-osmc in ${suite} ${arch}."
+                        break 4
+                    fi
+                done
+            done
         done
+        if [ -n "${package_file}" ]; then
+            break
+        fi
     done
 
     if [ -z "${package_file}" ]; then
@@ -61,8 +73,14 @@ install_armv7_toolchain_direct() {
         exit 1
     fi
 
+    case "${package_file}" in
+        http://*|https://*) package_url="${package_file}" ;;
+        /*) package_url="${package_base_url}${package_file}" ;;
+        *) package_url="${package_base_url}/${package_file}" ;;
+    esac
+
     deb_file="${tmp_dir}/armv7-toolchain-osmc.deb"
-    wget -O "${deb_file}" "${OSMC_APT_BASE_URL}/${package_file}"
+    wget -O "${deb_file}" "${package_url}"
     sudo apt install -y "${deb_file}"
 }
 
