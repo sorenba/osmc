@@ -1,5 +1,5 @@
 diff --git a/xbmc/cores/RetroPlayer/process/RPProcessInfo.h b/xbmc/cores/RetroPlayer/process/RPProcessInfo.h
-index f5ffe670d6..cc505bac26 100644
+index 7706c2e..4d5efc4 100644
 --- a/xbmc/cores/RetroPlayer/process/RPProcessInfo.h
 +++ b/xbmc/cores/RetroPlayer/process/RPProcessInfo.h
 @@ -146,6 +146,14 @@ public:
@@ -14,6 +14,6 @@ index f5ffe670d6..cc505bac26 100644
 +   */
 +  virtual void ConfigureRenderSystem(AVPixelFormat format) { }
 +
-   ///}
- 
-   /// @name Player video info
+   /*!
+    * \brief Get a symbol from the hardware context
+    *
