@@ -14,8 +14,8 @@ patch --batch --forward -p1 < split.patch
 Only patches that passed dry-run were applied before testing the next split patch. This preserves order as much as possible.
 
 Total split patches: 173
-Working split patches: 152
-Needs work: 21
+Working split patches: 155
+Needs work: 18
 
 ## Fixed after initial split test
 
@@ -50,10 +50,23 @@ Needs work: 21
   - Updated hunk context for Kodi 22 forward declarations.
   - Dry-run passed locally.
 
+- `vero5-split-100-xbmc-cores-VideoPlayer-VideoRenderers-BaseRenderer.cpp.patch`
+  - Updated include hunk context for Kodi 22 and kept the Vero aspect-ratio logic.
+  - Dry-run passed locally.
+
+- `vero5-split-108-xbmc-cores-VideoPlayer-VideoRenderers-OverlayRendererUtil.cpp.patch`
+  - Updated for Kodi 22 `RenderStereoMode` and `RenderStereoView` enum naming.
+  - Regenerated hunk counts so Linux `patch` accepts it.
+  - Dry-run passed locally.
+
 - `vero5-split-119-xbmc-messaging-ApplicationMessenger.h.patch`
   - Updated message ids for Kodi 22.
   - `TMSG_PROCESS_DELETE_AFTER_WATCH` already uses `TMSG_MASK_APPLICATION + 39`.
   - Added `TMSG_SETOSMCWALKTHROUGHSTATE` at `+40` and `TMSG_AML_RESIZE` at `+41`.
+  - Dry-run passed locally.
+
+- `vero5-split-128-xbmc-platform-linux-input-CMakeLists.txt.patch`
+  - Updated for Kodi 22 `TARGET ${APP_NAME_LC}::LibInput` context.
   - Dry-run passed locally.
 
 ## Needs work
@@ -70,12 +83,6 @@ Needs work: 21
 - `vero5-split-096-xbmc-cores-VideoPlayer-VideoPlayer.cpp.patch`
   - Fails 3 of 16 hunks.
 
-- `vero5-split-100-xbmc-cores-VideoPlayer-VideoRenderers-BaseRenderer.cpp.patch`
-  - Fails 1 of 3 hunks.
-
-- `vero5-split-108-xbmc-cores-VideoPlayer-VideoRenderers-OverlayRendererUtil.cpp.patch`
-  - Fails 1 hunk.
-
 - `vero5-split-115-xbmc-guilib-GUITextLayout.cpp.patch`
   - Fails 1 hunk.
 
@@ -84,9 +91,6 @@ Needs work: 21
 
 - `vero5-split-118-xbmc-interfaces-generic-LanguageInvokerThread.cpp.patch`
   - Fails 1 of 2 hunks.
-
-- `vero5-split-128-xbmc-platform-linux-input-CMakeLists.txt.patch`
-  - Fails 1 hunk.
 
 - `vero5-split-130-xbmc-platform-linux-storage-UDevProvider.cpp.patch`
   - Fails 1 hunk.
@@ -123,4 +127,4 @@ Needs work: 21
 
 ## Working split patches
 
-The remaining 152 split patches either applied during the initial full split test or were fixed afterward and dry-run validated locally.
+The remaining 155 split patches either applied during the initial full split test or were fixed afterward and dry-run validated locally.
