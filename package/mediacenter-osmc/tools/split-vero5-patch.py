@@ -2,7 +2,6 @@
 import argparse
 import re
 import shutil
-import zipfile
 from pathlib import Path
 
 
@@ -12,7 +11,7 @@ def safe_name(path: str) -> str:
     return text or 'patch'
 
 
-def split_patch(input_patch: Path, output_dir: Path, zip_path: Path | None) -> int:
+def split_patch(input_patch: Path, output_dir: Path) -> int:
     text = input_patch.read_text(encoding='utf-8', errors='replace').splitlines(keepends=True)
 
     starts: list[int] = []
@@ -43,19 +42,16 @@ def split_patch(input_patch: Path, output_dir: Path, zip_path: Path | None) -> i
         'Generated from `package/mediacenter-osmc/patches/vero5-000-add-vero-support.patch`.\n\n'
         'Each file contains one top-level `diff --git` chunk from the original patch.\n'
         'Embedded patch files inside added files are kept inside their parent chunk.\n\n'
+        'Run from the repository root:\n\n'
+        '```bash\n'
+        'python package/mediacenter-osmc/tools/split-vero5-patch.py\n'
+        'git add package/mediacenter-osmc/patches/vero5-split\n'
+        'git commit -m "Split Vero 5 support patch"\n'
+        '```\n\n'
         '## Files\n\n'
         + ''.join(f'- `{name}` -> `{target}`\n' for name, target in chunks),
         encoding='utf-8',
     )
-
-    if zip_path is not None:
-        if zip_path.exists():
-            zip_path.unlink()
-        zip_path.parent.mkdir(parents=True, exist_ok=True)
-        with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
-            for path in sorted(output_dir.rglob('*')):
-                if path.is_file():
-                    zf.write(path, path.relative_to(output_dir.parent))
 
     return len(chunks)
 
@@ -64,13 +60,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description='Split the Vero 5 Kodi patch into top-level diff chunks.')
     parser.add_argument('--input', default='package/mediacenter-osmc/patches/vero5-000-add-vero-support.patch')
     parser.add_argument('--output-dir', default='package/mediacenter-osmc/patches/vero5-split')
-    parser.add_argument('--zip', default='package/mediacenter-osmc/patches/vero5-split-patches.zip')
     args = parser.parse_args()
 
-    count = split_patch(Path(args.input), Path(args.output_dir), Path(args.zip) if args.zip else None)
+    count = split_patch(Path(args.input), Path(args.output_dir))
     print(f'Wrote {count} split patch files to {args.output_dir}')
-    if args.zip:
-        print(f'Wrote {args.zip}')
 
 
 if __name__ == '__main__':
