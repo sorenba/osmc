@@ -14,8 +14,8 @@ patch --batch --forward -p1 < split.patch
 Only patches that passed dry-run were applied before testing the next split patch. This preserves order as much as possible.
 
 Total split patches: 173
-Working split patches: 164
-Needs work: 9
+Working split patches: 167
+Needs work: 6
 
 ## Fixed after initial split test
 
@@ -67,6 +67,11 @@ Needs work: 9
   - Reduced to the Kodi 22-specific width calculation fixes that were still needed.
   - Dry-run passed locally.
 
+- `vero5-split-116-xbmc-guilib-StereoscopicsManager.cpp.patch`
+  - Updated for Kodi 22 `RenderStereoMode` enum naming and current stereoscopics code layout.
+  - Keeps Vero full-SBS/full-TAB/MVC detection and 3D mode fallback logic.
+  - Dry-run passed locally.
+
 - `vero5-split-118-xbmc-interfaces-generic-LanguageInvokerThread.cpp.patch`
   - Removed obsolete trailing-newline-only hunk.
   - Kept the thread priority change.
@@ -110,6 +115,16 @@ Needs work: 9
   - Keeps the original intent of leaving GL debug lookup maps empty.
   - Dry-run passed locally.
 
+- `vero5-split-161-xbmc-windowing-GraphicContext.cpp.patch`
+  - Updated for Kodi 22 `RenderStereoMode` / `RenderStereoView` names and current `GraphicContext.cpp` layout.
+  - Keeps Vero 3D flag conversion, Dolby Vision output check, and resolution reset behavior.
+  - Dry-run passed locally.
+
+- `vero5-split-162-xbmc-windowing-GraphicContext.h.patch`
+  - Updated for Kodi 22 `RenderStereoMode` names and current `GraphicContext.h` layout.
+  - Adds 3D FP mode flags and helper declarations used by the Vero 5 windowing patch.
+  - Dry-run passed locally.
+
 ## Needs work
 
 - `vero5-split-010-system-settings-settings.xml.patch`
@@ -121,24 +136,15 @@ Needs work: 9
 - `vero5-split-096-xbmc-cores-VideoPlayer-VideoPlayer.cpp.patch`
   - Fails 3 of 16 hunks.
 
-- `vero5-split-116-xbmc-guilib-StereoscopicsManager.cpp.patch`
-  - Fails 3 of 6 hunks.
-
 - `vero5-split-136-xbmc-settings-DisplaySettings.cpp.patch`
   - Fails 2 of 12 hunks.
 
 - `vero5-split-145-xbmc-utils-BitstreamConverter.cpp.patch`
   - Fails 5 of 8 hunks.
 
-- `vero5-split-161-xbmc-windowing-GraphicContext.cpp.patch`
-  - Fails 2 of 12 hunks.
-
-- `vero5-split-162-xbmc-windowing-GraphicContext.h.patch`
-  - Fails 1 of 4 hunks.
-
 - `vero5-split-163-xbmc-windowing-Resolution.cpp.patch`
   - Fails 4 of 11 hunks.
 
 ## Working split patches
 
-The remaining 164 split patches either applied during the initial full split test or were fixed afterward and dry-run validated locally.
+The remaining 167 split patches either applied during the initial full split test or were fixed afterward and dry-run validated locally.
