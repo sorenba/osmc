@@ -1,16 +1,13 @@
 diff --git a/cmake/modules/FindFFMPEG.cmake b/cmake/modules/FindFFMPEG.cmake
-index 6c6bf973de..215280a4e6 100644
+index 407859b..a8e004b 100644
 --- a/cmake/modules/FindFFMPEG.cmake
 +++ b/cmake/modules/FindFFMPEG.cmake
-@@ -80,7 +80,10 @@ macro(buildFFMPEG)
-                  -DPKG_CONFIG_PATH=${CMAKE_BINARY_DIR}/${CORE_BUILD_DIR}/lib/pkgconfig)
-   set(PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-                     ${CMAKE_SOURCE_DIR}/tools/depends/target/ffmpeg/CMakeLists.txt
--                    <SOURCE_DIR>)
-+                    <SOURCE_DIR> &&
-+                    /bin/bash -c "patch -p1 < ${CMAKE_SOURCE_DIR}/tools/depends/target/ffmpeg/0001-added_upstream_mvc_patches.patch" &&
-+                    /bin/bash -c "patch -p1 < ${CMAKE_SOURCE_DIR}/tools/depends/target/ffmpeg/0002-MKV-added-basic-block-addition-mapping-support-for-m.patch"
-+)
+@@ -177,6 +177,8 @@ macro(buildFFMPEG)
+     set(PATCH_COMMAND ${CMAKE_COMMAND} -E copy
+                       ${CMAKE_SOURCE_DIR}/tools/depends/target/ffmpeg/CMakeLists.txt
+                       <SOURCE_DIR>
++                      COMMAND /bin/bash -c "cd <SOURCE_DIR> && patch -p1 < ${CMAKE_SOURCE_DIR}/tools/depends/target/ffmpeg/0001-added_upstream_mvc_patches.patch"
++                      COMMAND /bin/bash -c "cd <SOURCE_DIR> && patch -p1 < ${CMAKE_SOURCE_DIR}/tools/depends/target/ffmpeg/0002-MKV-added-basic-block-addition-mapping-support-for-m.patch"
+     )
  
-   if(CMAKE_GENERATOR STREQUAL Xcode)
-     set(FFMPEG_GENERATOR CMAKE_GENERATOR "Unix Makefiles")
+     if(NOT DISABLE_FFMPEG_SOURCE_PLUGINS)
