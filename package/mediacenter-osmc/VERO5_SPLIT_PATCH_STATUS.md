@@ -14,8 +14,8 @@ patch --batch --forward -p1 < split.patch
 Only patches that passed dry-run were applied before testing the next split patch. This preserves order as much as possible.
 
 Total split patches: 173
-Working split patches: 169
-Needs work: 4
+Working split patches: 170
+Needs work: 3
 
 ## Fixed after initial split test
 
@@ -136,6 +136,11 @@ Needs work: 4
   - Adds 3D FP mode flags and helper declarations used by the Vero 5 windowing patch.
   - Dry-run passed locally.
 
+- `vero5-split-163-xbmc-windowing-Resolution.cpp.patch`
+  - Updated with reduced ASCII-only hunks so the connector accepts the payload.
+  - Keeps 3D whitelist selection, 2D fallback from 3D modes, and the helper for matching 3D resolutions.
+  - Dry-run passed locally.
+
 ## Needs work
 
 - `vero5-split-076-xbmc-cores-VideoPlayer-DVDDemuxers-DVDDemuxFFmpeg.cpp.patch`
@@ -147,9 +152,6 @@ Needs work: 4
 - `vero5-split-145-xbmc-utils-BitstreamConverter.cpp.patch`
   - Fails 5 of 8 hunks.
 
-- `vero5-split-163-xbmc-windowing-Resolution.cpp.patch`
-  - Fails 4 of 11 hunks.
-
 ## Working split patches
 
-The remaining 169 split patches either applied during the initial full split test or were fixed afterward and dry-run validated locally.
+The remaining 170 split patches either applied during the initial full split test or were fixed afterward and dry-run validated locally.
