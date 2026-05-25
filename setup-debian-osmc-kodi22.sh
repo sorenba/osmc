@@ -6,6 +6,7 @@ OSMC_KEYRING="/usr/share/keyrings/osmc-archive-keyring.gpg"
 OSMC_LIST="/etc/apt/sources.list.d/osmc.list"
 OSMC_REPO_LINE="deb [signed-by=${OSMC_KEYRING}] https://apt.osmc.tv bullseye-devel main"
 DUMMY_DIR="${HOME}/.cache/osmc-qemu-dummy"
+DEBIAN_VERSION_ID="unknown"
 
 if [ "${EUID}" -eq 0 ]; then
     echo "Run this as your normal user. The script will use sudo when needed."
@@ -14,13 +15,18 @@ fi
 
 if [ -r /etc/os-release ]; then
     . /etc/os-release
+    DEBIAN_VERSION_ID="${VERSION_ID:-unknown}"
     if [ "${ID:-}" != "debian" ]; then
         echo "Warning: this script is intended for Debian 12 or Debian 13. Detected ID=${ID:-unknown}."
     fi
-    case "${VERSION_ID:-}" in
+    case "${DEBIAN_VERSION_ID}" in
         12|13) ;;
-        *) echo "Warning: this script is intended for Debian 12 or Debian 13. Detected VERSION_ID=${VERSION_ID:-unknown}." ;;
+        *) echo "Warning: this script is intended for Debian 12 or Debian 13. Detected VERSION_ID=${DEBIAN_VERSION_ID}." ;;
     esac
+fi
+
+if [ "${DEBIAN_VERSION_ID}" = "13" ]; then
+    OSMC_REPO_LINE="deb [trusted=yes] https://apt.osmc.tv bullseye-devel main"
 fi
 
 sudo -v
