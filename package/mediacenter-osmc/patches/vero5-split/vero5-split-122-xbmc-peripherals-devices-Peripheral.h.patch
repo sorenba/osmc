@@ -1,0 +1,14 @@
+diff --git a/xbmc/peripherals/devices/Peripheral.h b/xbmc/peripherals/devices/Peripheral.h
+index 4c6d3c54b3..4c7fd2da6e 100644
+--- a/xbmc/peripherals/devices/Peripheral.h
++++ b/xbmc/peripherals/devices/Peripheral.h
+@@ -62,7 +62,8 @@ typedef enum
+ {
+   STATE_SWITCH_TOGGLE,
+   STATE_ACTIVATE_SOURCE,
+-  STATE_STANDBY
++  STATE_STANDBY,
++  STATE_ACTIVATE_SOURCE_OSMC_WAKEUP
+ } CecStateChange;
+ 
+ /*!

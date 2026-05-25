@@ -1,0 +1,24 @@
+diff --git a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxFFmpeg.h b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxFFmpeg.h
+index 03fb98552c..d559a2f1f2 100644
+--- a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxFFmpeg.h
++++ b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxFFmpeg.h
+@@ -19,6 +19,7 @@ extern "C" {
+ #include <libavformat/avformat.h>
+ }
+ 
++class DVDStreamMuxer;
+ class CDVDDemuxFFmpeg;
+ class CURL;
+ 
+@@ -177,5 +178,11 @@ protected:
+   double m_dtsAtDisplayTime;
+   bool m_seekToKeyFrame = false;
+   double m_startTime = 0;
++
++  DVDStreamMuxer *m_muxer;
++
++private:
++  bool isFpsNonsense(const AVRational &frameRate);
++  void checkNeedMuxer();
+ };
+ 

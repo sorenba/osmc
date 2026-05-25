@@ -1,0 +1,91 @@
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogic.h b/xbmc/windowing/amlogic/WinSystemAmlogic.h
+new file mode 100644
+index 0000000000..135be28fc1
+--- /dev/null
++++ b/xbmc/windowing/amlogic/WinSystemAmlogic.h
+@@ -0,0 +1,85 @@
++/*
++ *  Copyright (C) 2005-2025 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#pragma once
++
++#include "threads/SystemClock.h"
++#include "rendering/gles/RenderSystemGLES.h"
++#include "platform/linux/input/LibInputHandler.h"
++#include "windowing/WinSystem.h"
++
++class VeroSettings;
++class CSettings;
++class IDispResource;
++
++class CWinSystemAmlogic : public CWinSystemBase
++{
++private:
++  std::shared_ptr<CSettings> m_settings;
++  VeroSettings *m_veroSettings;
++
++  std::string m_framebuffer_name;
++
++  int m_displayWidth;
++  int m_displayHeight;
++
++  CCriticalSection m_resourceSection;
++  std::vector<IDispResource*> m_resources;
++
++  bool m_dispResetPending;
++  bool m_delayDispReset;
++  XbmcThreads::EndTime<> m_dispResetTimer;
++
++  std::thread m_monitorThread;
++  bool m_monitorEvents;
++  std::string m_lastEdid;
++
++  std::unique_ptr<CLibInputHandler> m_libinput;
++
++  RENDER_STEREO_MODE m_stereo_mode;
++  std::vector<RESOLUTION_INFO> resolutions3d;
++
++  bool m_dvOutput = false;
++
++  void StartMonitorHWEvent();
++  void StopMonitorHWEvent();
++  void hwMonitorThread();
++
++  void Update3dResolutions();
++  void OnLostDisplay();
++
++protected:
++  void ResetDisplay();
++  bool IsDisplayResetDue() const;
++  bool IsDolbyVisionSupportedByDisplay() const;
++
++public:
++  CWinSystemAmlogic();
++  virtual ~CWinSystemAmlogic();
++
++  bool InitWindowSystem() override;
++  bool DestroyWindowSystem() override;
++
++  bool CreateNewWindow(const std::string &name, bool fullScreen, RESOLUTION_INFO &res) override;
++  bool DestroyWindow() override;
++
++  void UpdateResolutions() override;
++
++  float GetDisplayLatency() override;
++
++  bool Hide() override;
++  bool Show(bool show = true) override;
++
++  void Register(IDispResource *resource) override;
++  void Unregister(IDispResource *resource) override;
++
++  CHDRCapabilities GetDisplayHDRCapabilities() const override;
++  bool IsHDRDisplay() override;
++  float GetGuiSdrPeakLuminance() const override;
++  bool IsDolbyVisionOutput() const override;
++};

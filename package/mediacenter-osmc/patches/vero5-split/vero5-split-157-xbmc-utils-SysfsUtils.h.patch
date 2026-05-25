@@ -1,0 +1,31 @@
+diff --git a/xbmc/utils/SysfsUtils.h b/xbmc/utils/SysfsUtils.h
+new file mode 100644
+index 0000000000..3d9310c39b
+--- /dev/null
++++ b/xbmc/utils/SysfsUtils.h
+@@ -0,0 +1,25 @@
++/*
++ *  Copyright (C) 2011-2018 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#pragma once
++
++#include <string>
++
++class SysfsUtils
++{
++public:
++  static int SetString(const std::string &path, const std::string &valstr);
++  static int GetString(const std::string &path, std::string &valstr);
++  static int SetInt(const std::string &path, const int val);
++  static int SetUInt32(const std::string &path, const uint32_t val);
++  static int GetInt(const std::string &path, int &val);
++  static int GetIntDec(const std::string &path, uint32_t &val);
++  static bool Has(const std::string &path);
++  static bool HasRW(const std::string &path);
++  static bool HasRO(const std::string &path);
++};

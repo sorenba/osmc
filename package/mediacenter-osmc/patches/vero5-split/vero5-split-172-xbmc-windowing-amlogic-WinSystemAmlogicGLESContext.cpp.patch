@@ -1,0 +1,169 @@
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp
+new file mode 100644
+index 0000000000..2ca3535845
+--- /dev/null
++++ b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp
+@@ -0,0 +1,163 @@
++/*
++ *  Copyright (C) 2005-2025 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#include "WinSystemAmlogicGLESContext.h"
++
++#include "VideoSyncAML.h"
++#include "utils/AMLUtils.h"
++#include "utils/log.h"
++#include "windowing/WindowSystemFactory.h"
++
++
++using namespace KODI;
++using namespace KODI::WINDOWING::AML;
++
++
++void CWinSystemAmlogicGLESContext::Register()
++{
++  KODI::WINDOWING::CWindowSystemFactory::RegisterWindowSystem(CreateWinSystem, "aml");
++}
++
++std::unique_ptr<CWinSystemBase> CWinSystemAmlogicGLESContext::CreateWinSystem()
++{
++  return std::make_unique<CWinSystemAmlogicGLESContext>();
++}
++
++CWinSystemAmlogicGLESContext::CWinSystemAmlogicGLESContext()
++    : m_nativeDisplay(EGL_NO_DISPLAY)
++{
++  m_nativeWindow = static_cast<EGLNativeWindowType>(NULL);
++}
++
++CWinSystemAmlogicGLESContext::~CWinSystemAmlogicGLESContext()
++{
++  if (m_nativeWindow) {
++    m_nativeWindow = static_cast<EGLNativeWindowType>(NULL);
++  }
++}
++
++bool CWinSystemAmlogicGLESContext::InitWindowSystem()
++{
++  m_nativeDisplay = EGL_DEFAULT_DISPLAY;
++
++  if (!CWinSystemAmlogic::InitWindowSystem()) {
++    return false;
++  }
++
++  if (!m_pGLContext.CreateDisplay(m_nativeDisplay)) {
++    return false;
++  }
++
++  if (!m_pGLContext.InitializeDisplay(EGL_OPENGL_ES_API)) {
++    return false;
++  }
++
++  if (!m_pGLContext.ChooseConfig(EGL_OPENGL_ES2_BIT)) {
++    return false;
++  }
++
++  CEGLAttributesVec contextAttribs;
++  contextAttribs.Add({{ EGL_CONTEXT_CLIENT_VERSION, 2 } });
++
++  if (!m_pGLContext.CreateContext(contextAttribs)) {
++    return false;
++  }
++
++  return true;
++}
++
++bool CWinSystemAmlogicGLESContext::CreateNewWindow(const std::string &name, bool fullScreen, RESOLUTION_INFO &res)
++{
++  m_pGLContext.DestroySurface();
++  m_nativeWindow = static_cast<EGLNativeWindowType>(NULL);
++
++  if (!CWinSystemAmlogic::DestroyWindow()) {
++    return false;
++  }
++
++  if (!CWinSystemAmlogic::CreateNewWindow(name, fullScreen, res)) {
++    return false;
++  }
++
++  int fbWidth, fbHeight;
++  CalculateFrameBufferResolution(res, fbWidth, fbHeight);
++
++  fbdev_window *nativeWindow = new fbdev_window;
++  nativeWindow->width = (ushort) fbWidth;
++  nativeWindow->height = (ushort) fbHeight;
++  m_nativeWindow = static_cast<EGLNativeWindowType>(nativeWindow);
++
++  if (!m_pGLContext.CreateSurface(m_nativeWindow)) {
++    return false;
++  }
++
++  if (!m_pGLContext.BindContext()) {
++    return false;
++  }
++
++  return true;
++}
++
++void CWinSystemAmlogicGLESContext::CalculateFrameBufferResolution(const RESOLUTION_INFO &res, int &width, int &height)
++{
++  aml_calc_framebuffer_resolution(res, width, height);
++}
++
++bool CWinSystemAmlogicGLESContext::ResizeWindow(int newWidth, int newHeight, int newLeft, int newTop)
++{
++  CRenderSystemGLES::ResetRenderSystem(newWidth, newHeight);
++
++  return true;
++}
++
++bool CWinSystemAmlogicGLESContext::SetFullScreen(bool fullScreen, RESOLUTION_INFO &res, bool blankOtherDisplays)
++{
++  CreateNewWindow("", fullScreen, res);
++
++  int fbWidth, fbHeight;
++
++  CalculateFrameBufferResolution(res, fbWidth, fbHeight);
++  CRenderSystemGLES::ResetRenderSystem(fbWidth, fbHeight);
++
++  return true;
++}
++
++void CWinSystemAmlogicGLESContext::SetVSyncImpl(bool enable)
++{
++  if (!m_pGLContext.SetVSync(enable)) {
++    CLog::Log(LOGERROR, "{}, Could not set egl vsync", __FUNCTION__);
++  }
++}
++
++void CWinSystemAmlogicGLESContext::PresentRenderImpl(bool rendered)
++{
++  // reset display if needed
++  if (IsDisplayResetDue()) {
++    ResetDisplay();
++  }
++
++  // Ignore errors - eglSwapBuffers() sometimes fails during modeswaps on AML,
++  // there is probably nothing we can do about it
++  m_pGLContext.TrySwapBuffers();
++}
++
++std::unique_ptr<CVideoSync> CWinSystemAmlogicGLESContext::GetVideoSync(CVideoReferenceClock *clock)
++{
++  std::unique_ptr<CVideoSync> pVSync(new CVideoSyncAML(clock));
++  return pVSync;
++}
++
++bool CWinSystemAmlogicGLESContext::SupportsStereo(RENDER_STEREO_MODE mode) const
++{
++  if (mode == RENDER_STEREO_MODE_HARDWAREBASED) {
++    // yes, we support hardware based MVC decoding
++    return true;
++  }
++
++  return CRenderSystemGLES::SupportsStereo(mode);
++}

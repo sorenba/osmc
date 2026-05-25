@@ -1,0 +1,56 @@
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h
+new file mode 100644
+index 0000000000..84a7bc22f2
+--- /dev/null
++++ b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h
+@@ -0,0 +1,50 @@
++/*
++ *  Copyright (C) 2005-2025 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#pragma once
++
++#include "utils/EGLUtils.h"
++#include "rendering/gles/RenderSystemGLES.h"
++#include "WinSystemAmlogic.h"
++
++namespace KODI::WINDOWING::AML {
++
++class CWinSystemAmlogicGLESContext : public CWinSystemAmlogic, public CRenderSystemGLES
++{
++private:
++  EGLDisplay m_nativeDisplay;
++  EGLNativeWindowType m_nativeWindow;
++  CEGLContextUtils m_pGLContext;
++
++  void CalculateFrameBufferResolution(const RESOLUTION_INFO &res, int &width, int &height);
++
++protected:
++  void SetVSyncImpl(bool enable) override;
++  void PresentRenderImpl(bool rendered) override;
++
++public:
++  CWinSystemAmlogicGLESContext();
++  virtual ~CWinSystemAmlogicGLESContext();
++
++  static void Register();
++  static std::unique_ptr<CWinSystemBase> CreateWinSystem();
++
++  // Implementation of CWinSystemBase via CWinSystemAmlogic
++  CRenderSystemBase *GetRenderSystem() override { return this; }
++  bool InitWindowSystem() override;
++  bool CreateNewWindow(const std::string &name, bool fullScreen, RESOLUTION_INFO &res) override;
++
++  bool ResizeWindow(int newWidth, int newHeight, int newLeft, int newTop) override;
++  bool SetFullScreen(bool fullScreen, RESOLUTION_INFO &res, bool blankOtherDisplays) override;
++
++  std::unique_ptr<CVideoSync> GetVideoSync(CVideoReferenceClock *clock) override;
++
++  bool SupportsStereo(RENDER_STEREO_MODE mode) const override;
++};
++
++}

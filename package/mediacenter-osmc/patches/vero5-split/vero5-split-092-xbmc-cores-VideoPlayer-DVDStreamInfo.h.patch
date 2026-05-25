@@ -1,0 +1,12 @@
+diff --git a/xbmc/cores/VideoPlayer/DVDStreamInfo.h b/xbmc/cores/VideoPlayer/DVDStreamInfo.h
+index 1da58a7e6a..274cc9526d 100644
+--- a/xbmc/cores/VideoPlayer/DVDStreamInfo.h
++++ b/xbmc/cores/VideoPlayer/DVDStreamInfo.h
+@@ -90,6 +90,7 @@ public:
+   uint64_t channellayout;
+ 
+   // SUBTITLE
++  int m_3dSubtitlePlane;
+ 
+   // CODEC EXTRADATA
+   FFmpegExtraData extradata; // extra data for codec to use

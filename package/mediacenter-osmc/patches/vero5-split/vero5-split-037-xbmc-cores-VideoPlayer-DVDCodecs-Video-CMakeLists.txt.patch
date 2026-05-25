@@ -1,0 +1,47 @@
+diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/CMakeLists.txt b/xbmc/cores/VideoPlayer/DVDCodecs/Video/CMakeLists.txt
+index 452ed873be..539499eb3e 100644
+--- a/xbmc/cores/VideoPlayer/DVDCodecs/Video/CMakeLists.txt
++++ b/xbmc/cores/VideoPlayer/DVDCodecs/Video/CMakeLists.txt
+@@ -11,6 +11,42 @@ if(NOT ENABLE_EXTERNAL_LIBAV)
+   list(APPEND HEADERS DVDVideoPPFFmpeg.h)
+ endif()
+ 
++if(AML_FOUND)
++  list(APPEND SOURCES amlogic/AMLCodecList.cpp
++                      amlogic/AMLDecoderInputQueueStats.cpp
++                      amlogic/AMLInsecureVideoCodec.cpp
++                      amlogic/AMLVideoCodec.cpp
++                      amlogic/DVCodec.cpp
++                      amlogic/AV1Codec.cpp
++                      amlogic/H264Codec.cpp
++                      amlogic/HEVCCodec.cpp
++                      amlogic/LibAmcodec.cpp
++                      amlogic/MPEG12Codec.cpp
++                      amlogic/MPEG4Codec.cpp
++                      amlogic/VC1Codec.cpp
++                      amlogic/VP9Codec.cpp
++                      DVDVideoCodecAmlogic.cpp)
++  list(APPEND HEADERS amlogic/AMLCodecList.h
++                      amlogic/AMLDecoderInputQueueStats.h
++                      amlogic/AMLInsecureVideoCodec.h
++                      amlogic/AMLVideoCodec.h
++                      amlogic/AMLVideoCodecConstants.h
++                      amlogic/AMLVideoCodecDataTypes.h
++                      amlogic/AMLVideoCodecInfo.h
++                      amlogic/DVCodec.h
++                      amlogic/AV1Codec.h
++                      amlogic/H264Codec.h
++                      amlogic/HEVCCodec.h
++                      amlogic/LibAmcodec.h
++                      amlogic/MPEG12Codec.h
++                      amlogic/MPEG4Codec.h
++                      amlogic/namespace.h
++                      amlogic/PosixFile.h
++                      amlogic/VC1Codec.h
++                      amlogic/VP9Codec.h
++                      DVDVideoCodecAmlogic.h)
++endif()
++
+ if(CORE_SYSTEM_NAME STREQUAL windows OR CORE_SYSTEM_NAME STREQUAL windowsstore)
+   list(APPEND SOURCES DXVA.cpp)
+   list(APPEND HEADERS DXVA.h)

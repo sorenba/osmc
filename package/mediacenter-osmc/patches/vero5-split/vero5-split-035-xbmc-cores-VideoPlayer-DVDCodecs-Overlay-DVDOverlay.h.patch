@@ -1,0 +1,29 @@
+diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Overlay/DVDOverlay.h b/xbmc/cores/VideoPlayer/DVDCodecs/Overlay/DVDOverlay.h
+index 96b4cbbc57..3e970bd5dd 100644
+--- a/xbmc/cores/VideoPlayer/DVDCodecs/Overlay/DVDOverlay.h
++++ b/xbmc/cores/VideoPlayer/DVDCodecs/Overlay/DVDOverlay.h
+@@ -36,6 +36,7 @@ public:
+     bForced = false;
+     replace = false;
+     m_textureid = 0;
++    m_3dSubtitleDepth = 0;
+     m_enableTextAlign = false;
+     m_overlayContainerFlushable = true;
+     m_setForcedMargins = false;
+@@ -49,6 +50,7 @@ public:
+     bForced       = src.bForced;
+     replace = src.replace;
+     m_textureid = 0;
++    m_3dSubtitleDepth = 0;
+     m_enableTextAlign = src.m_enableTextAlign;
+     m_overlayContainerFlushable = src.m_overlayContainerFlushable;
+     m_setForcedMargins = src.m_setForcedMargins;
+@@ -103,6 +105,8 @@ public:
+   bool replace; // replace by next nomatter what stoptime it has
+   unsigned long m_textureid;
+ 
++  int m_3dSubtitleDepth;
++
+ protected:
+   DVDOverlayType m_type;
+   bool m_enableTextAlign;

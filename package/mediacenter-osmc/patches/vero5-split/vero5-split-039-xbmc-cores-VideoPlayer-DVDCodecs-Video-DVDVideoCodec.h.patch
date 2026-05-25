@@ -1,0 +1,20 @@
+diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodec.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodec.h
+index adb8b51242..2e61bf4b3e 100644
+--- a/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodec.h
++++ b/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodec.h
+@@ -60,12 +60,14 @@ public:
+   unsigned int colorBits = 8;
+   std::string stereoMode;
+ 
++  int m_3dSubtitleDepth;
++
+   int8_t* qp_table;                //< Quantization parameters, primarily used by filters
+   int qstride;
+   int qscale_type;
+   int pict_type;
+ 
+-  StreamHdrType hdrType;
++  StreamHdrType hdrType = StreamHdrType::HDR_TYPE_NONE;
+ 
+   bool hasDisplayMetadata = false;
+   AVMasteringDisplayMetadata displayMetadata;

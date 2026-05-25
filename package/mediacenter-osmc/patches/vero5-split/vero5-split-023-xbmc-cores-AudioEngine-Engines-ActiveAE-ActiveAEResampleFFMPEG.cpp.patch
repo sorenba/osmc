@@ -1,0 +1,26 @@
+diff --git a/xbmc/cores/AudioEngine/Engines/ActiveAE/ActiveAEResampleFFMPEG.cpp b/xbmc/cores/AudioEngine/Engines/ActiveAE/ActiveAEResampleFFMPEG.cpp
+index 6aee94c6d3..dcbae016ef 100644
+--- a/xbmc/cores/AudioEngine/Engines/ActiveAE/ActiveAEResampleFFMPEG.cpp
++++ b/xbmc/cores/AudioEngine/Engines/ActiveAE/ActiveAEResampleFFMPEG.cpp
+@@ -8,6 +8,8 @@
+ 
+ #include "cores/AudioEngine/Utils/AEUtil.h"
+ #include "ActiveAEResampleFFMPEG.h"
++#include "settings/Settings.h"
++#include "ServiceBroker.h"
+ #include "utils/log.h"
+ #include "settings/SettingsComponent.h"
+ #include "settings/Settings.h"
+@@ -108,6 +110,12 @@ bool CActiveAEResampleFFMPEG::Init(SampleConfig dstConfig, SampleConfig srcConfi
+   {
+     av_opt_set_int(m_pContext, "output_sample_bits", m_dst_bits, 0);
+   }
++  int boost_center = CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt("audiooutput.boostcenter");
++  if (boost_center)
++  {
++    float gain = pow(10.0f, ((float)(-3 + boost_center))/20.0f);
++    av_opt_set_double(m_pContext, "center_mix_level", gain, 0);
++  }
+ 
+   // tell resampler to clamp float values
+   // not required for sink stage (remapLayout == true)

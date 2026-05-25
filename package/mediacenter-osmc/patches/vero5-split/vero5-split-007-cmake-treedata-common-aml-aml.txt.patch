@@ -1,0 +1,8 @@
+diff --git a/cmake/treedata/common/aml/aml.txt b/cmake/treedata/common/aml/aml.txt
+new file mode 100644
+index 0000000000..1e4856fcd4
+--- /dev/null
++++ b/cmake/treedata/common/aml/aml.txt
+@@ -0,0 +1,2 @@
++xbmc/cores/RetroPlayer/process/amlogic cores/RetroPlayer/process/amlogic
++xbmc/windowing/amlogic windowing/amlogic

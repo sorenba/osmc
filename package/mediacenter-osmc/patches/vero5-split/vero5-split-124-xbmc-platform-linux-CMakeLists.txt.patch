@@ -1,0 +1,14 @@
+diff --git a/xbmc/platform/linux/CMakeLists.txt b/xbmc/platform/linux/CMakeLists.txt
+index 6c5bceae7c..6161fa56f1 100644
+--- a/xbmc/platform/linux/CMakeLists.txt
++++ b/xbmc/platform/linux/CMakeLists.txt
+@@ -38,4 +38,9 @@ if(ADDONS_CONFIGURE_AT_STARTUP)
+   add_compile_definitions(ADDONS_CONFIGURE_AT_STARTUP)
+ endif()
+ 
++if("aml" IN_LIST CORE_PLATFORM_NAME_LC)
++  list(APPEND SOURCES ScreenshotSurfaceAML.cpp)
++  list(APPEND HEADERS ScreenshotSurfaceAML.h)
++endif()
++
+ core_add_library(linuxsupport)

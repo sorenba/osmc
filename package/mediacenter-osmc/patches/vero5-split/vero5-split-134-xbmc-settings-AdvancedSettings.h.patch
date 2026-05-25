@@ -1,0 +1,12 @@
+diff --git a/xbmc/settings/AdvancedSettings.h b/xbmc/settings/AdvancedSettings.h
+index 5abbed2486..76d7c2b863 100644
+--- a/xbmc/settings/AdvancedSettings.h
++++ b/xbmc/settings/AdvancedSettings.h
+@@ -363,6 +363,7 @@ class CAdvancedSettings : public ISettingCallback, public ISettingsHandler
+     std::string m_stereoscopicregex_3d;
+     std::string m_stereoscopicregex_sbs;
+     std::string m_stereoscopicregex_tab;
++    std::string m_stereoscopicregex_mvc;
+ 
+     bool m_openGlDebugging;
+ 

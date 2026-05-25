@@ -1,0 +1,12 @@
+diff --git a/xbmc/cores/RetroPlayer/process/amlogic/CMakeLists.txt b/xbmc/cores/RetroPlayer/process/amlogic/CMakeLists.txt
+new file mode 100644
+index 0000000000..be5fcbdabe
+--- /dev/null
++++ b/xbmc/cores/RetroPlayer/process/amlogic/CMakeLists.txt
+@@ -0,0 +1,6 @@
++if("aml" IN_LIST CORE_PLATFORM_NAME_LC)
++  set(SOURCES RPProcessInfoAmlogic.cpp)
++  set(HEADERS RPProcessInfoAmlogic.h)
++
++  core_add_library(rp-process-amlogic)
++endif()

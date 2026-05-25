@@ -1,0 +1,42 @@
+diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/HEVCCodec.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/HEVCCodec.h
+new file mode 100644
+index 0000000000..b09d2b48a9
+--- /dev/null
++++ b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/HEVCCodec.h
+@@ -0,0 +1,36 @@
++/*
++ *  Copyright (C) 2005-2022 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#pragma once
++
++#include "DVCodec.h"
++
++class CBitstreamConverter;
++
++class amlogic::HEVCCodec : public amlogic::DVCodec
++{
++private:
++	CBitstreamConverter	*m_bitstream;
++
++protected:
++	virtual vformat_t getVideoFormat(const CDVDStreamInfo &hints) const;
++	virtual vdec_type_t getVideoCodecType(const CDVDStreamInfo &hints) const;
++
++	virtual void setupVideoCodecParams(aml_generic_param &params) const;
++	virtual void setDualLayerSupport(bool on=true) const;
++
++	virtual int pre_header_feeding(am_private_t *para, am_packet_t *pkt) const;
++
++public:
++	HEVCCodec(CProcessInfo &processInfo, const CDVDStreamInfo &hints);
++	virtual ~HEVCCodec();
++
++	virtual std::string getFormatName() const;
++
++	virtual bool prepareFrame(CDVDStreamInfo &hints, uint8_t *&data, size_t &size, double dts, double pts);
++};

@@ -1,0 +1,160 @@
+diff --git a/xbmc/settings/VeroSettings.cpp b/xbmc/settings/VeroSettings.cpp
+new file mode 100644
+index 0000000000..7398564b5f
+--- /dev/null
++++ b/xbmc/settings/VeroSettings.cpp
+@@ -0,0 +1,154 @@
++/*
++ *  (c) 2025 OSMC
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#include "VeroSettings.h"
++
++#include <set>
++#include <string>
++#include <ranges>
++
++#include "ServiceBroker.h"
++#include "settings/Settings.h"
++#include "settings/SettingsComponent.h"
++#include "settings/lib/SettingsManager.h"
++#include "utils/log.h"
++#include "utils/SysfsUtils.h"
++
++
++VeroSettings::VeroSettings()
++{
++  m_settings = CServiceBroker::GetSettingsComponent()->GetSettings();
++
++  m_settingsMap.insert(std::make_pair(SETTING_VIDEOSCREEN_FORCE422, &VeroSettings::OnForce422Changed));
++  m_settingsMap.insert(std::make_pair(SETTING_VIDEOSCREEN_LIMITEDRANGEAML, &VeroSettings::OnLimitedRangeChanged));
++  m_settingsMap.insert(std::make_pair(SETTING_VIDEOSCREEN_MAXLUM, &VeroSettings::OnMaxLumChanged));
++  m_settingsMap.insert(std::make_pair(SETTING_VIDEOSCREEN_HDRCAPS, &VeroSettings::OnHdrCapsChanged));
++  m_settingsMap.insert(std::make_pair(SETTING_VIDEOSCREEN_FORCERGB, &VeroSettings::OnForceRgbChanged));
++  m_settingsMap.insert(std::make_pair(SETTING_VIDEOSCREEN_LOCKHPD, &VeroSettings::OnLockHpdChanged));
++
++  std::set<std::string> settingSet;
++
++  for (auto e : m_settingsMap) {
++    settingSet.insert(e.first);
++    std::invoke(e.second, this);
++  }
++
++  m_settings->GetSettingsManager()->RegisterCallback(this, settingSet);
++}
++
++VeroSettings::~VeroSettings()
++{
++  m_settings->GetSettingsManager()->UnregisterCallback(this);
++}
++
++bool VeroSettings::OnSettingChanging(const std::shared_ptr<const CSetting> &setting)
++{
++  const std::string &settingId = setting->GetId();
++  std::map<const std::string, bool (VeroSettings::*)()>::iterator iter = m_settingsMap.find(settingId);
++
++  if (iter == m_settingsMap.end()) {
++    // setting not handled
++    CLog::Log(LOGWARNING, "VeroSettings::OnSettingChanging -- unable to handle unknown setting '{}'", settingId);
++    return false;
++  }
++
++  bool res = std::invoke((*iter).second, this);
++  if (res && settingId == SETTING_VIDEOSCREEN_LIMITEDRANGEAML) {
++    // some special treatment for SETTING_VIDEOSCREEN_LIMITEDRANGEAML
++    std::string attr = "";
++
++    SysfsUtils::GetString("/sys/class/amhdmitx/amhdmitx0/attr", attr);
++    attr.append("now");
++    SysfsUtils::SetString("/sys/class/amhdmitx/amhdmitx0/attr", attr.c_str());
++  }
++
++  return res;
++}
++
++bool VeroSettings::OnLimitedRangeChanged()
++{
++  int range_control;
++
++  SysfsUtils::GetInt("/sys/module/am_vecm/parameters/range_control", range_control);
++  if (m_settings->GetBool(VeroSettings::SETTING_VIDEOSCREEN_LIMITEDRANGEAML)) {
++    range_control &= 1;
++  } else {
++    range_control |= 2;
++  }
++
++  CLog::Log(LOGDEBUG, "VeroSettings::OnLimitedRangeChanged -- setting quantization range to {}", range_control & 2 ? "full" : "limited");
++  SysfsUtils::SetInt("/sys/module/am_vecm/parameters/range_control", range_control);
++
++  return true;
++}
++
++bool VeroSettings::OnForce422Changed()
++{
++  std::string attr = "";
++
++  SysfsUtils::GetString("/sys/class/amhdmitx/amhdmitx0/attr", attr);
++
++  if (m_settings->GetBool(SETTING_VIDEOSCREEN_FORCE422)) {
++    if (attr.find("444") != std::string::npos ||
++        attr.find("422") != std::string::npos ||
++        attr.find("420") != std::string::npos) {
++      attr.replace(attr.find("4"), 3, "422").append("now");
++    } else {
++      attr.append("422now");
++    }
++  } else {
++    if (attr.find("422") != std::string::npos) {
++      attr.erase(attr.find("4"), 3);
++    }
++    attr.append("now");
++  }
++
++  CLog::Log(LOGDEBUG, "VeroSettings::OnForce422Changed -- setting 422 output, attr = {}", attr);
++  SysfsUtils::SetString("/sys/class/amhdmitx/amhdmitx0/attr", attr.c_str());
++
++  return true;
++}
++
++bool VeroSettings::OnMaxLumChanged()
++{
++  int maxlum = m_settings->GetInt(SETTING_VIDEOSCREEN_MAXLUM);
++
++  CLog::Log(LOGDEBUG, "VeroSettings::OnMaxLumChanged -- setting max lum to {}", maxlum);
++  SysfsUtils::SetInt("/sys/module/am_vecm/parameters/customer_panel_lumin", maxlum);
++
++  return true;
++}
++
++bool VeroSettings::OnHdrCapsChanged()
++{
++  int hdr_caps = m_settings->GetInt(SETTING_VIDEOSCREEN_HDRCAPS);
++
++  CLog::Log(LOGDEBUG, "VeroSettings::OnHdrCapsChanged -- setting HDR caps to {}", hdr_caps);
++  SysfsUtils::SetInt("/sys/class/amhdmitx/amhdmitx0/force_hdr", hdr_caps);
++
++  return true;
++}
++
++bool VeroSettings::OnForceRgbChanged()
++{
++  bool force = m_settings->GetBool(VeroSettings::SETTING_VIDEOSCREEN_FORCERGB);
++
++  CLog::Log(LOGDEBUG, "VeroSettings::OnForceRgbChanged -- {}forcing RGB", force ? "" : "not ");
++  SysfsUtils::SetString("/sys/class/amhdmitx/amhdmitx0/output_rgb", force ? "1" : "0");
++
++  return true;
++}
++
++bool VeroSettings::OnLockHpdChanged()
++{
++  bool lockHpd = m_settings->GetBool(VeroSettings::SETTING_VIDEOSCREEN_LOCKHPD);
++
++  CLog::Log(LOGDEBUG, "VeroSettings::OnLockHpdChanged -- forcing HPD to be {}locked", lockHpd ? "" : "un");
++  SysfsUtils::SetString("/sys/class/amhdmitx/amhdmitx0/debug", lockHpd ? "hpd_lock1" : "hpd_lock0");
++
++  return true;
++}

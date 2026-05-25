@@ -1,0 +1,24 @@
+diff --git a/xbmc/application/ApplicationPlayerCallback.cpp b/xbmc/application/ApplicationPlayerCallback.cpp
+index ed36a27e18..2b4ae95884 100644
+--- a/xbmc/application/ApplicationPlayerCallback.cpp
++++ b/xbmc/application/ApplicationPlayerCallback.cpp
+@@ -248,8 +248,19 @@ void CApplicationPlayerCallback::OnAVChange()
+ {
+   CLog::LogF(LOGDEBUG, "CApplication::OnAVChange");
+ 
++  RENDER_STEREO_MODE oldRsm = CServiceBroker::GetGUI()->GetStereoscopicsManager().GetStereoMode();
++
+   CServiceBroker::GetGUI()->GetStereoscopicsManager().OnStreamChange();
+ 
++  RENDER_STEREO_MODE newRsm = CServiceBroker::GetGUI()->GetStereoscopicsManager().GetStereoMode();
++
++  if (oldRsm != newRsm) {
++    // stereo mode changed
++    auto& components = CServiceBroker::GetAppComponents();
++    const auto appPlayer = components.GetComponent<CApplicationPlayer>();
++    appPlayer->TriggerUpdateResolution();
++  }
++
+   CGUIMessage msg(GUI_MSG_PLAYBACK_AVCHANGE, 0, 0);
+   CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(msg);
+ }

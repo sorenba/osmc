@@ -1,0 +1,148 @@
+diff --git a/xbmc/utils/SysfsUtils.cpp b/xbmc/utils/SysfsUtils.cpp
+new file mode 100644
+index 0000000000..c25960ac13
+--- /dev/null
++++ b/xbmc/utils/SysfsUtils.cpp
+@@ -0,0 +1,142 @@
++/*
++ *  Copyright (C) 2011-2018 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#include "SysfsUtils.h"
++#include "utils/log.h"
++#include "utils/StringUtils.h"
++
++#include <unistd.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <fcntl.h>
++#include <string.h>
++
++
++int SysfsUtils::SetString(const std::string &path, const std::string &valstr)
++{
++  int fd = open(path.c_str(), O_RDWR, 0644);
++
++  if (fd < 0) {
++    CLog::Log(LOGERROR, "{}: error opening '{}' for writing", __FUNCTION__, path.c_str());
++    return -1;
++  }
++
++  if (write(fd, valstr.c_str(), valstr.size()) < 0) {
++    CLog::Log(LOGERROR, "{}: error writing to '{}'", __FUNCTION__, path.c_str());
++    close(fd);
++    return -1;
++  }
++
++  close(fd);
++
++  return 0;
++}
++
++int SysfsUtils::GetString(const std::string &path, std::string &valstr)
++{
++  valstr.clear();
++
++  int fd = open(path.c_str(), O_RDONLY);
++
++  if (fd < 0) {
++    CLog::Log(LOGERROR, "{}: error opening '{}' for reading", __FUNCTION__, path.c_str());
++    return -1;
++  }
++
++  int len;
++  char buf[256] = { 0 };
++
++  while ((len = read(fd, buf, sizeof(buf))) > 0) {
++    valstr.append(buf, len);
++  }
++
++  close(fd);
++
++  if (len < 0) {
++    CLog::Log(LOGERROR, "{}: error reading from '{}'", __FUNCTION__, path.c_str());
++    valstr.clear();
++    return -1;
++  }
++
++  StringUtils::Trim(valstr);
++
++  return 0;
++}
++
++int SysfsUtils::SetInt(const std::string &path, const int val)
++{
++  char bcmd[16];
++
++  snprintf(bcmd, sizeof(bcmd), "%d", val);
++
++  return SetString(path, bcmd);
++}
++
++int SysfsUtils::SetUInt32(const std::string &path, const uint32_t val)
++{
++  char bcmd[16];
++
++  snprintf(bcmd, sizeof(bcmd), "%u", val);
++
++  return SetString(path, bcmd);
++}
++
++int SysfsUtils::GetInt(const std::string &path, int &val)
++{
++  std::string value;
++
++  if (GetString(path, value)) {
++    return -1;
++  }
++
++  val = strtol(value.c_str(), NULL, 16);
++
++  return 0;
++}
++
++int SysfsUtils::GetIntDec(const std::string &path, uint32_t &val)
++{
++  std::string value;
++
++  if (GetString(path, value)) {
++    return -1;
++  }
++
++  val = strtoull(value.c_str(), NULL, 10);
++
++  return 0;
++}
++
++bool SysfsUtils::Has(const std::string &path)
++{
++  return HasRO(path);
++}
++
++bool SysfsUtils::HasRW(const std::string &path)
++{
++  int fd = open(path.c_str(), O_RDWR);
++
++  if (fd >= 0) {
++    close(fd);
++    return true;
++  }
++
++  return false;
++}
++
++bool SysfsUtils::HasRO(const std::string &path)
++{
++  int fd = open(path.c_str(), O_RDONLY);
++
++  if (fd >= 0) {
++    close(fd);
++    return true;
++  }
++
++  return false;
++}

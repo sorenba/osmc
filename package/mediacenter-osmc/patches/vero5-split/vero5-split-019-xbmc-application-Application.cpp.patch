@@ -1,0 +1,66 @@
+diff --git a/xbmc/application/Application.cpp b/xbmc/application/Application.cpp
+index 1791ed607a..714ea913e3 100644
+--- a/xbmc/application/Application.cpp
++++ b/xbmc/application/Application.cpp
+@@ -139,6 +139,7 @@
+ #include "utils/TimeUtils.h"
+ #include "utils/URIUtils.h"
+ #include "utils/Variant.h"
++#include "utils/SysfsUtils.h"
+ #include "utils/XTimeUtils.h"
+ #include "utils/log.h"
+ #include "video/Bookmark.h"
+@@ -1232,8 +1233,15 @@ bool CApplication::OnAction(const CAction &action)
+   }
+ 
+   // forward action to graphic context and see if it can handle it
+-  if (CServiceBroker::GetGUI()->GetStereoscopicsManager().OnAction(action))
+-    return true;
++  RENDER_STEREO_MODE oldRsm = CServiceBroker::GetGUI()->GetStereoscopicsManager().GetStereoMode();
++  if (CServiceBroker::GetGUI()->GetStereoscopicsManager().OnAction(action)) {
++    RENDER_STEREO_MODE newRsm = CServiceBroker::GetGUI()->GetStereoscopicsManager().GetStereoMode();
++    if (oldRsm != newRsm) {
++      // stereo mode changed
++      appPlayer->TriggerUpdateResolution();
++    }
++  return true;
++  }
+ 
+   if (appPlayer->IsPlaying())
+   {
+@@ -1598,6 +1606,18 @@ void CApplication::OnApplicationMessage(ThreadMessage* pMsg)
+       break;
+   }
+ 
++  case TMSG_AML_RESIZE:
++  {
++    if (! appPlayer->IsPlayingVideo()) {
++      CDisplaySettings::GetInstance().ClearCustomResolutions();
++      CServiceBroker::GetWinSystem()->UpdateResolutions();
++      CDisplaySettings::GetInstance().SetCurrentResolution(RES_DESKTOP);
++      CServiceBroker::GetWinSystem()->GetGfxContext().SetVideoResolution(RES_DESKTOP, true);
++      CLog::Log(LOGINFO, "Updated resolutions and set desktop");
++    }
++    break;
++  }
++
+   case TMSG_NETWORKMESSAGE:
+     m_ServiceManager->GetNetwork().NetworkMessage(static_cast<CNetworkBase::EMESSAGE>(pMsg->param1),
+                                                   pMsg->param2);
+@@ -2641,6 +2661,7 @@ void CApplication::PlaybackCleanup()
+     else
+     {
+       //  resets to res_desktop or look&feel resolution (including refreshrate)
++      SysfsUtils::SetInt("/sys/class/amhdmitx/amhdmitx0/aspect", 2);
+       CServiceBroker::GetWinSystem()->GetGfxContext().SetFullScreenVideo(false);
+     }
+ #ifdef TARGET_DARWIN_EMBEDDED
+@@ -3694,7 +3715,7 @@ void CApplication::SetLoggingIn(bool switchingProfiles)
+ void CApplication::PrintStartupLog()
+ {
+   CLog::Log(LOGINFO, "-----------------------------------------------------------------------");
+-  CLog::Log(LOGINFO, "Starting {} ({}). Platform: {} {} {}-bit", CSysInfo::GetAppName(),
++  CLog::Log(LOGINFO, "Starting {} ({}). Platform: {} {} {}-bit (version for Vero)", CSysInfo::GetAppName(),
+             CSysInfo::GetVersion(), g_sysinfo.GetBuildTargetPlatformName(),
+             g_sysinfo.GetBuildTargetCpuFamily(), g_sysinfo.GetXbmcBitness());
+ 

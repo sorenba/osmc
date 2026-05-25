@@ -1,0 +1,18 @@
+diff --git a/xbmc/windowing/amlogic/CMakeLists.txt b/xbmc/windowing/amlogic/CMakeLists.txt
+new file mode 100644
+index 0000000000..5df7176c70
+--- /dev/null
++++ b/xbmc/windowing/amlogic/CMakeLists.txt
+@@ -0,0 +1,12 @@
++set(SOURCES WinSystemAmlogic.cpp
++            VideoSyncAML.cpp)
++
++set(HEADERS WinSystemAmlogic.h
++            VideoSyncAML.h)
++
++if(OPENGLES_FOUND)
++  list(APPEND SOURCES WinSystemAmlogicGLESContext.cpp)
++  list(APPEND HEADERS WinSystemAmlogicGLESContext.h)
++endif()
++
++core_add_library(windowing_Amlogic)

@@ -1,0 +1,15 @@
+diff --git a/xbmc/peripherals/Peripherals.cpp b/xbmc/peripherals/Peripherals.cpp
+index 4fdc64db0b..b51a4243a7 100644
+--- a/xbmc/peripherals/Peripherals.cpp
++++ b/xbmc/peripherals/Peripherals.cpp
+@@ -1042,6 +1042,10 @@ void CPeripherals::OnApplicationMessage(MESSAGING::ThreadMessage* pMsg)
+       ToggleDeviceState(STATE_ACTIVATE_SOURCE);
+       break;
+ 
++    case TMSG_CECACTIVATESOURCEOSMCWAKEUP:
++      ToggleDeviceState(STATE_ACTIVATE_SOURCE_OSMC_WAKEUP);
++      break;
++
+     case TMSG_CECSTANDBY:
+       ToggleDeviceState(STATE_STANDBY);
+       break;

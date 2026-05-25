@@ -1,0 +1,12 @@
+diff --git a/xbmc/cores/AudioEngine/Sinks/AESinkAUDIOTRACK.h b/xbmc/cores/AudioEngine/Sinks/AESinkAUDIOTRACK.h
+index db476bb8d4..ad28ef5331 100644
+--- a/xbmc/cores/AudioEngine/Sinks/AESinkAUDIOTRACK.h
++++ b/xbmc/cores/AudioEngine/Sinks/AESinkAUDIOTRACK.h
+@@ -49,6 +49,7 @@ protected:
+                                       int channelMask,
+                                       int encoding,
+                                       bool isRaw = false);
++  static bool HasAmlHD();
+   static void UpdateAvailablePCMCapabilities();
+   static void UpdateAvailablePassthroughCapabilities(bool isRaw = false);
+ 

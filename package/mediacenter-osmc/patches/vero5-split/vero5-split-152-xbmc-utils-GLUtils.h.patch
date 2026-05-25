@@ -1,0 +1,12 @@
+diff --git a/xbmc/utils/GLUtils.h b/xbmc/utils/GLUtils.h
+index 5c360300dd..ede094c649 100644
+--- a/xbmc/utils/GLUtils.h
++++ b/xbmc/utils/GLUtils.h
+@@ -20,6 +20,7 @@
+ // and will be optimized out.
+ 
+ #include "system_gl.h"
++#include <stdint.h>
+ 
+ namespace KODI
+ {

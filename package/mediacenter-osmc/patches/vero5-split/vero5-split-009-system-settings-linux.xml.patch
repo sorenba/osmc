@@ -1,0 +1,16 @@
+diff --git a/system/settings/linux.xml b/system/settings/linux.xml
+index 531974f3f4..9b85a3bf92 100644
+--- a/system/settings/linux.xml
++++ b/system/settings/linux.xml
+@@ -223,11 +223,6 @@
+           </constraints>
+           <control type="list" format="string" />
+         </setting>
+-        <setting id="videoscreen.limitedrange" type="boolean" label="36042" help="36359">
+-          <level>3</level>
+-          <default>false</default>
+-          <control type="toggle" />
+-        </setting>
+       </group>
+     </category>
+     <category id="input">

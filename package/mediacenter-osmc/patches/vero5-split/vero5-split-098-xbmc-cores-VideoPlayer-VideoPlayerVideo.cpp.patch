@@ -1,0 +1,34 @@
+diff --git a/xbmc/cores/VideoPlayer/VideoPlayerVideo.cpp b/xbmc/cores/VideoPlayer/VideoPlayerVideo.cpp
+index c42f8f3dd7..21176a818a 100644
+--- a/xbmc/cores/VideoPlayer/VideoPlayerVideo.cpp
++++ b/xbmc/cores/VideoPlayer/VideoPlayerVideo.cpp
+@@ -319,6 +319,7 @@ void CVideoPlayerVideo::Process()
+   int iDropDirective;
+   bool onlyPrioMsgs = false;
+ 
++  m_picture.Reset();
+   m_videoStats.Start();
+   m_droppingStats.Reset();
+   m_iDroppedFrames = 0;
+@@ -715,6 +716,11 @@ bool CVideoPlayerVideo::ProcessDecoderOutput(double &frametime, double &pts)
+           if (m_processInfo.GetVideoSettings().m_StereoInvert)
+             stereoMode = "bottom_top";
+           break;
++        case RENDER_STEREO_MODE_HARDWAREBASED:
++          stereoMode = "block_lr";
++          if (m_processInfo.GetVideoSettings().m_StereoInvert)
++            stereoMode = "block_rl";
++          break;
+         default:
+           stereoMode = m_hints.stereo_mode;
+           break;
+@@ -826,6 +832,9 @@ void CVideoPlayerVideo::ProcessOverlays(const VideoPicture* pSource, double pts)
+ 
+       if((pOverlay->iPTSStartTime <= pts2 && (pOverlay->iPTSStopTime > pts2 || pOverlay->iPTSStopTime == 0LL)))
+       {
++
++        pOverlay->m_3dSubtitleDepth = pSource->m_3dSubtitleDepth;
++
+         if(pOverlay->IsOverlayType(DVDOVERLAY_TYPE_GROUP))
+           overlays.insert(overlays.end(),
+                           static_cast<CDVDOverlayGroup&>(*pOverlay).m_overlays.begin(),

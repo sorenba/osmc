@@ -1,0 +1,22 @@
+diff --git a/xbmc/CMakeLists.txt b/xbmc/CMakeLists.txt
+index b7c838b3da..70c96fd319 100644
+--- a/xbmc/CMakeLists.txt
++++ b/xbmc/CMakeLists.txt
+@@ -16,6 +16,8 @@ set(SOURCES AutoSwitch.cpp
+             LangInfo.cpp
+             MediaSource.cpp
+             NfoFile.cpp
++            OSMCSecureOS.cpp
++            OSMCHelper.cpp
+             PasswordManager.cpp
+             PlayListPlayer.cpp
+             PartyModeManager.cpp
+@@ -58,6 +60,8 @@ set(HEADERS AutoSwitch.h
+             LockType.h
+             MediaSource.h
+             NfoFile.h
++            OSMCSecureOS.h
++	    OSMCHelper.h
+             PartyModeManager.h
+             PasswordManager.h
+             PlayListPlayer.h

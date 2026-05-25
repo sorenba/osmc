@@ -1,0 +1,23 @@
+diff --git a/xbmc/windowing/WinSystem.h b/xbmc/windowing/WinSystem.h
+index 88218db9e0..a119ccd2d7 100644
+--- a/xbmc/windowing/WinSystem.h
++++ b/xbmc/windowing/WinSystem.h
+@@ -219,6 +219,7 @@ public:
+   static const char* SETTING_WINSYSTEM_IS_HDR_DISPLAY;
+   virtual float GetGuiSdrPeakLuminance() const { return .0f; }
+   virtual bool HasSystemSdrPeakLuminance() { return false; }
++  virtual bool IsDolbyVisionOutput() const { return false; }
+ 
+   /*!
+    * \brief System supports Video Super Resolution HW upscaler i.e.:
+@@ -235,6 +236,10 @@ public:
+ 
+   virtual std::vector<std::string> GetConnectedOutputs() { return {}; }
+ 
++  // Other than GetFPS from GraphicContext, it does not block access by using a mutex. The refresh rate
++  // is only set during initialization (CreateNewWindow) when GetFPS() isn't called from other threads.
++  virtual inline float GetFPS() const { return m_fRefreshRate; }
++
+   /*!
+    * \brief Return true when HDR display is available and enabled in settings
+    *

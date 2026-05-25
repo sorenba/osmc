@@ -1,0 +1,12 @@
+diff --git a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxClient.cpp b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxClient.cpp
+index 0cdf8c3864..0f82d44372 100644
+--- a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxClient.cpp
++++ b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxClient.cpp
+@@ -697,6 +697,7 @@ bool CDVDDemuxClient::SeekTime(double timems, bool backwards, double *startpts)
+ {
+   if (m_IDemux)
+   {
++    CLog::Log(LOGDEBUG, LOGVIDEO, "CDVDDemuxClient::SeekTime: {:.3f}", timems / 1000.0);
+     m_displayTime = 0;
+     m_dtsAtDisplayTime = DVD_NOPTS_VALUE;
+     return m_IDemux->SeekTime(timems, backwards, startpts);

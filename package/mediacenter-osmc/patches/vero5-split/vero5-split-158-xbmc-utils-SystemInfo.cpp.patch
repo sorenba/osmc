@@ -1,0 +1,14 @@
+diff --git a/xbmc/utils/SystemInfo.cpp b/xbmc/utils/SystemInfo.cpp
+index 4bf6f3f447..12a95c118a 100644
+--- a/xbmc/utils/SystemInfo.cpp
++++ b/xbmc/utils/SystemInfo.cpp
+@@ -55,6 +55,9 @@ using namespace winrt::Windows::System::Profile;
+ #include <androidjni/Build.h>
+ #include <androidjni/Context.h>
+ #include <androidjni/PackageManager.h>
++#if defined(HAS_LIBAMCODEC)
++#include "utils/AMLUtils.h"
++#endif
+ #endif
+ 
+ /* Platform identification */

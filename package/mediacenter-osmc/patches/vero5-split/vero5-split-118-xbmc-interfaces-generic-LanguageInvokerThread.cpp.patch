@@ -1,0 +1,20 @@
+diff --git a/xbmc/interfaces/generic/LanguageInvokerThread.cpp b/xbmc/interfaces/generic/LanguageInvokerThread.cpp
+index 67f3d14875..d2d785ef4c 100644
+--- a/xbmc/interfaces/generic/LanguageInvokerThread.cpp
++++ b/xbmc/interfaces/generic/LanguageInvokerThread.cpp
+@@ -60,6 +60,8 @@ bool CLanguageInvokerThread::execute(const std::string &script, const std::vecto
+ 
+   //Todo wait until running
+ 
++  SetPriority(ThreadPriority::BELOW_NORMAL);
++
+   return true;
+ }
+ 
+@@ -130,4 +132,4 @@ void CLanguageInvokerThread::OnException()
+ 
+   m_invoker->onExecutionFailed();
+   m_invocationManager->OnExecutionDone(GetId());
+-}
+\ No newline at end of file
++}

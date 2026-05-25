@@ -1,0 +1,57 @@
+diff --git a/xbmc/settings/VeroSettings.h b/xbmc/settings/VeroSettings.h
+new file mode 100644
+index 0000000000..d710f7594e
+--- /dev/null
++++ b/xbmc/settings/VeroSettings.h
+@@ -0,0 +1,51 @@
++/*
++ *  (c) 2025 OSMC
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#pragma once
++
++#include "settings/lib/ISettingCallback.h"
++
++#include <map>
++#include <string>
++
++class CSettings;
++
++class VeroSettings : public ISettingCallback
++{
++public:
++  static constexpr const char *SETTING_VIDEOSCREEN_FORCERGB        = "videoscreen.forcergb";
++  static constexpr const char *SETTING_VIDEOSCREEN_LOCKHPD         = "videoscreen.lockhpd";
++  static constexpr const char *SETTING_VIDEOSCREEN_MUTEHDMI        = "videoscreen.mutehdmi";
++  static constexpr const char *SETTING_VIDEOSCREEN_FORCE422        = "videoscreen.force422";
++  static constexpr const char *SETTING_VIDEOSCREEN_MAXLUM          = "videoscreen.maxlum";
++  static constexpr const char *SETTING_VIDEOSCREEN_LIMITEDRANGEAML = "videoscreen.limitedrangeaml";
++  static constexpr const char *SETTING_VIDEOSCREEN_HDRCAPS         = "videoscreen.hdrcaps";
++
++  static constexpr const char *SETTING_VIDEOPLAYER_HDR_PROCESS     = "videoplayer.amlhdrmodes";
++  static constexpr const char *SETTING_VIDEOPLAYER_USEAMCODEC      = "videoplayer.useamcodec";
++  static constexpr const char *SETTING_VIDEOPLAYER_USEAMCODECMPEG2 = "videoplayer.useamcodecmpeg2";
++  static constexpr const char *SETTING_VIDEOPLAYER_USEAMCODECMPEG4 = "videoplayer.useamcodecmpeg4";
++  static constexpr const char *SETTING_VIDEOPLAYER_USEAMCODECH264  = "videoplayer.useamcodech264";
++  static constexpr const char *SETTING_VIDEOPLAYER_USEAMCODECAV1   = "videoplayer.useamcodecav1";
++
++private:
++  std::shared_ptr<CSettings> m_settings;
++  std::map<const std::string, bool (VeroSettings::*)()> m_settingsMap;
++
++  bool OnLimitedRangeChanged();
++  bool OnForce422Changed();
++  bool OnForceRgbChanged();
++  bool OnLockHpdChanged();
++  bool OnMaxLumChanged();
++  bool OnHdrCapsChanged();
++
++  bool OnSettingChanging(const std::shared_ptr<const CSetting> &setting) override;
++
++public:
++  VeroSettings();
++  virtual ~VeroSettings();
++};

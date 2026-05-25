@@ -1,0 +1,16 @@
+diff --git a/xbmc/addons/kodi-dev-kit/include/kodi/c-api/addon-instance/inputstream/demux_packet.h b/xbmc/addons/kodi-dev-kit/include/kodi/c-api/addon-instance/inputstream/demux_packet.h
+index 79686abc9b..84aa11512c 100644
+--- a/xbmc/addons/kodi-dev-kit/include/kodi/c-api/addon-instance/inputstream/demux_packet.h
++++ b/xbmc/addons/kodi-dev-kit/include/kodi/c-api/addon-instance/inputstream/demux_packet.h
+@@ -98,6 +98,11 @@ extern "C"
+ 
+     //------------------------------------------
+ 
++    /// @brief The 3D MVC subtitle plane
++    int subtitlePlane;
++
++    //------------------------------------------
++
+     /// @brief Optional data to allow decryption at processing site if
+     /// necessary.
+     ///

@@ -1,0 +1,51 @@
+diff --git a/xbmc/windowing/GraphicContext.h b/xbmc/windowing/GraphicContext.h
+index 0c5201f1e7..cb8bf71bd4 100644
+--- a/xbmc/windowing/GraphicContext.h
++++ b/xbmc/windowing/GraphicContext.h
+@@ -29,11 +29,19 @@
+ #define D3DPRESENTFLAG_PROGRESSIVE  4
+ #define D3DPRESENTFLAG_MODE3DSBS    8
+ #define D3DPRESENTFLAG_MODE3DTB    16
++#define D3DPRESENTFLAG_MODE3DFP    32
++#define D3DPRESENTFLAG_MODE3DFSBS  0x4000000
++#define D3DPRESENTFLAG_MODE3DFTAB  0x8000000
+ 
+ /* what types are important for mode setting */
+ #define D3DPRESENTFLAG_MODEMASK ( D3DPRESENTFLAG_INTERLACED \
+                                   | D3DPRESENTFLAG_MODE3DSBS  \
+-                                  | D3DPRESENTFLAG_MODE3DTB   )
++                                  | D3DPRESENTFLAG_MODE3DTB   \
++                                  | D3DPRESENTFLAG_MODE3DFP   )
++/* 3D modes only */
++#define D3DPRESENTFLAG_MODE3DMASK (D3DPRESENTFLAG_MODE3DSBS \
++                                   | D3DPRESENTFLAG_MODE3DTB \
++                                   | D3DPRESENTFLAG_MODE3DFP)
+ 
+ enum VIEW_TYPE { VIEW_TYPE_NONE = 0,
+                  VIEW_TYPE_LIST,
+@@ -82,7 +90,6 @@ public:
+ 
+   void Flip(bool rendered, bool videoLayer);
+ 
+-  // gfx context interface
+   int GetWidth() const;
+   int GetHeight() const;
+   bool SetViewPort(float fx, float fy , float fwidth, float fheight, bool intersectPrevious = false);
+@@ -101,6 +108,9 @@ public:
+   void ApplyStateBlock();
+   void Clear(UTILS::COLOR::Color color = 0);
+   void GetAllowedResolutions(std::vector<RESOLUTION> &res);
++  uint32_t ConvertRenderStereoModeToMode3dFlags(RENDER_STEREO_MODE stereo_mode) const;
++  RENDER_STEREO_MODE ConvertMode3dFlagsToRenderStereoMode(uint32_t mode3dFlags) const;
++  RENDER_STEREO_MODE GetRenderStereoModeFromResolution(RESOLUTION resolution) const;
+ 
+   /* \brief Get UI scaling information from a given resolution to the screen resolution.
+    Takes account of overscan and UI zooming.
+@@ -198,6 +208,7 @@ protected:
+   bool m_bCalibrating = false;
+   RESOLUTION m_Resolution = RES_INVALID;
+   float m_fFPSOverride = 0.0f;
++  bool m_dvOutput = false;
+ 
+   RESOLUTION_INFO m_windowResolution;
+   std::stack<CPoint> m_cameras;

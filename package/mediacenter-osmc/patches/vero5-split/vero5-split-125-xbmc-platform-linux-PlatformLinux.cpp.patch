@@ -1,0 +1,24 @@
+diff --git a/xbmc/platform/linux/PlatformLinux.cpp b/xbmc/platform/linux/PlatformLinux.cpp
+index e01f8216bf..9aa8f20ce6 100644
+--- a/xbmc/platform/linux/PlatformLinux.cpp
++++ b/xbmc/platform/linux/PlatformLinux.cpp
+@@ -36,6 +36,9 @@
+ #if defined(HAVE_GBM)
+ #include "windowing/gbm/WinSystemGbmGLESContext.h"
+ #endif
++#if defined(HAS_LIBAMCODEC)
++#include "windowing/amlogic/WinSystemAmlogicGLESContext.h"
++#endif
+ #endif
+ 
+ #if defined(HAS_GL)
+@@ -77,6 +80,9 @@ bool CPlatformLinux::InitStageOne()
+ #if defined(HAVE_GBM)
+   KODI::WINDOWING::GBM::CWinSystemGbmGLESContext::Register();
+ #endif
++#if defined(HAS_LIBAMCODEC)
++  KODI::WINDOWING::AML::CWinSystemAmlogicGLESContext::Register();
++#endif
+ #endif
+ 
+ #if defined(HAS_GL)

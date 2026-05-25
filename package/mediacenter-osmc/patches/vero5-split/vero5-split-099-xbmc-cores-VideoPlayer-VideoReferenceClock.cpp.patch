@@ -1,0 +1,17 @@
+diff --git a/xbmc/cores/VideoPlayer/VideoReferenceClock.cpp b/xbmc/cores/VideoPlayer/VideoReferenceClock.cpp
+index 236db07780..06d537f32a 100644
+--- a/xbmc/cores/VideoPlayer/VideoReferenceClock.cpp
++++ b/xbmc/cores/VideoPlayer/VideoReferenceClock.cpp
+@@ -46,8 +46,10 @@ CVideoReferenceClock::~CVideoReferenceClock()
+ 
+ void CVideoReferenceClock::Start()
+ {
+-  if(CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_VIDEOPLAYER_USEDISPLAYASCLOCK) && !IsRunning())
+-    Create();
++  //if(CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_VIDEOPLAYER_USEDISPLAYASCLOCK) && !IsRunning())
++    //Create();
++  /* We don't use this on AML */
++  return;
+ }
+ 
+ void CVideoReferenceClock::UpdateClock(int NrVBlanks, uint64_t time)

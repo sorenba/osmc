@@ -1,0 +1,24 @@
+diff --git a/xbmc/settings/CMakeLists.txt b/xbmc/settings/CMakeLists.txt
+index d477f51d5d..fb703ddb1e 100644
+--- a/xbmc/settings/CMakeLists.txt
++++ b/xbmc/settings/CMakeLists.txt
+@@ -18,7 +18,8 @@ set(SOURCES AdvancedSettings.cpp
+             SettingUtils.cpp
+             SkinSettings.cpp
+             SettingsComponent.cpp
+-            SubtitlesSettings.cpp)
++            SubtitlesSettings.cpp
++            VeroSettings.cpp)
+ 
+ set(HEADERS AdvancedSettings.h
+             DiscSettings.h
+@@ -42,7 +43,8 @@ set(HEADERS AdvancedSettings.h
+             SettingUtils.h
+             SkinSettings.h
+             SettingsComponent.h
+-            SubtitlesSettings.h)
++            SubtitlesSettings.h
++            VeroSettings.h)
+ 
+ if(BLURAY_FOUND)
+   list(APPEND SOURCES DiscSettings.cpp)

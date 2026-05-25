@@ -1,0 +1,12 @@
+diff --git a/cmake/scripts/android/ArchSetup.cmake b/cmake/scripts/android/ArchSetup.cmake
+index 935af74930..d32a359cfb 100644
+--- a/cmake/scripts/android/ArchSetup.cmake
++++ b/cmake/scripts/android/ArchSetup.cmake
+@@ -36,6 +36,7 @@ endif()
+ list(APPEND SYSTEM_DEFINES -DHAS_ZEROCONF)
+ 
+ set(ENABLE_X11 OFF CACHE BOOL "" FORCE)
++set(ENABLE_AML OFF CACHE BOOL "" FORCE)
+ set(ENABLE_OPTICAL OFF CACHE BOOL "" FORCE)
+ set(ENABLE_MDNS OFF CACHE BOOL "" FORCE)
+ 

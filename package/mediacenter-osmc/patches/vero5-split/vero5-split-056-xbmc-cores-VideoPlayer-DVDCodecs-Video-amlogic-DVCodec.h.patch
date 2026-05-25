@@ -1,0 +1,43 @@
+diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/DVCodec.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/DVCodec.h
+new file mode 100644
+index 0000000000..dfadd027f9
+--- /dev/null
++++ b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/DVCodec.h
+@@ -0,0 +1,37 @@
++/*
++ *  Copyright (C) 2024 OSMC
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#pragma once
++
++#include "AMLInsecureVideoCodec.h"
++
++
++class amlogic::DVCodec : public amlogic::AMLInsecureVideoCodec
++{
++private:
++	bool m_player_supports_dv;
++	bool m_dv_enabled;
++
++protected:
++	virtual inline bool isDolbyVisionSupported() const {
++		return m_player_supports_dv;
++	}
++
++	virtual bool isDisplaySupportsDolbyVision() const;
++
++	virtual void setupVideoCodecParams(aml_generic_param &params) const;
++	virtual void closeAmlVideo();
++
++	virtual void setDualLayerSupport(bool on=true) const;
++	virtual bool setVideoRect(const CRect &SrcRect, const CRect &DestRect);
++private:
++	void setupDolbyVision(const CDVDStreamInfo &hints);
++
++public:
++	DVCodec(CProcessInfo &processInfo, const CDVDStreamInfo &hints);
++	virtual ~DVCodec();
++};

@@ -1,0 +1,8 @@
+diff --git a/cmake/platform/linux/aml.cmake b/cmake/platform/linux/aml.cmake
+new file mode 100644
+index 0000000000..4206c283e2
+--- /dev/null
++++ b/cmake/platform/linux/aml.cmake
+@@ -0,0 +1,2 @@
++list(APPEND PLATFORM_REQUIRED_DEPS OpenGLES AML EGL LibInput Xkbcommon)
++set(APP_RENDER_SYSTEM gles)

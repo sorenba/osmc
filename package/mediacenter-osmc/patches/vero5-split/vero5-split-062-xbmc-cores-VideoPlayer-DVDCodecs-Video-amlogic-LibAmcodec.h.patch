@@ -1,0 +1,107 @@
+diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/LibAmcodec.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/LibAmcodec.h
+new file mode 100644
+index 0000000000..00b8e6e8f6
+--- /dev/null
++++ b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/LibAmcodec.h
+@@ -0,0 +1,101 @@
++/*
++ *  Copyright (C) 2005-2022 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#pragma once
++
++#include <stdint.h>
++
++extern "C" {
++	#include <amcodec/codec.h>
++}
++
++#include "namespace.h"
++
++typedef enum {
++	VIDEO_MODE_3D_MVC_FP = 1,
++	VIDEO_MODE_3D_MVC_SBS = 2,
++	VIDEO_MODE_3D_MVC_HTAB = 3,
++	VIDEO_MODE_3D_MVC_MONO = 4
++} video_mode_3d_t;
++
++typedef enum {
++	VIDEO_INPUT_MODE_2D = 1,
++	VIDEO_INPUT_MODE_HSBS = 2,
++	VIDEO_INPUT_MODE_HTAB = 3,
++	VIDEO_INPUT_MODE_FSBS = 4,
++	VIDEO_INPUT_MODE_FTAB = 5,
++	VIDEO_INPUT_MODE_MVC = 6
++} video_input_mode;
++
++typedef enum {
++	VIDEO_OUTPUT_MODE_2D = 1,
++	VIDEO_OUTPUT_MODE_HSBS = 2,
++	VIDEO_OUTPUT_MODE_HTAB = 3,
++	VIDEO_OUTPUT_MODE_FP = 4
++} video_output_mode;
++
++typedef struct {
++	bool noblock;
++	int video_pid;
++	int video_type;
++	enum FRAME_BASE_VIDEO_PATH video_path;
++	stream_type_t stream_type;
++	decoder_type_t decoder_type;
++	display_mode_type_t display_mode;
++	unsigned int format;
++	unsigned int width;
++	unsigned int height;
++	unsigned int rate;
++	unsigned int extra;
++	unsigned int status;
++	unsigned int ratio;
++	unsigned long long ratio64;
++	void *param;
++	int config_len;
++	char *config;
++	bool use_dv_vpath;
++} aml_generic_param;
++
++class amlogic::LibAmcodec
++{
++private:
++	DllLibAmCodec	*m_dll;
++	codec_para_t	*m_codec;
++
++public:
++	LibAmcodec();
++	virtual ~LibAmcodec();
++
++	bool inline isValid() const { return m_dll != nullptr; }
++
++	int init(const aml_generic_param &gparam);
++	int close();
++
++	int pause();
++	int reset();
++	int write(unsigned char *buf, unsigned int size);
++	int poll(unsigned int timeoutMs);
++
++	int getVbufState(struct buf_status &bs) const;
++	int getVdecState(struct vdec_status &vs) const;
++	int getVdecInfo(struct vdec_info &vi) const;
++	bool isVCodecBuffering() const;
++
++	int checkinPts64(uint64_t pts64);
++
++	void setLogCallback(void (*logf)(const char *, ...));
++	int setControlMode(unsigned int mode);
++	int setControlAvThreshold(unsigned int threshold);
++	int setControlSyncThreshold(unsigned int threshold);
++	int setVideoDelayLimitedMs(int delay);
++	int set3dVideoMode(video_mode_3d_t mode);
++	int setVideoMode(video_input_mode vimode, video_output_mode vomode, bool leftEyeFirst);
++	int setHdr10pMetadata(unsigned char *metadata, int metadata_length);
++	void setNoBlockMode(bool noblock);
++	void setStreamType(stream_type_t type);
++};

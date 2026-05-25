@@ -1,0 +1,29 @@
+diff --git a/xbmc/platform/linux/ScreenshotSurfaceAML.h b/xbmc/platform/linux/ScreenshotSurfaceAML.h
+new file mode 100644
+index 0000000000..49ee74c757
+--- /dev/null
++++ b/xbmc/platform/linux/ScreenshotSurfaceAML.h
+@@ -0,0 +1,23 @@
++/*
++ *  Copyright (C) 2005-2018 Team Kodi
++ *  Copyright (C) 2020-present Team CoreELEC (https://coreelec.org)
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#pragma once
++
++#include "utils/IScreenshotSurface.h"
++
++#include <memory>
++
++class CScreenshotSurfaceAML : public IScreenshotSurface
++{
++public:
++  static void Register();
++  static std::unique_ptr<IScreenshotSurface> CreateSurface();
++
++  bool Capture() override;
++};

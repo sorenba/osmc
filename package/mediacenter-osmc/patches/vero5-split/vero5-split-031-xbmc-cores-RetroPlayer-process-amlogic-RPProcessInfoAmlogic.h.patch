@@ -1,0 +1,36 @@
+diff --git a/xbmc/cores/RetroPlayer/process/amlogic/RPProcessInfoAmlogic.h b/xbmc/cores/RetroPlayer/process/amlogic/RPProcessInfoAmlogic.h
+new file mode 100644
+index 0000000000..007915d750
+--- /dev/null
++++ b/xbmc/cores/RetroPlayer/process/amlogic/RPProcessInfoAmlogic.h
+@@ -0,0 +1,30 @@
++/*
++ *  Copyright (C) 2017-2018 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#pragma once
++
++#include "cores/RetroPlayer/process/RPProcessInfo.h"
++
++namespace KODI
++{
++namespace RETRO
++{
++  class CRPProcessInfoAmlogic : public CRPProcessInfo
++  {
++  public:
++    CRPProcessInfoAmlogic();
++
++    static std::unique_ptr<CRPProcessInfo> Create();
++    static void Register();
++
++    // Implementation of CRPProcessInfo
++    void ConfigureRenderSystem(AVPixelFormat format) override;
++
++  };
++}
++}

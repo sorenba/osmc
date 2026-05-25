@@ -1,0 +1,18 @@
+diff --git a/xbmc/platform/linux/storage/UDevProvider.cpp b/xbmc/platform/linux/storage/UDevProvider.cpp
+index 2d94c39daa..58e17c1882 100644
+--- a/xbmc/platform/linux/storage/UDevProvider.cpp
++++ b/xbmc/platform/linux/storage/UDevProvider.cpp
+@@ -142,6 +142,13 @@ void CUDevProvider::GetDisks(VECSOURCES& disks, bool removable)
+ 
+    // filter out osmc boot partition
+    if (strcmp(mountpoint, "/boot") == 0)
++   {
++      udev_device_unref(device);
++      continue;
++   }
++
++   // filter out tee partition
++   if (strcmp(mountpoint, "/tee") == 0)
+    {
+       udev_device_unref(device);
+       continue;

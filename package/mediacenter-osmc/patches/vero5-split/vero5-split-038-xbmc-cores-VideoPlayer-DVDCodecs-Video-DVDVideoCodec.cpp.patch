@@ -1,0 +1,13 @@
+diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodec.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodec.cpp
+index d8554d33b6..c6bad23ed8 100644
+--- a/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodec.cpp
++++ b/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodec.cpp
+@@ -46,6 +46,8 @@ void VideoPicture::Reset()
+   colorBits = 8;
+   stereoMode.clear();
+ 
++  m_3dSubtitleDepth = 0;
++
+   qp_table = nullptr;
+   qstride = 0;
+   qscale_type = 0;

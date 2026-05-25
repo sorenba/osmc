@@ -1,0 +1,17 @@
+diff --git a/xbmc/cores/VideoPlayer/DVDInputStreams/CMakeLists.txt b/xbmc/cores/VideoPlayer/DVDInputStreams/CMakeLists.txt
+index 576ddda150..26ccf8f434 100644
+--- a/xbmc/cores/VideoPlayer/DVDInputStreams/CMakeLists.txt
++++ b/xbmc/cores/VideoPlayer/DVDInputStreams/CMakeLists.txt
+@@ -31,8 +31,10 @@ set(HEADERS BlurayStateSerializer.h
+             InputStreamPVRRecording.h)
+ 
+ if(BLURAY_FOUND)
+-  list(APPEND SOURCES DVDInputStreamBluray.cpp)
+-  list(APPEND HEADERS DVDInputStreamBluray.h)
++  list(APPEND SOURCES DVDInputStreamBluray.cpp
++                      DVDInputStreamBlurayExtension.cpp)
++  list(APPEND HEADERS DVDInputStreamBluray.h
++                      DVDInputStreamBlurayExtension.h)
+ endif()
+ 
+ core_add_library(dvdinputstreams)
