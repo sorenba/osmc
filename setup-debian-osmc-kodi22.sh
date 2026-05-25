@@ -13,6 +13,14 @@ if [ "${EUID}" -eq 0 ]; then
     exit 1
 fi
 
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    repo_root="$(git rev-parse --show-toplevel)"
+    cd "${repo_root}"
+    git pull --ff-only
+else
+    echo "Warning: not running inside a Git checkout; skipping git pull."
+fi
+
 if [ -r /etc/os-release ]; then
     . /etc/os-release
     DEBIAN_VERSION_ID="${VERSION_ID:-unknown}"
