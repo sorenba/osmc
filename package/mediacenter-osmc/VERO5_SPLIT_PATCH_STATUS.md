@@ -14,8 +14,8 @@ patch --batch --forward -p1 < split.patch
 Only patches that passed dry-run were applied before testing the next split patch. This preserves order as much as possible.
 
 Total split patches: 173
-Working split patches: 161
-Needs work: 12
+Working split patches: 164
+Needs work: 9
 
 ## Fixed after initial split test
 
@@ -28,6 +28,10 @@ Needs work: 12
   - Updated for Kodi 22 code movement.
   - Kept Application.cpp changes in this split file and added the AML resize handler in `ApplicationMessageHandling.cpp`.
   - Updated stereo mode enum naming to `RenderStereoMode`.
+  - Dry-run passed locally.
+
+- `vero5-split-025-xbmc-cores-AudioEngine-Sinks-AESinkAUDIOTRACK.cpp.patch`
+  - Updated Kodi 22 context for Android AudioTrack passthrough and AML old-mode handling.
   - Dry-run passed locally.
 
 - `vero5-split-028-xbmc-cores-RetroPlayer-process-RPProcessInfo.h.patch`
@@ -59,6 +63,10 @@ Needs work: 12
   - Regenerated hunk counts so Linux `patch` accepts it.
   - Dry-run passed locally.
 
+- `vero5-split-115-xbmc-guilib-GUITextLayout.cpp.patch`
+  - Reduced to the Kodi 22-specific width calculation fixes that were still needed.
+  - Dry-run passed locally.
+
 - `vero5-split-118-xbmc-interfaces-generic-LanguageInvokerThread.cpp.patch`
   - Removed obsolete trailing-newline-only hunk.
   - Kept the thread priority change.
@@ -88,6 +96,10 @@ Needs work: 12
   - Updated hunk context for Kodi 22 `GetStringFromRes(...)` helper.
   - Dry-run passed locally.
 
+- `vero5-split-146-xbmc-utils-BitstreamConverter.h.patch`
+  - Updated hunk context for Kodi 22 bitstream converter declarations.
+  - Dry-run passed locally.
+
 - `vero5-split-150-xbmc-utils-EGLUtils.cpp.patch`
   - Updated for Kodi 22 `make_map` and `std::string_view` EGL utility code.
   - Keeps the original intent of removing EGL debug setup and no-config-context usage.
@@ -103,17 +115,11 @@ Needs work: 12
 - `vero5-split-010-system-settings-settings.xml.patch`
   - Fails 3 of 14 hunks in `system/settings/settings.xml`.
 
-- `vero5-split-025-xbmc-cores-AudioEngine-Sinks-AESinkAUDIOTRACK.cpp.patch`
-  - Fails 1 of 9 hunks.
-
 - `vero5-split-076-xbmc-cores-VideoPlayer-DVDDemuxers-DVDDemuxFFmpeg.cpp.patch`
   - Fails 2 of 26 hunks.
 
 - `vero5-split-096-xbmc-cores-VideoPlayer-VideoPlayer.cpp.patch`
   - Fails 3 of 16 hunks.
-
-- `vero5-split-115-xbmc-guilib-GUITextLayout.cpp.patch`
-  - Fails 1 hunk.
 
 - `vero5-split-116-xbmc-guilib-StereoscopicsManager.cpp.patch`
   - Fails 3 of 6 hunks.
@@ -123,9 +129,6 @@ Needs work: 12
 
 - `vero5-split-145-xbmc-utils-BitstreamConverter.cpp.patch`
   - Fails 5 of 8 hunks.
-
-- `vero5-split-146-xbmc-utils-BitstreamConverter.h.patch`
-  - Fails 1 hunk.
 
 - `vero5-split-161-xbmc-windowing-GraphicContext.cpp.patch`
   - Fails 2 of 12 hunks.
@@ -138,4 +141,4 @@ Needs work: 12
 
 ## Working split patches
 
-The remaining 161 split patches either applied during the initial full split test or were fixed afterward and dry-run validated locally.
+The remaining 164 split patches either applied during the initial full split test or were fixed afterward and dry-run validated locally.
