@@ -25,7 +25,7 @@ install_armv7_toolchain_direct() {
         for suffix in Packages Packages.gz; do
             url="${OSMC_APT_BASE_URL}/dists/bullseye-devel/main/binary-${arch}/${suffix}"
             raw_file="${tmp_dir}/${arch}-${suffix}"
-            parsed_file="${tmp_dir}/${arch}-Packages"
+            parsed_file="${tmp_dir}/${arch}-${suffix}.parsed"
 
             if ! wget -qO "${raw_file}" "${url}"; then
                 continue
@@ -34,7 +34,7 @@ install_armv7_toolchain_direct() {
             if [ "${suffix}" = "Packages.gz" ]; then
                 gzip -dc "${raw_file}" > "${parsed_file}"
             else
-                cp "${raw_file}" "${parsed_file}"
+                parsed_file="${raw_file}"
             fi
 
             package_file="$(awk '
