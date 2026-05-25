@@ -30,6 +30,9 @@ if [ "${DEBIAN_VERSION_ID}" = "13" ]; then
 fi
 
 sudo -v
+
+echo "${OSMC_REPO_LINE}" | sudo tee "${OSMC_LIST}" > /dev/null
+
 sudo apt update
 sudo apt install -y ca-certificates gnupg dirmngr wget git build-essential fakeroot devscripts equivs rsync texinfo libncurses-dev whois bc cpio python3 python-is-python3 bison flex libssl-dev unzip xz-utils subversion qemu-user qemu-user-static binfmt-support
 
@@ -66,8 +69,10 @@ gpg --homedir "${tmp_gnupg}" --batch --keyserver hkps://keyserver.ubuntu.com --r
 gpg --homedir "${tmp_gnupg}" --batch --export "${OSMC_KEY}" | sudo gpg --dearmor --yes -o "${OSMC_KEYRING}"
 sudo chmod 644 "${OSMC_KEYRING}"
 
-echo "${OSMC_REPO_LINE}" | sudo tee "${OSMC_LIST}" > /dev/null
-sudo apt update
+if [ "${DEBIAN_VERSION_ID}" != "13" ]; then
+    echo "${OSMC_REPO_LINE}" | sudo tee "${OSMC_LIST}" > /dev/null
+    sudo apt update
+fi
 
 if ! apt-cache policy armv7-toolchain-osmc | grep -q 'Candidate:'; then
     echo "armv7-toolchain-osmc was not found in APT metadata. Check ${OSMC_LIST}."
