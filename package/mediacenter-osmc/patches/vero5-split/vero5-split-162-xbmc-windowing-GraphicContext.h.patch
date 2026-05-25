@@ -1,8 +1,7 @@
 diff --git a/xbmc/windowing/GraphicContext.h b/xbmc/windowing/GraphicContext.h
-index 0c5201f1e7..cb8bf71bd4 100644
 --- a/xbmc/windowing/GraphicContext.h
 +++ b/xbmc/windowing/GraphicContext.h
-@@ -29,11 +29,19 @@
+@@ -24,11 +24,19 @@
  #define D3DPRESENTFLAG_PROGRESSIVE  4
  #define D3DPRESENTFLAG_MODE3DSBS    8
  #define D3DPRESENTFLAG_MODE3DTB    16
@@ -23,7 +22,7 @@ index 0c5201f1e7..cb8bf71bd4 100644
  
  enum VIEW_TYPE { VIEW_TYPE_NONE = 0,
                   VIEW_TYPE_LIST,
-@@ -82,7 +90,6 @@ public:
+@@ -84,7 +92,6 @@
  
    void Flip(bool rendered, bool videoLayer);
  
@@ -31,17 +30,17 @@ index 0c5201f1e7..cb8bf71bd4 100644
    int GetWidth() const;
    int GetHeight() const;
    bool SetViewPort(float fx, float fy , float fwidth, float fheight, bool intersectPrevious = false);
-@@ -101,6 +108,9 @@ public:
-   void ApplyStateBlock();
-   void Clear(UTILS::COLOR::Color color = 0);
+@@ -112,6 +119,9 @@
+    */
+   void Clear(KODI::UTILS::COLOR::Color color);
    void GetAllowedResolutions(std::vector<RESOLUTION> &res);
-+  uint32_t ConvertRenderStereoModeToMode3dFlags(RENDER_STEREO_MODE stereo_mode) const;
-+  RENDER_STEREO_MODE ConvertMode3dFlagsToRenderStereoMode(uint32_t mode3dFlags) const;
-+  RENDER_STEREO_MODE GetRenderStereoModeFromResolution(RESOLUTION resolution) const;
- 
-   /* \brief Get UI scaling information from a given resolution to the screen resolution.
-    Takes account of overscan and UI zooming.
-@@ -198,6 +208,7 @@ protected:
++  uint32_t ConvertRenderStereoModeToMode3dFlags(RenderStereoMode stereo_mode) const;
++  RenderStereoMode ConvertMode3dFlagsToRenderStereoMode(uint32_t mode3dFlags) const;
++  RenderStereoMode GetRenderStereoModeFromResolution(RESOLUTION resolution) const;
+   /*! \brief Sets the direction of the current rendering pass.
+    \param renderOrder direction of the pass
+    */
+@@ -235,6 +245,7 @@
    bool m_bCalibrating = false;
    RESOLUTION m_Resolution = RES_INVALID;
    float m_fFPSOverride = 0.0f;
