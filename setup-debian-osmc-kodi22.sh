@@ -15,73 +15,21 @@ install_armv7_toolchain_direct() {
         return
     fi
 
-    echo "Installing armv7-toolchain-osmc directly from OSMC package metadata."
-    tmp_dir="$(mktemp -d)"
-    trap 'rm -rf "${tmp_dir}"' RETURN
-
-    package_base_url=""
-    package_file=""
-    for base_url in https://apt.osmc.tv https://ftp.fau.de/osmc/osmc/apt; do
-        for suite in bullseye-devel bullseye jessie; do
-            for arch in amd64 all armhf; do
-                for suffix in Packages Packages.gz; do
-                    url="${base_url}/dists/${suite}/main/binary-${arch}/${suffix}"
-                    safe_name="$(printf '%s' "${base_url}-${suite}-${arch}-${suffix}" | tr -c 'A-Za-z0-9_.-' '_')"
-                    raw_file="${tmp_dir}/${safe_name}"
-                    parsed_file="${tmp_dir}/${safe_name}.parsed"
-
-                    if ! wget -qO "${raw_file}" "${url}"; then
-                        continue
-                    fi
-
-                    if [ "${suffix}" = "Packages.gz" ]; then
-                        if ! gzip -dc "${raw_file}" > "${parsed_file}"; then
-                            continue
-                        fi
-                    else
-                        parsed_file="${raw_file}"
-                    fi
-
-                    package_file="$(awk '
-                        BEGIN { RS=""; FS="\n" }
-                        /^Package: armv7-toolchain-osmc$/ {
-                            for (i = 1; i <= NF; i++) {
-                                if ($i ~ /^Filename: /) {
-                                    sub(/^Filename: /, "", $i)
-                                    print $i
-                                    exit
-                                }
-                            }
-                        }
-                    ' "${parsed_file}")"
-
-                    if [ -n "${package_file}" ]; then
-                        package_base_url="${base_url}"
-                        echo "Found armv7-toolchain-osmc in ${suite} ${arch}."
-                        break 4
-                    fi
-                done
-            done
-        done
-        if [ -n "${package_file}" ]; then
-            break
-        fi
-    done
-
-    if [ -z "${package_file}" ]; then
-        echo "Could not find armv7-toolchain-osmc in OSMC package metadata."
+    if [ ! -x ./toolchains/armv7-toolchain-osmc/build.sh ]; then
+        echo "Cannot find ./toolchains/armv7-toolchain-osmc/build.sh. Run this from the OSMC checkout."
         exit 1
     fi
 
-    case "${package_file}" in
-        http://*|https://*) package_url="${package_file}" ;;
-        /*) package_url="${package_base_url}${package_file}" ;;
-        *) package_url="${package_base_url}/${package_file}" ;;
-    esac
+    echo "Building armv7-toolchain-osmc locally. This can take a while."
+    (cd toolchains/armv7-toolchain-osmc && sudo ./build.sh)
 
-    deb_file="${tmp_dir}/armv7-toolchain-osmc.deb"
-    wget -O "${deb_file}" "${package_url}"
-    sudo apt install -y "${deb_file}"
+    toolchain_deb="$(find toolchains/armv7-toolchain-osmc -maxdepth 1 -name 'armv7-toolchain-osmc*.deb' | sort | tail -n 1)"
+    if [ -z "${toolchain_deb}" ]; then
+        echo "Local armv7-toolchain-osmc build finished, but no .deb was found."
+        exit 1
+    fi
+
+    sudo apt install -y "./${toolchain_deb}"
 }
 
 if [ "${EUID}" -eq 0 ]; then
@@ -129,7 +77,7 @@ fi
 echo "${OSMC_REPO_LINE}" | sudo tee "${OSMC_LIST}" > /dev/null
 
 sudo apt -o Acquire::AllowInsecureRepositories=true -o Acquire::AllowWeakRepositories=true update || true
-sudo apt install -y ca-certificates gnupg dirmngr wget git build-essential fakeroot devscripts equivs rsync texinfo libncurses-dev whois bc cpio python3 python-is-python3 bison flex libssl-dev unzip xz-utils subversion qemu-user qemu-user-static binfmt-support
+sudo apt install -y ca-certificates gnupg dirmngr wget git build-essential fakeroot devscripts equivs rsync texinfo libncurses-dev whois bc cpio python3 python-is-python3 bison flex libssl-dev unzip xz-utils subversion qemu-user qemu-user-static binfmt-support debootstrap
 
 if apt-cache policy qemu | grep -q 'Candidate: (none)'; then
     echo "Creating local dummy qemu package."
@@ -149,13 +97,12 @@ if apt-cache policy qemu | grep -q 'Candidate: (none)'; then
         > qemu-dummy.control
     equivs-build qemu-dummy.control
     sudo apt install -y ./qemu_99_all.deb
+    cd - >/dev/null
 else
     sudo apt install -y qemu
 fi
 
-if [ "${DEBIAN_VERSION_ID}" = "13" ]; then
-    install_armv7_toolchain_direct
-else
+if [ "${DEBIAN_VERSION_ID}" != "13" ]; then
     tmp_gnupg="$(mktemp -d)"
     cleanup() {
         rm -rf "${tmp_gnupg}"
@@ -171,13 +118,16 @@ else
     sudo apt update
 fi
 
-if ! dpkg -s armv7-toolchain-osmc >/dev/null 2>&1 && ! apt-cache policy armv7-toolchain-osmc | grep -q 'Candidate:'; then
-    echo "armv7-toolchain-osmc was not found in APT metadata or installed locally. Check ${OSMC_LIST}."
-    exit 1
+if ! dpkg -s armv7-toolchain-osmc >/dev/null 2>&1 && apt-cache policy armv7-toolchain-osmc | grep -q 'Candidate: (none)'; then
+    install_armv7_toolchain_direct
 fi
 
-if ! dpkg -s armv7-toolchain-osmc >/dev/null 2>&1 && apt-cache policy armv7-toolchain-osmc | grep -q 'Candidate: (none)'; then
-    echo "armv7-toolchain-osmc has no install candidate and is not installed locally. Check ${OSMC_LIST}."
+if ! dpkg -s armv7-toolchain-osmc >/dev/null 2>&1 && apt-cache policy armv7-toolchain-osmc | grep -q 'Candidate:'; then
+    sudo apt install -y armv7-toolchain-osmc
+fi
+
+if ! dpkg -s armv7-toolchain-osmc >/dev/null 2>&1; then
+    echo "armv7-toolchain-osmc is still not installed."
     exit 1
 fi
 
