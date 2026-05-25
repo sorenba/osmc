@@ -1,17 +1,17 @@
 diff --git a/xbmc/settings/AdvancedSettings.cpp b/xbmc/settings/AdvancedSettings.cpp
-index 34dafe7ea7..76518d8db2 100644
+index 058faaf..c3075f1 100644
 --- a/xbmc/settings/AdvancedSettings.cpp
 +++ b/xbmc/settings/AdvancedSettings.cpp
-@@ -424,7 +424,7 @@ void CAdvancedSettings::Initialize()
+@@ -520,7 +520,7 @@ void CAdvancedSettings::Initialize()
    m_pictureExtensions =
-       ".png|.jpg|.jpeg|.bmp|.gif|.ico|.tif|.tiff|.tga|.pcx|.cbz|.zip|.rss|.webp|.jp2|.apng|.avif";
+       ".png|.jpg|.jpeg|.bmp|.gif|.ico|.tif|.tiff|.tga|.pcx|.cbz|.zip|.rss|.webp|.jp2|.apng|.avif|.heif|.heic";
    m_musicExtensions = ".b4s|.nsv|.m4a|.flac|.aac|.strm|.pls|.rm|.rma|.mpa|.wav|.wma|.ogg|.mp3|.mp2|.m3u|.gdm|.imf|.m15|.sfx|.uni|.ac3|.dts|.cue|.aif|.aiff|.wpl|.xspf|.ape|.mac|.mpc|.mp+|.mpp|.shn|.zip|.wv|.dsp|.xsp|.xwav|.waa|.wvs|.wam|.gcm|.idsp|.mpdsp|.mss|.spt|.rsd|.sap|.cmc|.cmr|.dmc|.mpt|.mpd|.rmt|.tmc|.tm8|.tm2|.oga|.url|.pxml|.tta|.rss|.wtv|.mka|.tak|.opus|.dff|.dsf|.m4b|.dtshd";
 -  m_videoExtensions = ".m4v|.3g2|.3gp|.nsv|.tp|.ts|.ty|.strm|.pls|.rm|.rmvb|.mpd|.m3u|.m3u8|.ifo|.mov|.qt|.divx|.xvid|.bivx|.vob|.nrg|.img|.iso|.udf|.pva|.wmv|.asf|.asx|.ogm|.m2v|.avi|.bin|.dat|.mpg|.mpeg|.mp4|.mkv|.mk3d|.avc|.vp3|.svq3|.nuv|.viv|.dv|.fli|.flv|.001|.wpl|.xspf|.zip|.vdr|.dvr-ms|.xsp|.mts|.m2t|.m2ts|.evo|.ogv|.sdp|.avs|.rec|.url|.pxml|.vc1|.h264|.rcv|.rss|.mpls|.mpl|.webm|.bdmv|.bdm|.wtv|.trp|.f4v";
 +  m_videoExtensions = ".m4v|.3g2|.3gp|.nsv|.tp|.ts|.ty|.strm|.pls|.rm|.rmvb|.mpd|.m3u|.m3u8|.ifo|.mov|.qt|.divx|.xvid|.bivx|.vob|.nrg|.img|.iso|.udf|.pva|.wmv|.asf|.asx|.ogm|.m2v|.avi|.bin|.dat|.mpg|.mpeg|.mp4|.mkv|.mk3d|.avc|.vp3|.svq3|.nuv|.viv|.dv|.fli|.flv|.001|.wpl|.xspf|.zip|.vdr|.dvr-ms|.xsp|.mts|.m2t|.m2ts|.evo|.ogv|.sdp|.avs|.rec|.url|.pxml|.vc1|.h264|.rcv|.rss|.mpls|.mpl|.webm|.bdmv|.bdm|.wtv|.trp|.f4v|.ssif";
-   m_subtitlesExtensions = ".utf|.utf8|.utf-8|.sub|.srt|.smi|.rt|.txt|.ssa|.text|.ssa|.aqt|.jss|"
-                           ".ass|.vtt|.idx|.ifo|.zip|.sup";
-   m_discStubExtensions = ".disc";
-@@ -436,6 +436,7 @@ void CAdvancedSettings::Initialize()
+   m_subtitlesExtensions = ".utf|.utf8|.utf-8|.sub|.srt|.smi|.rt|.txt|.ssa|.text|.ssa|.aqt|.jss|."
+                           "ass|.vtt|.idx|.ifo|.zip|.sup";
+   m_archiveExtensions = ".tgz|.tbz2|.xz|.7z|.bz2|.gz|.tar|.rar|.zip";
+@@ -534,6 +534,7 @@ void CAdvancedSettings::Initialize()
    m_stereoscopicregex_3d = "[-. _]3d[-. _]";
    m_stereoscopicregex_sbs = "[-. _]h?sbs[-. _]";
    m_stereoscopicregex_tab = "[-. _]h?tab[-. _]";
@@ -19,11 +19,11 @@ index 34dafe7ea7..76518d8db2 100644
  
    m_logLevelHint = m_logLevel = LOG_LEVEL_NORMAL;
  
-@@ -600,6 +601,7 @@ void CAdvancedSettings::ParseSettingsFile(const std::string &file)
+@@ -693,6 +694,7 @@ void CAdvancedSettings::ParseSettingsFile(const std::string &file)
      XMLUtils::GetString(pElement, "stereoscopicregex3d", m_stereoscopicregex_3d);
      XMLUtils::GetString(pElement, "stereoscopicregexsbs", m_stereoscopicregex_sbs);
      XMLUtils::GetString(pElement, "stereoscopicregextab", m_stereoscopicregex_tab);
 +    XMLUtils::GetString(pElement, "stereoscopicregexmvc", m_stereoscopicregex_mvc);
      XMLUtils::GetFloat(pElement, "subsdelayrange", m_videoSubsDelayRange, 10, 600);
+     XMLUtils::GetFloat(pElement, "subsdelaystep", m_videoSubsDelayStep, 0, 1.0f);
      XMLUtils::GetFloat(pElement, "audiodelayrange", m_videoAudioDelayRange, 10, 600);
-     XMLUtils::GetString(pElement, "defaultplayer", m_videoDefaultPlayer);
