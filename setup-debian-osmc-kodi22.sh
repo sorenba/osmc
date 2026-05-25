@@ -6,8 +6,65 @@ OSMC_KEYRING="/usr/share/keyrings/osmc-archive-keyring.gpg"
 OSMC_LIST="/etc/apt/sources.list.d/osmc.list"
 OSMC_APT_WEAK_CONF="/etc/apt/apt.conf.d/99osmc-allow-weak-repository"
 OSMC_REPO_LINE="deb [signed-by=${OSMC_KEYRING}] https://apt.osmc.tv bullseye-devel main"
+OSMC_APT_BASE_URL="https://ftp.fau.de/osmc/osmc/apt"
 DUMMY_DIR="${HOME}/.cache/osmc-qemu-dummy"
 DEBIAN_VERSION_ID="unknown"
+
+install_armv7_toolchain_direct() {
+    if dpkg -s armv7-toolchain-osmc >/dev/null 2>&1; then
+        echo "armv7-toolchain-osmc is already installed."
+        return
+    fi
+
+    echo "Installing armv7-toolchain-osmc directly from OSMC package metadata."
+    tmp_dir="$(mktemp -d)"
+    trap 'rm -rf "${tmp_dir}"' RETURN
+
+    package_file=""
+    for arch in amd64 all; do
+        for suffix in Packages Packages.gz; do
+            url="${OSMC_APT_BASE_URL}/dists/bullseye-devel/main/binary-${arch}/${suffix}"
+            raw_file="${tmp_dir}/${arch}-${suffix}"
+            parsed_file="${tmp_dir}/${arch}-Packages"
+
+            if ! wget -qO "${raw_file}" "${url}"; then
+                continue
+            fi
+
+            if [ "${suffix}" = "Packages.gz" ]; then
+                gzip -dc "${raw_file}" > "${parsed_file}"
+            else
+                cp "${raw_file}" "${parsed_file}"
+            fi
+
+            package_file="$(awk '
+                BEGIN { RS=""; FS="\n" }
+                /^Package: armv7-toolchain-osmc$/ {
+                    for (i = 1; i <= NF; i++) {
+                        if ($i ~ /^Filename: /) {
+                            sub(/^Filename: /, "", $i)
+                            print $i
+                            exit
+                        }
+                    }
+                }
+            ' "${parsed_file}")"
+
+            if [ -n "${package_file}" ]; then
+                break 2
+            fi
+        done
+    done
+
+    if [ -z "${package_file}" ]; then
+        echo "Could not find armv7-toolchain-osmc in OSMC package metadata."
+        exit 1
+    fi
+
+    deb_file="${tmp_dir}/armv7-toolchain-osmc.deb"
+    wget -O "${deb_file}" "${OSMC_APT_BASE_URL}/${package_file}"
+    sudo apt install -y "${deb_file}"
+}
 
 if [ "${EUID}" -eq 0 ]; then
     echo "Run this as your normal user. The script will use sudo when needed."
@@ -53,7 +110,7 @@ fi
 
 echo "${OSMC_REPO_LINE}" | sudo tee "${OSMC_LIST}" > /dev/null
 
-sudo apt -o Acquire::AllowInsecureRepositories=true -o Acquire::AllowWeakRepositories=true update
+sudo apt -o Acquire::AllowInsecureRepositories=true -o Acquire::AllowWeakRepositories=true update || true
 sudo apt install -y ca-certificates gnupg dirmngr wget git build-essential fakeroot devscripts equivs rsync texinfo libncurses-dev whois bc cpio python3 python-is-python3 bison flex libssl-dev unzip xz-utils subversion qemu-user qemu-user-static binfmt-support
 
 if apt-cache policy qemu | grep -q 'Candidate: (none)'; then
@@ -78,7 +135,9 @@ else
     sudo apt install -y qemu
 fi
 
-if [ "${DEBIAN_VERSION_ID}" != "13" ]; then
+if [ "${DEBIAN_VERSION_ID}" = "13" ]; then
+    install_armv7_toolchain_direct
+else
     tmp_gnupg="$(mktemp -d)"
     cleanup() {
         rm -rf "${tmp_gnupg}"
@@ -94,13 +153,13 @@ if [ "${DEBIAN_VERSION_ID}" != "13" ]; then
     sudo apt update
 fi
 
-if ! apt-cache policy armv7-toolchain-osmc | grep -q 'Candidate:'; then
-    echo "armv7-toolchain-osmc was not found in APT metadata. Check ${OSMC_LIST}."
+if ! dpkg -s armv7-toolchain-osmc >/dev/null 2>&1 && ! apt-cache policy armv7-toolchain-osmc | grep -q 'Candidate:'; then
+    echo "armv7-toolchain-osmc was not found in APT metadata or installed locally. Check ${OSMC_LIST}."
     exit 1
 fi
 
-if apt-cache policy armv7-toolchain-osmc | grep -q 'Candidate: (none)'; then
-    echo "armv7-toolchain-osmc has no install candidate. Check ${OSMC_LIST}."
+if ! dpkg -s armv7-toolchain-osmc >/dev/null 2>&1 && apt-cache policy armv7-toolchain-osmc | grep -q 'Candidate: (none)'; then
+    echo "armv7-toolchain-osmc has no install candidate and is not installed locally. Check ${OSMC_LIST}."
     exit 1
 fi
 
