@@ -13,7 +13,7 @@ diff --git a/xbmc/peripherals/devices/PeripheralCecAdapter.cpp b/xbmc/peripheral
 index 0e05be381b..4f6c3f03a1 100644
 --- a/xbmc/peripherals/devices/PeripheralCecAdapter.cpp
 +++ b/xbmc/peripherals/devices/PeripheralCecAdapter.cpp
-@@ -317,16 +317,6 @@ bool CPeripheralCecAdapter::OpenConnection(void)
+@@ -319,15 +319,6 @@ bool CPeripheralCecAdapter::OpenConnection(void)
    CLog::Log(LOGDEBUG, "{} - opening a connection to the CEC adapter: {}", __FUNCTION__,
              m_strComPort);
  
@@ -29,7 +29,7 @@ index 0e05be381b..4f6c3f03a1 100644
    bool bConnectionFailedDisplayed(false);
  
    while (!m_bStop && !bIsOpen)
-@@ -1674,11 +1664,6 @@ bool CPeripheralCecAdapterUpdateThread::SetInitialConfiguration(void)
+@@ -1675,11 +1666,6 @@ bool CPeripheralCecAdapterUpdateThread::SetInitialConfiguration(void)
  
    m_adapter->m_bIsReady = true;
  
@@ -41,7 +41,7 @@ index 0e05be381b..4f6c3f03a1 100644
    std::unique_lock lock(m_critSection);
    m_bIsUpdating = false;
    return true;
-@@ -1725,11 +1710,6 @@ void CPeripheralCecAdapterUpdateThread::Process(void)
+@@ -1725,12 +1711,6 @@ void CPeripheralCecAdapterUpdateThread::Process(void)
          UpdateAudioSystemStatus();
        }
  
