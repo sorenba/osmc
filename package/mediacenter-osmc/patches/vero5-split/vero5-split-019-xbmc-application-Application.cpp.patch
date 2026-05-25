@@ -1,53 +1,34 @@
 diff --git a/xbmc/application/Application.cpp b/xbmc/application/Application.cpp
-index 1791ed607a..714ea913e3 100644
+index b638730..4ca3ef9 100644
 --- a/xbmc/application/Application.cpp
 +++ b/xbmc/application/Application.cpp
-@@ -139,6 +139,7 @@
+@@ -145,6 +145,7 @@
  #include "utils/TimeUtils.h"
  #include "utils/URIUtils.h"
  #include "utils/Variant.h"
 +#include "utils/SysfsUtils.h"
- #include "utils/XTimeUtils.h"
  #include "utils/log.h"
- #include "video/Bookmark.h"
-@@ -1232,8 +1233,15 @@ bool CApplication::OnAction(const CAction &action)
+ #include "video/PlayerController.h"
+ #include "video/VideoLibraryQueue.h"
+@@ -1207,8 +1208,17 @@ bool CApplication::OnAction(const CAction &action)
    }
  
    // forward action to graphic context and see if it can handle it
--  if (CServiceBroker::GetGUI()->GetStereoscopicsManager().OnAction(action))
--    return true;
-+  RENDER_STEREO_MODE oldRsm = CServiceBroker::GetGUI()->GetStereoscopicsManager().GetStereoMode();
-+  if (CServiceBroker::GetGUI()->GetStereoscopicsManager().OnAction(action)) {
-+    RENDER_STEREO_MODE newRsm = CServiceBroker::GetGUI()->GetStereoscopicsManager().GetStereoMode();
-+    if (oldRsm != newRsm) {
++  RenderStereoMode oldRsm = CServiceBroker::GetGUI()->GetStereoscopicsManager().GetStereoMode();
+   if (CServiceBroker::GetGUI()->GetStereoscopicsManager().OnAction(action))
++  {
++    RenderStereoMode newRsm = CServiceBroker::GetGUI()->GetStereoscopicsManager().GetStereoMode();
++    if (oldRsm != newRsm)
++    {
 +      // stereo mode changed
 +      appPlayer->TriggerUpdateResolution();
 +    }
-+  return true;
+     return true;
 +  }
  
    if (appPlayer->IsPlaying())
    {
-@@ -1598,6 +1606,18 @@ void CApplication::OnApplicationMessage(ThreadMessage* pMsg)
-       break;
-   }
- 
-+  case TMSG_AML_RESIZE:
-+  {
-+    if (! appPlayer->IsPlayingVideo()) {
-+      CDisplaySettings::GetInstance().ClearCustomResolutions();
-+      CServiceBroker::GetWinSystem()->UpdateResolutions();
-+      CDisplaySettings::GetInstance().SetCurrentResolution(RES_DESKTOP);
-+      CServiceBroker::GetWinSystem()->GetGfxContext().SetVideoResolution(RES_DESKTOP, true);
-+      CLog::Log(LOGINFO, "Updated resolutions and set desktop");
-+    }
-+    break;
-+  }
-+
-   case TMSG_NETWORKMESSAGE:
-     m_ServiceManager->GetNetwork().NetworkMessage(static_cast<CNetworkBase::EMESSAGE>(pMsg->param1),
-                                                   pMsg->param2);
-@@ -2641,6 +2661,7 @@ void CApplication::PlaybackCleanup()
+@@ -2081,6 +2091,7 @@ void CApplication::PlaybackCleanup()
      else
      {
        //  resets to res_desktop or look&feel resolution (including refreshrate)
@@ -55,7 +36,7 @@ index 1791ed607a..714ea913e3 100644
        CServiceBroker::GetWinSystem()->GetGfxContext().SetFullScreenVideo(false);
      }
  #ifdef TARGET_DARWIN_EMBEDDED
-@@ -3694,7 +3715,7 @@ void CApplication::SetLoggingIn(bool switchingProfiles)
+@@ -2777,7 +2788,7 @@ void CApplication::SetLoggingIn(bool switchingProfiles)
  void CApplication::PrintStartupLog()
  {
    CLog::Log(LOGINFO, "-----------------------------------------------------------------------");
@@ -64,3 +45,40 @@ index 1791ed607a..714ea913e3 100644
              CSysInfo::GetVersion(), g_sysinfo.GetBuildTargetPlatformName(),
              g_sysinfo.GetBuildTargetCpuFamily(), g_sysinfo.GetXbmcBitness());
  
+diff --git a/xbmc/application/ApplicationMessageHandling.cpp b/xbmc/application/ApplicationMessageHandling.cpp
+index 5396c24..fdd2fa6 100644
+--- a/xbmc/application/ApplicationMessageHandling.cpp
++++ b/xbmc/application/ApplicationMessageHandling.cpp
+@@ -56,10 +56,12 @@
+ #include "resources/LocalizeStrings.h"
+ #include "resources/ResourcesComponent.h"
+ #include "settings/Settings.h"
++#include "settings/DisplaySettings.h"
+ #include "settings/SettingsComponent.h"
+ #include "utils/ContentUtils.h"
+ #include "utils/FileExtensionProvider.h"
+ #include "utils/URIUtils.h"
++#include "utils/log.h"
+ #include "video/VideoFileItemClassify.h"
+ #include "windowing/WinSystem.h"
+ 
+@@ -217,6 +219,19 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
+     }
+     break;
+ 
++    case TMSG_AML_RESIZE:
++    {
++      if (!appPlayer->IsPlayingVideo())
++      {
++        CDisplaySettings::GetInstance().ClearCustomResolutions();
++        CServiceBroker::GetWinSystem()->UpdateResolutions();
++        CDisplaySettings::GetInstance().SetCurrentResolution(RES_DESKTOP);
++        CServiceBroker::GetWinSystem()->GetGfxContext().SetVideoResolution(RES_DESKTOP, true);
++        CLog::Log(LOGINFO, "Updated resolutions and set desktop");
++      }
++      break;
++    }
++
+     case TMSG_NETWORKMESSAGE:
+       m_app.m_ServiceManager->GetNetwork().NetworkMessage(
+           static_cast<CNetworkBase::EMESSAGE>(pMsg->param1), pMsg->param2);
