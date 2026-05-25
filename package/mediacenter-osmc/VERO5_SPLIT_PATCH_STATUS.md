@@ -14,8 +14,8 @@ patch --batch --forward -p1 < split.patch
 Only patches that passed dry-run were applied before testing the next split patch. This preserves order as much as possible.
 
 Total split patches: 173
-Working split patches: 158
-Needs work: 15
+Working split patches: 161
+Needs work: 12
 
 ## Fixed after initial split test
 
@@ -59,6 +59,11 @@ Needs work: 15
   - Regenerated hunk counts so Linux `patch` accepts it.
   - Dry-run passed locally.
 
+- `vero5-split-118-xbmc-interfaces-generic-LanguageInvokerThread.cpp.patch`
+  - Removed obsolete trailing-newline-only hunk.
+  - Kept the thread priority change.
+  - Dry-run passed locally.
+
 - `vero5-split-119-xbmc-messaging-ApplicationMessenger.h.patch`
   - Updated message ids for Kodi 22.
   - `TMSG_PROCESS_DELETE_AFTER_WATCH` already uses `TMSG_MASK_APPLICATION + 39`.
@@ -83,6 +88,16 @@ Needs work: 15
   - Updated hunk context for Kodi 22 `GetStringFromRes(...)` helper.
   - Dry-run passed locally.
 
+- `vero5-split-150-xbmc-utils-EGLUtils.cpp.patch`
+  - Updated for Kodi 22 `make_map` and `std::string_view` EGL utility code.
+  - Keeps the original intent of removing EGL debug setup and no-config-context usage.
+  - Dry-run passed locally.
+
+- `vero5-split-151-xbmc-utils-GLUtils.cpp.patch`
+  - Updated for Kodi 22 `make_map` and `std::string_view` GL utility code.
+  - Keeps the original intent of leaving GL debug lookup maps empty.
+  - Dry-run passed locally.
+
 ## Needs work
 
 - `vero5-split-010-system-settings-settings.xml.patch`
@@ -103,9 +118,6 @@ Needs work: 15
 - `vero5-split-116-xbmc-guilib-StereoscopicsManager.cpp.patch`
   - Fails 3 of 6 hunks.
 
-- `vero5-split-118-xbmc-interfaces-generic-LanguageInvokerThread.cpp.patch`
-  - Fails 1 of 2 hunks.
-
 - `vero5-split-136-xbmc-settings-DisplaySettings.cpp.patch`
   - Fails 2 of 12 hunks.
 
@@ -113,12 +125,6 @@ Needs work: 15
   - Fails 5 of 8 hunks.
 
 - `vero5-split-146-xbmc-utils-BitstreamConverter.h.patch`
-  - Fails 1 hunk.
-
-- `vero5-split-150-xbmc-utils-EGLUtils.cpp.patch`
-  - Fails 2 of 3 hunks.
-
-- `vero5-split-151-xbmc-utils-GLUtils.cpp.patch`
   - Fails 1 hunk.
 
 - `vero5-split-161-xbmc-windowing-GraphicContext.cpp.patch`
@@ -132,4 +138,4 @@ Needs work: 15
 
 ## Working split patches
 
-The remaining 158 split patches either applied during the initial full split test or were fixed afterward and dry-run validated locally.
+The remaining 161 split patches either applied during the initial full split test or were fixed afterward and dry-run validated locally.
