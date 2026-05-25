@@ -14,14 +14,20 @@ patch --batch --forward -p1 < split.patch
 Only patches that passed dry-run were applied before testing the next split patch. This preserves order as much as possible.
 
 Total split patches: 173
-Working split patches: 167
-Needs work: 6
+Working split patches: 169
+Needs work: 4
 
 ## Fixed after initial split test
 
 - `vero5-split-002-cmake-modules-FindFFMPEG.cmake.patch`
   - Updated for Kodi 22 `PATCH_COMMAND` layout.
   - Uses `COMMAND /bin/bash -c "cd <SOURCE_DIR> && patch ..."` entries.
+  - Dry-run passed locally.
+
+- `vero5-split-010-system-settings-settings.xml.patch`
+  - Updated for Kodi 22 settings layout.
+  - Keeps Vero video, HDMI, HDR, whitelist, and audio defaults.
+  - Removes the memory-size hunk because Kodi 22 already defaults that setting to 64 MB.
   - Dry-run passed locally.
 
 - `vero5-split-019-xbmc-application-Application.cpp.patch`
@@ -97,6 +103,11 @@ Needs work: 6
   - Keeps `.ssif` video extension and MVC stereoscopic regex support.
   - Dry-run passed locally.
 
+- `vero5-split-136-xbmc-settings-DisplaySettings.cpp.patch`
+  - Updated for Kodi 22 display settings filler code.
+  - Keeps 3D FP mode strings, Vero resolution display labels, 4K warning, and 3D calibration behavior.
+  - Dry-run passed locally.
+
 - `vero5-split-137-xbmc-settings-DisplaySettings.h.patch`
   - Updated hunk context for Kodi 22 `GetStringFromRes(...)` helper.
   - Dry-run passed locally.
@@ -127,17 +138,11 @@ Needs work: 6
 
 ## Needs work
 
-- `vero5-split-010-system-settings-settings.xml.patch`
-  - Fails 3 of 14 hunks in `system/settings/settings.xml`.
-
 - `vero5-split-076-xbmc-cores-VideoPlayer-DVDDemuxers-DVDDemuxFFmpeg.cpp.patch`
   - Fails 2 of 26 hunks.
 
 - `vero5-split-096-xbmc-cores-VideoPlayer-VideoPlayer.cpp.patch`
   - Fails 3 of 16 hunks.
-
-- `vero5-split-136-xbmc-settings-DisplaySettings.cpp.patch`
-  - Fails 2 of 12 hunks.
 
 - `vero5-split-145-xbmc-utils-BitstreamConverter.cpp.patch`
   - Fails 5 of 8 hunks.
@@ -147,4 +152,4 @@ Needs work: 6
 
 ## Working split patches
 
-The remaining 167 split patches either applied during the initial full split test or were fixed afterward and dry-run validated locally.
+The remaining 169 split patches either applied during the initial full split test or were fixed afterward and dry-run validated locally.
