@@ -1,14 +1,15 @@
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/BaseRenderer.cpp b/xbmc/cores/VideoPlayer/VideoRenderers/BaseRenderer.cpp
-index a451bc4be7..4466603f00 100644
+index 66a7d39..9c0c8e3 100644
 --- a/xbmc/cores/VideoPlayer/VideoRenderers/BaseRenderer.cpp
 +++ b/xbmc/cores/VideoPlayer/VideoRenderers/BaseRenderer.cpp
-@@ -19,7 +19,11 @@
+@@ -18,8 +18,12 @@
  #include "settings/lib/SettingDefinitions.h"
  #include "utils/MathUtils.h"
  #include "utils/log.h"
 +#include "utils/StringUtils.h"
- #include "windowing/GraphicContext.h"
 +#include "utils/SysfsUtils.h"
+ #include "windowing/GraphicContext.h"
+ #include "windowing/WinSystem.h"
 +#include "xbmc/application/Application.h"
 +#include "application/ApplicationPlayer.h"
  
@@ -18,12 +19,12 @@ index a451bc4be7..4466603f00 100644
    // and the output pixel ratio setting)
  
    float outputFrameRatio = inputFrameRatio / CServiceBroker::GetWinSystem()->GetGfxContext().GetResInfo().fPixelRatio;
-+  
++
 +  static int countdown = 0;
 +
 +  std::string hdmiAspect;
 +  SysfsUtils::GetString("/sys/class/amhdmitx/amhdmitx0/aspect", hdmiAspect);
-+  
++
 +  if (((MathUtils::FloatEquals(inputFrameRatio, 4.0f / 3.0f, 0.01f) &&
 +      !MathUtils::FloatEquals(inputFrameRatio, (float) m_sourceWidth / (float) m_sourceHeight, 0.01f)) ||
 +      (StringUtils::EndsWith(hdmiAspect, "0x01/0x08") && countdown > 0)) &&
