@@ -1,14 +1,15 @@
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Overlay/DVDOverlayCodecFFmpeg.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Overlay/DVDOverlayCodecFFmpeg.cpp
-index 3eb85be4ee..d46be3d2cf 100644
+index b292bd8..1d06e9e 100644
 --- a/xbmc/cores/VideoPlayer/DVDCodecs/Overlay/DVDOverlayCodecFFmpeg.cpp
 +++ b/xbmc/cores/VideoPlayer/DVDCodecs/Overlay/DVDOverlayCodecFFmpeg.cpp
-@@ -243,22 +243,6 @@ std::shared_ptr<CDVDOverlay> CDVDOverlayCodecFFmpeg::GetOverlay()
+@@ -245,23 +245,6 @@ std::shared_ptr<CDVDOverlay> CDVDOverlayCodecFFmpeg::GetOverlay()
        }
      }
  
--    RENDER_STEREO_MODE render_stereo_mode = CServiceBroker::GetWinSystem()->GetGfxContext().GetStereoMode();
--    if (render_stereo_mode != RENDER_STEREO_MODE_OFF &&
--        render_stereo_mode != RENDER_STEREO_MODE_HARDWAREBASED)
+-    RenderStereoMode render_stereo_mode =
+-        CServiceBroker::GetWinSystem()->GetGfxContext().GetStereoMode();
+-    if (render_stereo_mode != RenderStereoMode::OFF &&
+-        render_stereo_mode != RenderStereoMode::HARDWAREBASED)
 -    {
 -      if (rect.h > m_height / 2)
 -      {
