@@ -1,13 +1,12 @@
 diff --git a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemux.h b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemux.h
-index a1d229b5b6..b0ae61db1e 100644
+index 7e41418..ca4430e 100644
 --- a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemux.h
 +++ b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemux.h
-@@ -189,7 +189,10 @@ public:
-     : CDemuxStream()
-   {
-     type = STREAM_SUBTITLE;
-+    m_3dSubtitlePlane = 0;
-   }
+@@ -201,6 +201,8 @@ class CDemuxStreamSubtitle : public CDemuxStream
+ {
+ public:
+-  CDemuxStreamSubtitle() : CDemuxStream(StreamType::SUBTITLE) {}
++  CDemuxStreamSubtitle() : CDemuxStream(StreamType::SUBTITLE), m_3dSubtitlePlane(0) {}
 +
 +  int m_3dSubtitlePlane;
  };
