@@ -14,8 +14,8 @@ patch --batch --forward -p1 < split.patch
 Only patches that passed dry-run were applied before testing the next split patch. This preserves order as much as possible.
 
 Total split patches: 173
-Working split patches: 155
-Needs work: 18
+Working split patches: 158
+Needs work: 15
 
 ## Fixed after initial split test
 
@@ -69,6 +69,20 @@ Needs work: 18
   - Updated for Kodi 22 `TARGET ${APP_NAME_LC}::LibInput` context.
   - Dry-run passed locally.
 
+- `vero5-split-130-xbmc-platform-linux-storage-UDevProvider.cpp.patch`
+  - Updated for Kodi 22 UDevProvider context.
+  - Filters `/boot` and `/tee` mount points.
+  - Dry-run passed locally.
+
+- `vero5-split-133-xbmc-settings-AdvancedSettings.cpp.patch`
+  - Updated for Kodi 22 extension and stereoscopic regex context.
+  - Keeps `.ssif` video extension and MVC stereoscopic regex support.
+  - Dry-run passed locally.
+
+- `vero5-split-137-xbmc-settings-DisplaySettings.h.patch`
+  - Updated hunk context for Kodi 22 `GetStringFromRes(...)` helper.
+  - Dry-run passed locally.
+
 ## Needs work
 
 - `vero5-split-010-system-settings-settings.xml.patch`
@@ -92,17 +106,8 @@ Needs work: 18
 - `vero5-split-118-xbmc-interfaces-generic-LanguageInvokerThread.cpp.patch`
   - Fails 1 of 2 hunks.
 
-- `vero5-split-130-xbmc-platform-linux-storage-UDevProvider.cpp.patch`
-  - Fails 1 hunk.
-
-- `vero5-split-133-xbmc-settings-AdvancedSettings.cpp.patch`
-  - Fails 1 of 3 hunks.
-
 - `vero5-split-136-xbmc-settings-DisplaySettings.cpp.patch`
   - Fails 2 of 12 hunks.
-
-- `vero5-split-137-xbmc-settings-DisplaySettings.h.patch`
-  - Fails 1 hunk.
 
 - `vero5-split-145-xbmc-utils-BitstreamConverter.cpp.patch`
   - Fails 5 of 8 hunks.
@@ -127,4 +132,4 @@ Needs work: 18
 
 ## Working split patches
 
-The remaining 155 split patches either applied during the initial full split test or were fixed afterward and dry-run validated locally.
+The remaining 158 split patches either applied during the initial full split test or were fixed afterward and dry-run validated locally.
