@@ -36,20 +36,24 @@ fi
 
 sudo -v
 
+sudo rm -f "${OSMC_LIST}"
+sudo rm -f "${OSMC_APT_WEAK_CONF}"
+sudo rm -f /etc/apt/sources.list.d/osmc*.list
+sudo rm -f /var/lib/apt/lists/*apt.osmc.tv* /var/lib/apt/lists/*ftp.fau.de_osmc* 2>/dev/null || true
+
 if [ "${DEBIAN_VERSION_ID}" = "13" ]; then
     OSMC_REPO_LINE="deb [trusted=yes allow-insecure=yes allow-weak=yes] https://apt.osmc.tv bullseye-devel main"
     sudo tee "${OSMC_APT_WEAK_CONF}" > /dev/null <<'EOF'
 Acquire::AllowInsecureRepositories "true";
 Acquire::AllowDowngradeToInsecureRepositories "true";
 Acquire::AllowWeakRepositories "true";
+APT::Get::AllowUnauthenticated "true";
 EOF
-else
-    sudo rm -f "${OSMC_APT_WEAK_CONF}"
 fi
 
 echo "${OSMC_REPO_LINE}" | sudo tee "${OSMC_LIST}" > /dev/null
 
-sudo apt update
+sudo apt -o Acquire::AllowInsecureRepositories=true -o Acquire::AllowWeakRepositories=true update
 sudo apt install -y ca-certificates gnupg dirmngr wget git build-essential fakeroot devscripts equivs rsync texinfo libncurses-dev whois bc cpio python3 python-is-python3 bison flex libssl-dev unzip xz-utils subversion qemu-user qemu-user-static binfmt-support
 
 if apt-cache policy qemu | grep -q 'Candidate: (none)'; then
@@ -74,18 +78,18 @@ else
     sudo apt install -y qemu
 fi
 
-tmp_gnupg="$(mktemp -d)"
-cleanup() {
-    rm -rf "${tmp_gnupg}"
-}
-trap cleanup EXIT
-chmod 700 "${tmp_gnupg}"
-
-gpg --homedir "${tmp_gnupg}" --batch --keyserver hkps://keyserver.ubuntu.com --recv-keys "${OSMC_KEY}"
-gpg --homedir "${tmp_gnupg}" --batch --export "${OSMC_KEY}" | sudo gpg --dearmor --yes -o "${OSMC_KEYRING}"
-sudo chmod 644 "${OSMC_KEYRING}"
-
 if [ "${DEBIAN_VERSION_ID}" != "13" ]; then
+    tmp_gnupg="$(mktemp -d)"
+    cleanup() {
+        rm -rf "${tmp_gnupg}"
+    }
+    trap cleanup EXIT
+    chmod 700 "${tmp_gnupg}"
+
+    gpg --homedir "${tmp_gnupg}" --batch --keyserver hkps://keyserver.ubuntu.com --recv-keys "${OSMC_KEY}"
+    gpg --homedir "${tmp_gnupg}" --batch --export "${OSMC_KEY}" | sudo gpg --dearmor --yes -o "${OSMC_KEYRING}"
+    sudo chmod 644 "${OSMC_KEYRING}"
+
     echo "${OSMC_REPO_LINE}" | sudo tee "${OSMC_LIST}" > /dev/null
     sudo apt update
 fi
