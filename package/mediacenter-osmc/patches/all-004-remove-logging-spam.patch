@@ -8,7 +8,7 @@ Subject: [PATCH] kodi: remove annoying, excessively repetitive addon logging
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/xbmc/addons/Repository.cpp b/xbmc/addons/Repository.cpp
-index 6708e71c2a..869bd2d292 100644
+index 004d6f8c00..eaec0a4e0b 100644
 --- a/xbmc/addons/Repository.cpp
 +++ b/xbmc/addons/Repository.cpp
 @@ -140,11 +140,11 @@ CRepository::CRepository(const AddonInfoPtr& addonInfo) : CAddon(addonInfo, Addo
@@ -25,15 +25,16 @@ index 6708e71c2a..869bd2d292 100644
      }
    }
  }
-@@ -315,7 +315,7 @@ RepositoryDirInfo CRepository::ParseDirConfiguration(const CAddonExtensions& con
+@@ -323,8 +323,8 @@ RepositoryDirInfo CRepository::ParseDirConfiguration(const CAddonExtensions& con
      dir.hashType = CDigest::TypeFromString(hashStr);
      if (dir.hashType == CDigest::Type::MD5)
      {
--      CLog::Log(LOGWARNING, "CRepository::{}: Repository has MD5 hashes enabled - this hash function is broken and will only guard against unintentional data corruption", __FUNCTION__);
-+      CLog::Log(LOGDEBUG, "CRepository::{}: Repository has MD5 hashes enabled - this hash function is broken and will only guard against unintentional data corruption", __FUNCTION__);
+-      CLog::LogF(LOGWARNING, "Repository has MD5 hashes enabled - this hash function is broken and "
+-                             "will only guard against unintentional data corruption");
++      CLog::LogF(LOGDEBUG, "Repository has MD5 hashes enabled - this hash function is broken and "
++                           "will only guard against unintentional data corruption");
      }
    }
  
 -- 
 2.25.1
-
