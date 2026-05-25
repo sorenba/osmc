@@ -1,62 +1,42 @@
-From e868cd34472d1f9f2c6b4d544684480673862e4c Mon Sep 17 00:00:00 2001
-From: Sam Nazarko <email@samnazarko.co.uk>
-Date: Sun, 13 Dec 2015 18:19:06 +0000
-Subject: [PATCH] Sometimes the shutdown or reboot process can hang:
-
-* Ensure that logind receives a request to initiate the exit process.
-
-* Allow OSMC's sigterm handler to know when to do the business or not, otherwise we get code on EXIT and POWERDOWN/REBOOT paths
-
-Signed-off-by: Sam Nazarko <email@samnazarko.co.uk>
----
- xbmc/application/Application.cpp | 8 ++++++--
- xbmc/application/Application.h   | 5 +++++
- 2 files changed, 11 insertions(+), 2 deletions(-)
-
-diff --git a/xbmc/application/Application.cpp b/xbmc/application/Application.cpp
-index 4ead646f9b..46312bb687 100644
---- a/xbmc/application/Application.cpp
-+++ b/xbmc/application/Application.cpp
-@@ -1481,8 +1481,10 @@ void CApplication::OnApplicationMessage(ThreadMessage* pMsg)
-   switch (msg)
-   {
-   case TMSG_POWERDOWN:
--    if (Stop(EXITCODE_POWERDOWN))
-+    if (Stop(EXITCODE_POWERDOWN)) {
-+      m_ShuttingDown = true;
-       CServiceBroker::GetPowerManager().Powerdown();
-+    }
-     break;
- 
-   case TMSG_QUIT:
-@@ -1507,8 +1509,10 @@ void CApplication::OnApplicationMessage(ThreadMessage* pMsg)
- 
-   case TMSG_RESTART:
-   case TMSG_RESET:
--    if (Stop(EXITCODE_REBOOT))
-+    if (Stop(EXITCODE_REBOOT)) {
-+      m_ShuttingDown = true;
-       CServiceBroker::GetPowerManager().Reboot();
-+    }
-     break;
- 
-   case TMSG_RESTARTAPP:
 diff --git a/xbmc/application/Application.h b/xbmc/application/Application.h
-index a37dcf733d..45df227ac5 100644
+index 8f6d71c..81590a5 100644
 --- a/xbmc/application/Application.h
 +++ b/xbmc/application/Application.h
-@@ -186,6 +186,11 @@ public:
+@@ -187,6 +187,11 @@ public:
  
    std::unique_ptr<CServiceManager> m_ServiceManager;
  
 +  /*! \Allow OSMC's sigterm handler to know when to do the business or not, otherwise we get code on EXIT and POWERDOWN/REBOOT paths
-++  */
-+  bool m_ShuttingDown;
-+  bool isShuttingDown() { return m_ShuttingDown; }
++  */
++  bool m_ShuttingDown{false};
++  bool isShuttingDown() const { return m_ShuttingDown; }
 +
    /*!
    \brief Locks calls from outside kodi (e.g. python) until framemove is processed.
    */
--- 
-2.25.1
-
+diff --git a/xbmc/application/ApplicationMessageHandling.cpp b/xbmc/application/ApplicationMessageHandling.cpp
+index 5396c24..39900a6 100644
+--- a/xbmc/application/ApplicationMessageHandling.cpp
++++ b/xbmc/application/ApplicationMessageHandling.cpp
+@@ -118,7 +118,10 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
+   {
+     case TMSG_POWERDOWN:
+       if (m_app.Stop(EXITCODE_POWERDOWN))
++      {
++        m_app.m_ShuttingDown = true;
+         CServiceBroker::GetPowerManager().Powerdown();
++      }
+       break;
+ 
+     case TMSG_QUIT:
+@@ -144,7 +147,10 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
+     case TMSG_RESTART:
+     case TMSG_RESET:
+       if (m_app.Stop(EXITCODE_REBOOT))
++      {
++        m_app.m_ShuttingDown = true;
+         CServiceBroker::GetPowerManager().Reboot();
++      }
+       break;
+ 
+     case TMSG_RESTARTAPP:
