@@ -4,7 +4,7 @@ set -euo pipefail
 OSMC_KEY="553B25A766C762CC"
 OSMC_LIST="/etc/apt/sources.list.d/osmc.list"
 OSMC_APT_WEAK_CONF="/etc/apt/apt.conf.d/99osmc-allow-weak-repository"
-OSMC_REPO_LINE="deb http://apt.osmc.tv jessie main"
+OSMC_REPO_LINE="deb https://apt.osmc.tv bullseye-devel main"
 DUMMY_DIR="${HOME}/.cache/osmc-qemu-dummy"
 DEBIAN_VERSION_ID="unknown"
 
