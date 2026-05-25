@@ -7,8 +7,8 @@
 
 if [ "$1" == "rbp2" ] || [ "$1" == "rbp4" ] || [ "$1" == "vero3" ] || [ "$1" == "vero5" ]
 then
-pull_source "https://github.com/xbmc/xbmc/archive/a3a448d26b8d560a65655dab2cd122994dc4e146.tar.gz" "$(pwd)/src"
-API_VERSION="21"
+pull_source "https://github.com/xbmc/xbmc/archive/22.0a3-Piers.tar.gz" "$(pwd)/src"
+API_VERSION="22"
 else
 pull_source "https://github.com/xbmc/xbmc/archive/master.tar.gz" "$(pwd)/kodi"
 API_VERSION="22"
@@ -379,6 +379,7 @@ then
         pushd languages
         if [ "$API_VERSION" = "20" ]; then api_name="nexus"; fi
 	if [ "$API_VERSION" = "21" ]; then api_name="omega"; fi
+	if [ "$API_VERSION" = "22" ]; then api_name="piers"; fi
 	base_url="http://mirror.ox.ac.uk/sites/xbmc.org/addons/${api_name}"
 	handle_dep "wget" # We do not usually use wget in the build environment
         languages=$(wget ${base_url} -O- | grep resource.language. | sed -e 's/<a/\n<a/g' | sed -e 's/<a .*href=['"'"'"]//' -e 's/["'"'"'].*$//' -e '/^$/ d' | sed '/tr/d' | sed 's/resource.language.//' | tr -d / | grep -v 'img src')
