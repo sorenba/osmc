@@ -1,62 +1,61 @@
 diff --git a/xbmc/guilib/StereoscopicsManager.cpp b/xbmc/guilib/StereoscopicsManager.cpp
-index 3aa269bca3..e281b550a7 100644
 --- a/xbmc/guilib/StereoscopicsManager.cpp
 +++ b/xbmc/guilib/StereoscopicsManager.cpp
-@@ -52,6 +52,10 @@ static const struct StereoModeMap VideoModeToGuiModeMap[] =
-   { "right_left",               RENDER_STEREO_MODE_SPLIT_VERTICAL },
-   { "top_bottom",               RENDER_STEREO_MODE_SPLIT_HORIZONTAL },
-   { "bottom_top",               RENDER_STEREO_MODE_SPLIT_HORIZONTAL },
-+  { "full_left_right",          RENDER_STEREO_MODE_HARDWAREBASED },
-+  { "full_right_left",          RENDER_STEREO_MODE_HARDWAREBASED },
-+  { "full_top_bottom",          RENDER_STEREO_MODE_HARDWAREBASED },
-+  { "full_bottom_top",          RENDER_STEREO_MODE_HARDWAREBASED },
-   { "checkerboard_rl",          RENDER_STEREO_MODE_CHECKERBOARD },
-   { "checkerboard_lr",          RENDER_STEREO_MODE_CHECKERBOARD },
-   { "row_interleaved_rl",       RENDER_STEREO_MODE_INTERLACED },
-@@ -61,8 +65,8 @@ static const struct StereoModeMap VideoModeToGuiModeMap[] =
-   { "anaglyph_cyan_red",        RENDER_STEREO_MODE_ANAGLYPH_RED_CYAN },
-   { "anaglyph_green_magenta",   RENDER_STEREO_MODE_ANAGLYPH_GREEN_MAGENTA },
-   { "anaglyph_yellow_blue",     RENDER_STEREO_MODE_ANAGLYPH_YELLOW_BLUE },
--  { "block_lr",                 RENDER_STEREO_MODE_OFF }, // unsupported
--  { "block_rl",                 RENDER_STEREO_MODE_OFF }, // unsupported
-+  { "block_lr",                 RENDER_STEREO_MODE_HARDWAREBASED },
-+  { "block_rl",                 RENDER_STEREO_MODE_HARDWAREBASED },
-   {}
- };
+@@ -53,6 +53,10 @@
+     {"right_left", RenderStereoMode::SPLIT_VERTICAL},
+     {"top_bottom", RenderStereoMode::SPLIT_HORIZONTAL},
+     {"bottom_top", RenderStereoMode::SPLIT_HORIZONTAL},
++    {"full_left_right", RenderStereoMode::HARDWAREBASED},
++    {"full_right_left", RenderStereoMode::HARDWAREBASED},
++    {"full_top_bottom", RenderStereoMode::HARDWAREBASED},
++    {"full_bottom_top", RenderStereoMode::HARDWAREBASED},
+     {"checkerboard_rl", RenderStereoMode::CHECKERBOARD},
+     {"checkerboard_lr", RenderStereoMode::CHECKERBOARD},
+     {"row_interleaved_rl", RenderStereoMode::INTERLACED},
+@@ -62,8 +66,8 @@
+     {"anaglyph_cyan_red", RenderStereoMode::ANAGLYPH_RED_CYAN},
+     {"anaglyph_green_magenta", RenderStereoMode::ANAGLYPH_GREEN_MAGENTA},
+     {"anaglyph_yellow_blue", RenderStereoMode::ANAGLYPH_YELLOW_BLUE},
+-    {"block_lr", RenderStereoMode::OFF}, // unsupported
+-    {"block_rl", RenderStereoMode::OFF}, // unsupported
++    {"block_lr", RenderStereoMode::HARDWAREBASED},
++    {"block_rl", RenderStereoMode::HARDWAREBASED},
+     {}};
  
-@@ -130,10 +134,76 @@ void CStereoscopicsManager::SetStereoMode(const RENDER_STEREO_MODE &mode)
-   RENDER_STEREO_MODE currentMode = GetStereoMode();
-   RENDER_STEREO_MODE applyMode = mode;
+ static const struct StereoModeMap StringToGuiModeMap[] = {
+@@ -127,10 +131,71 @@
+   RenderStereoMode currentMode = GetStereoMode();
+   RenderStereoMode applyMode = mode;
  
 +  const auto& components = CServiceBroker::GetAppComponents();
 +  const auto appPlayer = components.GetComponent<CApplicationPlayer>();
 +
    // resolve automatic mode before applying
-   if (mode == RENDER_STEREO_MODE_AUTO)
+   if (mode == RenderStereoMode::AUTO)
      applyMode = GetStereoModeOfPlayingVideo();
  
-+  // Check if we're allowed to switch the stereo mode
++  // Check if we are allowed to switch the stereo mode
 +  if (CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(CSettings::SETTING_VIDEOPLAYER_ADJUSTREFRESHRATE) == ADJUST_REFRESHRATE_OFF)
 +  {
 +    // mode switches are not allowed
-+    if (currentMode == RENDER_STEREO_MODE_MONO || currentMode == RENDER_STEREO_MODE_OFF)
++    if (currentMode == RenderStereoMode::MONO || currentMode == RenderStereoMode::OFF)
 +    {
 +      // we are in 2D mode
 +      if (IsVideoStereoscopic())
 +      {
-+        // no mode switches allowed, but we've got a 3D video and are running in 2D then set the stereo mode to mono
-+        applyMode = RENDER_STEREO_MODE_MONO;
++        // no mode switches allowed, but we have a 3D video and are running in 2D then set the stereo mode to mono
++        applyMode = RenderStereoMode::MONO;
 +      }
 +    }
 +    else if (IsVideoStereoscopic())
 +    {
-+      // no mode switches allowed, and we've got a 3D video and are running in 3D => done
++      // no mode switches allowed, and we have a 3D video and are running in 3D => done
 +      applyMode = currentMode;
 +    }
 +    else
 +    {
-+      // TODO: we're in 3D mode, the video is 2D and mode switching is not allowed,
-+      // then we've a bit of bad luck because we can't do anything about it :-(
++      // TODO: we are in 3D mode, the video is 2D and mode switching is not allowed,
++      // then we have a bit of bad luck because we cannot do anything about it.
 +      applyMode = currentMode;
 +    }
 +
@@ -64,48 +63,43 @@ index 3aa269bca3..e281b550a7 100644
 +  }
 +  else if (appPlayer->IsPlaying() && IsVideoStereoscopic())
 +  {
-+    // a 3D video is playing, let's check if we really support the requested stereoscopic mode
++    // a 3D video is playing, check if we support the requested stereoscopic mode
 +    float fps = CServiceBroker::GetDataCacheCore().GetVideoFps();
 +    int width = CServiceBroker::GetDataCacheCore().GetVideoWidth();
 +    int height = CServiceBroker::GetDataCacheCore().GetVideoHeight();
 +
-+    // request a matching resolution
 +    uint32_t mode3dFlags = CServiceBroker::GetWinSystem()->GetGfxContext().ConvertRenderStereoModeToMode3dFlags(applyMode);
 +    RESOLUTION res = CResolutionUtils::ChooseBestResolution(static_cast<float>(fps), width, height, mode3dFlags);
-+    RENDER_STEREO_MODE rsm = CServiceBroker::GetWinSystem()->GetGfxContext().GetRenderStereoModeFromResolution(res);
++    RenderStereoMode rsm = CServiceBroker::GetWinSystem()->GetGfxContext().GetRenderStereoModeFromResolution(res);
 +
-+    // check if we've got what we've requested
-+    if (rsm != applyMode && rsm == RENDER_STEREO_MODE_OFF)
++    if (rsm != applyMode && rsm == RenderStereoMode::OFF)
 +    {
-+      // nope, check for possible fallbacks in case of MVC/FP playback
-+      if (applyMode == RENDER_STEREO_MODE_HARDWAREBASED)
++      if (applyMode == RenderStereoMode::HARDWAREBASED)
 +      {
-+        // check SBS fallback for MVC/FP output
-+   	    res = CResolutionUtils::ChooseBestResolution(static_cast<float>(fps), width, height, D3DPRESENTFLAG_MODE3DSBS);
-+   	    rsm = CServiceBroker::GetWinSystem()->GetGfxContext().GetRenderStereoModeFromResolution(res);
-+   	    if (rsm != RENDER_STEREO_MODE_SPLIT_VERTICAL)
-+   	    {
-+          // check TAB fallback for MVC/FP output
-+   	      res = CResolutionUtils::ChooseBestResolution(static_cast<float>(fps), width, height, D3DPRESENTFLAG_MODE3DTB);
-+   	      rsm = CServiceBroker::GetWinSystem()->GetGfxContext().GetRenderStereoModeFromResolution(res);
-+          if (rsm != RENDER_STEREO_MODE_SPLIT_HORIZONTAL)
-+        	rsm = RENDER_STEREO_MODE_MONO;
-+   	    }
-+      	applyMode = rsm;
++        res = CResolutionUtils::ChooseBestResolution(static_cast<float>(fps), width, height, D3DPRESENTFLAG_MODE3DSBS);
++        rsm = CServiceBroker::GetWinSystem()->GetGfxContext().GetRenderStereoModeFromResolution(res);
++        if (rsm != RenderStereoMode::SPLIT_VERTICAL)
++        {
++          res = CResolutionUtils::ChooseBestResolution(static_cast<float>(fps), width, height, D3DPRESENTFLAG_MODE3DTB);
++          rsm = CServiceBroker::GetWinSystem()->GetGfxContext().GetRenderStereoModeFromResolution(res);
++          if (rsm != RenderStereoMode::SPLIT_HORIZONTAL)
++            rsm = RenderStereoMode::MONO;
++        }
++        applyMode = rsm;
 +      }
 +      else
-+        applyMode = RENDER_STEREO_MODE_MONO;
++        applyMode = RenderStereoMode::MONO;
 +    }
 +  }
 +
-   if (applyMode != currentMode && applyMode >= RENDER_STEREO_MODE_OFF)
+   if (applyMode != currentMode && applyMode >= RenderStereoMode::OFF)
    {
      if (CServiceBroker::GetRenderSystem()->SupportsStereo(applyMode))
-@@ -198,6 +268,15 @@ std::string CStereoscopicsManager::DetectStereoModeByString(const std::string &n
+@@ -198,6 +263,15 @@
    if (re.RegFind(searchString) > -1)
      stereoMode = "top_bottom";
  
-+  if (!re.RegComp(CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_stereoscopicregex_mvc))
++  if (!re.RegComp(CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_stereoscopicregex_mvc.c_str()))
 +  {
 +    CLog::Log(LOGERROR, "{}: Invalid RegExp for matching 3d MVC content:'{}'", __FUNCTION__, CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_stereoscopicregex_mvc);
 +    return stereoMode;
@@ -117,39 +111,37 @@ index 3aa269bca3..e281b550a7 100644
    return stereoMode;
  }
  
-@@ -304,7 +383,7 @@ int CStereoscopicsManager::ConvertVideoToGuiStereoMode(const std::string &mode)
+@@ -307,7 +381,7 @@
    size_t i = 0;
    while (VideoModeToGuiModeMap[i].name)
    {
 -    if (mode == VideoModeToGuiModeMap[i].name)
 +    if (mode == VideoModeToGuiModeMap[i].name && CServiceBroker::GetRenderSystem()->SupportsStereo(VideoModeToGuiModeMap[i].mode))
        return VideoModeToGuiModeMap[i].mode;
-     i++;
+     ++i;
    }
-@@ -512,8 +591,25 @@ std::string CStereoscopicsManager::GetVideoStereoMode() const
+@@ -522,8 +596,25 @@
  
    const auto& components = CServiceBroker::GetAppComponents();
    const auto appPlayer = components.GetComponent<CApplicationPlayer>();
 -  if (appPlayer->IsPlaying())
 -    playerMode = CServiceBroker::GetDataCacheCore().GetVideoStereoMode();
-+  if (appPlayer->IsPlaying()) {
-+	  playerMode = CServiceBroker::GetDataCacheCore().GetVideoStereoMode();
++  if (appPlayer->IsPlaying())
++  {
++    playerMode = CServiceBroker::GetDataCacheCore().GetVideoStereoMode();
 +
-+	  if (playerMode.find("left") != std::string::npos) {
-+		  // check for Full-SBS
-+		  int width = CServiceBroker::GetDataCacheCore().GetVideoWidth();
-+
-+		  if (width == 3840) {
-+			  playerMode = "full_" + playerMode;
-+		  }
-+	  } else if (playerMode.find("bottom") != std::string::npos) {
-+		  // check for Full-TAB
-+		  int height = CServiceBroker::GetDataCacheCore().GetVideoHeight();
-+
-+		  if (height > 1080) {
-+			  playerMode = "full_" + playerMode;
-+		  }
-+	  }
++    if (playerMode.find("left") != std::string::npos)
++    {
++      int width = CServiceBroker::GetDataCacheCore().GetVideoWidth();
++      if (width == 3840)
++        playerMode = "full_" + playerMode;
++    }
++    else if (playerMode.find("bottom") != std::string::npos)
++    {
++      int height = CServiceBroker::GetDataCacheCore().GetVideoHeight();
++      if (height > 1080)
++        playerMode = "full_" + playerMode;
++    }
 +  }
  
    return playerMode;
