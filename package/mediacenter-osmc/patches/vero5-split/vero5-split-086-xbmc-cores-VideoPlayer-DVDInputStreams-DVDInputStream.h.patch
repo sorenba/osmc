@@ -1,12 +1,12 @@
 diff --git a/xbmc/cores/VideoPlayer/DVDInputStreams/DVDInputStream.h b/xbmc/cores/VideoPlayer/DVDInputStreams/DVDInputStream.h
-index 46337576ab..8f8e8b1bc6 100644
+index 6c6f2fa..15e7d32 100644
 --- a/xbmc/cores/VideoPlayer/DVDInputStreams/DVDInputStream.h
 +++ b/xbmc/cores/VideoPlayer/DVDInputStreams/DVDInputStream.h
-@@ -46,6 +46,7 @@ namespace XFILE
+@@ -49,6 +49,7 @@ namespace XFILE
  
  struct DemuxPacket;
  class CDemuxStream;
 +class CDVDDemux;
+ class CStreamDetails;
+ struct SPlayerState;
  
- class CDVDInputStream
- {
