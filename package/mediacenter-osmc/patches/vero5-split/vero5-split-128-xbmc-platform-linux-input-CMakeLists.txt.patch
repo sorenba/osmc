@@ -1,14 +1,14 @@
 diff --git a/xbmc/platform/linux/input/CMakeLists.txt b/xbmc/platform/linux/input/CMakeLists.txt
-index 0859158c9c..988f0f3888 100644
+index 7e99c62..7ba473a 100644
 --- a/xbmc/platform/linux/input/CMakeLists.txt
 +++ b/xbmc/platform/linux/input/CMakeLists.txt
-@@ -6,7 +6,8 @@ if(TARGET LIRCCLIENT::LIRCCLIENT)
+@@ -6,7 +6,8 @@ if(TARGET ${APP_NAME_LC}::LircClient)
    list(APPEND HEADERS LIRC.h)
  endif()
  
 -if("gbm" IN_LIST CORE_PLATFORM_NAME_LC)
 +if("aml" IN_LIST CORE_PLATFORM_NAME_LC OR
 +   "gbm" IN_LIST CORE_PLATFORM_NAME_LC)
-   if(LIBINPUT_FOUND)
+   if(TARGET ${APP_NAME_LC}::LibInput)
      list(APPEND SOURCES LibInputHandler.cpp
                          LibInputKeyboard.cpp
