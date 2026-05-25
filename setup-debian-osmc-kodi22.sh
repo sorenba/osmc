@@ -2,35 +2,11 @@
 set -euo pipefail
 
 OSMC_KEY="553B25A766C762CC"
-OSMC_KEYRING="/usr/share/keyrings/osmc-archive-keyring.gpg"
 OSMC_LIST="/etc/apt/sources.list.d/osmc.list"
 OSMC_APT_WEAK_CONF="/etc/apt/apt.conf.d/99osmc-allow-weak-repository"
-OSMC_REPO_LINE="deb [signed-by=${OSMC_KEYRING}] https://apt.osmc.tv bullseye-devel main"
+OSMC_REPO_LINE="deb http://apt.osmc.tv jessie main"
 DUMMY_DIR="${HOME}/.cache/osmc-qemu-dummy"
 DEBIAN_VERSION_ID="unknown"
-
-install_armv7_toolchain_direct() {
-    if dpkg -s armv7-toolchain-osmc >/dev/null 2>&1; then
-        echo "armv7-toolchain-osmc is already installed."
-        return
-    fi
-
-    if [ ! -x ./toolchains/armv7-toolchain-osmc/build.sh ]; then
-        echo "Cannot find ./toolchains/armv7-toolchain-osmc/build.sh. Run this from the OSMC checkout."
-        exit 1
-    fi
-
-    echo "Building armv7-toolchain-osmc locally. This can take a while."
-    (cd toolchains/armv7-toolchain-osmc && sudo ./build.sh)
-
-    toolchain_deb="$(find toolchains/armv7-toolchain-osmc -maxdepth 1 -name 'armv7-toolchain-osmc*.deb' | sort | tail -n 1)"
-    if [ -z "${toolchain_deb}" ]; then
-        echo "Local armv7-toolchain-osmc build finished, but no .deb was found."
-        exit 1
-    fi
-
-    sudo apt install -y "./${toolchain_deb}"
-}
 
 if [ "${EUID}" -eq 0 ]; then
     echo "Run this as your normal user. The script will use sudo when needed."
@@ -64,20 +40,11 @@ sudo rm -f "${OSMC_APT_WEAK_CONF}"
 sudo rm -f /etc/apt/sources.list.d/osmc*.list
 sudo rm -f /var/lib/apt/lists/*apt.osmc.tv* /var/lib/apt/lists/*ftp.fau.de_osmc* 2>/dev/null || true
 
-if [ "${DEBIAN_VERSION_ID}" = "13" ]; then
-    OSMC_REPO_LINE="deb [trusted=yes allow-insecure=yes allow-weak=yes] https://apt.osmc.tv bullseye-devel main"
-    sudo tee "${OSMC_APT_WEAK_CONF}" > /dev/null <<'EOF'
-Acquire::AllowInsecureRepositories "true";
-Acquire::AllowDowngradeToInsecureRepositories "true";
-Acquire::AllowWeakRepositories "true";
-APT::Get::AllowUnauthenticated "true";
-EOF
-fi
-
 echo "${OSMC_REPO_LINE}" | sudo tee "${OSMC_LIST}" > /dev/null
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys "${OSMC_KEY}"
 
-sudo apt -o Acquire::AllowInsecureRepositories=true -o Acquire::AllowWeakRepositories=true update || true
-sudo apt install -y ca-certificates gnupg dirmngr wget git build-essential fakeroot devscripts equivs rsync texinfo libncurses-dev whois bc cpio python3 python-is-python3 bison flex libssl-dev unzip xz-utils subversion qemu-user qemu-user-static binfmt-support debootstrap
+sudo apt update
+sudo apt install -y ca-certificates gnupg dirmngr wget git build-essential fakeroot devscripts equivs rsync texinfo libncurses-dev whois bc cpio python3 python-is-python3 bison flex libssl-dev unzip xz-utils subversion qemu-user qemu-user-static binfmt-support
 
 if apt-cache policy qemu | grep -q 'Candidate: (none)'; then
     echo "Creating local dummy qemu package."
@@ -102,29 +69,7 @@ else
     sudo apt install -y qemu
 fi
 
-if [ "${DEBIAN_VERSION_ID}" != "13" ]; then
-    tmp_gnupg="$(mktemp -d)"
-    cleanup() {
-        rm -rf "${tmp_gnupg}"
-    }
-    trap cleanup EXIT
-    chmod 700 "${tmp_gnupg}"
-
-    gpg --homedir "${tmp_gnupg}" --batch --keyserver hkps://keyserver.ubuntu.com --recv-keys "${OSMC_KEY}"
-    gpg --homedir "${tmp_gnupg}" --batch --export "${OSMC_KEY}" | sudo gpg --dearmor --yes -o "${OSMC_KEYRING}"
-    sudo chmod 644 "${OSMC_KEYRING}"
-
-    echo "${OSMC_REPO_LINE}" | sudo tee "${OSMC_LIST}" > /dev/null
-    sudo apt update
-fi
-
-if ! dpkg -s armv7-toolchain-osmc >/dev/null 2>&1 && apt-cache policy armv7-toolchain-osmc | grep -q 'Candidate: (none)'; then
-    install_armv7_toolchain_direct
-fi
-
-if ! dpkg -s armv7-toolchain-osmc >/dev/null 2>&1 && apt-cache policy armv7-toolchain-osmc | grep -q 'Candidate:'; then
-    sudo apt install -y armv7-toolchain-osmc
-fi
+sudo apt install -y armv7-toolchain-osmc
 
 if ! dpkg -s armv7-toolchain-osmc >/dev/null 2>&1; then
     echo "armv7-toolchain-osmc is still not installed."
