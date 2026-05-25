@@ -1,11 +1,11 @@
 diff --git a/xbmc/settings/DisplaySettings.h b/xbmc/settings/DisplaySettings.h
-index e02e80c8e3..9713f31000 100644
+index 9f4be62..34e1fab 100644
 --- a/xbmc/settings/DisplaySettings.h
 +++ b/xbmc/settings/DisplaySettings.h
-@@ -73,6 +73,7 @@ public:
-   RESOLUTION_INFO& GetCurrentResolutionInfo() { return GetResolutionInfo(m_currentResolution); }
-   RESOLUTION GetResFromString(const std::string &strResolution) { return GetResolutionFromString(strResolution); }
-   std::string GetStringFromRes(const RESOLUTION resolution, float refreshrate = 0.0f) { return GetStringFromResolution(resolution, refreshrate); }
+@@ -79,6 +79,7 @@ public:
+   {
+     return GetStringFromResolution(resolution, refreshrate);
+   }
 +  std::string GetDisplayStringFromRes(const RESOLUTION resolution, bool hiDpi = false, bool withRefreshRate = true) const;
  
    void ApplyCalibrations();
