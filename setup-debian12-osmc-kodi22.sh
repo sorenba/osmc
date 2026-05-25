@@ -6,6 +6,7 @@ OSMC_KEY="553B25A766C762CC"
 OSMC_KEYRING="/usr/share/keyrings/osmc-archive-keyring.gpg"
 OSMC_LIST="/etc/apt/sources.list.d/osmc.list"
 OSMC_REPO_LINE="deb [signed-by=${OSMC_KEYRING}] https://apt.osmc.tv bullseye-devel main"
+DUMMY_DIR="${HOME}/.cache/osmc-qemu-dummy"
 
 if [ "${EUID}" -eq 0 ]; then
     echo "Run this as your normal user. The script will use sudo when needed."
@@ -25,7 +26,29 @@ fi
 sudo -v
 
 sudo apt update
-sudo apt install -y ca-certificates gnupg dirmngr wget git build-essential fakeroot devscripts equivs rsync texinfo libncurses-dev whois bc cpio python3 python-is-python3 bison flex libssl-dev unzip xz-utils subversion qemu qemu-user qemu-user-static binfmt-support
+sudo apt install -y ca-certificates gnupg dirmngr wget git build-essential fakeroot devscripts equivs rsync texinfo libncurses-dev whois bc cpio python3 python-is-python3 bison flex libssl-dev unzip xz-utils subversion qemu-user qemu-user-static binfmt-support
+
+if apt-cache policy qemu | grep -q 'Candidate: (none)'; then
+    echo "Creating local dummy qemu package for Debian ${EXPECTED_VERSION_ID}."
+    mkdir -p "${DUMMY_DIR}"
+    cd "${DUMMY_DIR}"
+    cat > qemu-dummy.control <<'EOF'
+Section: misc
+Priority: optional
+Standards-Version: 3.9.2
+Package: qemu
+Version: 1:99
+Maintainer: local <local@example.com>
+Architecture: all
+Depends: qemu-user, qemu-user-static, binfmt-support
+Description: Dummy qemu package for OSMC toolchain dependency
+ Provides the old qemu package name for builds that depend on it.
+EOF
+    equivs-build qemu-dummy.control
+    sudo apt install -y ./qemu_99_all.deb
+else
+    sudo apt install -y qemu
+fi
 
 tmp_gnupg="$(mktemp -d)"
 cleanup() {
