@@ -4,6 +4,7 @@ set -euo pipefail
 OSMC_KEY="553B25A766C762CC"
 OSMC_KEYRING="/usr/share/keyrings/osmc-archive-keyring.gpg"
 OSMC_LIST="/etc/apt/sources.list.d/osmc.list"
+OSMC_APT_WEAK_CONF="/etc/apt/apt.conf.d/99osmc-allow-weak-repository"
 OSMC_REPO_LINE="deb [signed-by=${OSMC_KEYRING}] https://apt.osmc.tv bullseye-devel main"
 DUMMY_DIR="${HOME}/.cache/osmc-qemu-dummy"
 DEBIAN_VERSION_ID="unknown"
@@ -33,11 +34,18 @@ if [ -r /etc/os-release ]; then
     esac
 fi
 
-if [ "${DEBIAN_VERSION_ID}" = "13" ]; then
-    OSMC_REPO_LINE="deb [trusted=yes] https://apt.osmc.tv bullseye-devel main"
-fi
-
 sudo -v
+
+if [ "${DEBIAN_VERSION_ID}" = "13" ]; then
+    OSMC_REPO_LINE="deb [trusted=yes allow-insecure=yes allow-weak=yes] https://apt.osmc.tv bullseye-devel main"
+    sudo tee "${OSMC_APT_WEAK_CONF}" > /dev/null <<'EOF'
+Acquire::AllowInsecureRepositories "true";
+Acquire::AllowDowngradeToInsecureRepositories "true";
+Acquire::AllowWeakRepositories "true";
+EOF
+else
+    sudo rm -f "${OSMC_APT_WEAK_CONF}"
+fi
 
 echo "${OSMC_REPO_LINE}" | sudo tee "${OSMC_LIST}" > /dev/null
 
