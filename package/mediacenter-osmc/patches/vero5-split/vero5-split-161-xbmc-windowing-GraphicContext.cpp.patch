@@ -1,5 +1,4 @@
 diff --git a/xbmc/windowing/GraphicContext.cpp b/xbmc/windowing/GraphicContext.cpp
-index e3300e925c..6801245fa9 100644
 --- a/xbmc/windowing/GraphicContext.cpp
 +++ b/xbmc/windowing/GraphicContext.cpp
 @@ -14,6 +14,7 @@
@@ -10,21 +9,21 @@ index e3300e925c..6801245fa9 100644
  #include "guilib/TextureManager.h"
  #include "guilib/gui3d.h"
  #include "input/InputManager.h"
-@@ -258,6 +259,13 @@ CPoint CGraphicContext::StereoCorrection(const CPoint &point) const
-     if(m_stereoView == RENDER_STEREO_VIEW_RIGHT)
-       res.y += info.iHeight + info.iBlanking;
+@@ -267,6 +268,13 @@
+     if (m_stereoView == RenderStereoView::RIGHT)
+       res.x += info.iWidth  + info.iBlanking;
    }
-+  if (m_stereoMode == RENDER_STEREO_MODE_HARDWAREBASED)
++  if (m_stereoMode == RenderStereoMode::HARDWAREBASED)
 +  {
 +    const RESOLUTION_INFO info = GetResInfo();
 +
-+    if(m_stereoView == RENDER_STEREO_VIEW_RIGHT)
++    if (m_stereoView == RenderStereoView::RIGHT)
 +      res.y += info.iHeight + info.iBlanking;
 +  }
-   if(m_stereoMode == RENDER_STEREO_MODE_SPLIT_VERTICAL)
-   {
-     const RESOLUTION_INFO info = GetResInfo();
-@@ -354,7 +362,7 @@ void CGraphicContext::SetFullScreenVideo(bool bOnOff)
+   return res;
+ }
+ 
+@@ -356,7 +364,7 @@
      }
    }
    else
@@ -33,35 +32,35 @@ index e3300e925c..6801245fa9 100644
  }
  
  bool CGraphicContext::IsFullScreenVideo() const
-@@ -382,6 +390,36 @@ bool CGraphicContext::IsValidResolution(RESOLUTION res)
+@@ -384,6 +392,36 @@
    return false;
  }
  
-+uint32_t CGraphicContext::ConvertRenderStereoModeToMode3dFlags(RENDER_STEREO_MODE stereo_mode) const
++uint32_t CGraphicContext::ConvertRenderStereoModeToMode3dFlags(RenderStereoMode stereo_mode) const
 +{
-+  if (stereo_mode == RENDER_STEREO_MODE_SPLIT_HORIZONTAL)
++  if (stereo_mode == RenderStereoMode::SPLIT_HORIZONTAL)
 +    return D3DPRESENTFLAG_MODE3DTB;
-+  else if (stereo_mode == RENDER_STEREO_MODE_SPLIT_VERTICAL)
++  else if (stereo_mode == RenderStereoMode::SPLIT_VERTICAL)
 +    return D3DPRESENTFLAG_MODE3DSBS;
-+  else if (stereo_mode == RENDER_STEREO_MODE_HARDWAREBASED)
++  else if (stereo_mode == RenderStereoMode::HARDWAREBASED)
 +    return D3DPRESENTFLAG_MODE3DFP;
 +
 +  return 0;
 +}
 +
-+RENDER_STEREO_MODE CGraphicContext::ConvertMode3dFlagsToRenderStereoMode(uint32_t mode3dFlags) const
++RenderStereoMode CGraphicContext::ConvertMode3dFlagsToRenderStereoMode(uint32_t mode3dFlags) const
 +{
 +  if (mode3dFlags & D3DPRESENTFLAG_MODE3DTB)
-+    return RENDER_STEREO_MODE_SPLIT_HORIZONTAL;
++    return RenderStereoMode::SPLIT_HORIZONTAL;
 +  else if (mode3dFlags & D3DPRESENTFLAG_MODE3DSBS)
-+    return RENDER_STEREO_MODE_SPLIT_VERTICAL;
++    return RenderStereoMode::SPLIT_VERTICAL;
 +  else if (mode3dFlags & D3DPRESENTFLAG_MODE3DFP)
-+    return RENDER_STEREO_MODE_HARDWAREBASED;
++    return RenderStereoMode::HARDWAREBASED;
 +
-+  return RENDER_STEREO_MODE_OFF;
++  return RenderStereoMode::OFF;
 +}
 +
-+RENDER_STEREO_MODE CGraphicContext::GetRenderStereoModeFromResolution(RESOLUTION resolution) const
++RenderStereoMode CGraphicContext::GetRenderStereoModeFromResolution(RESOLUTION resolution) const
 +{
 +  RESOLUTION_INFO info = GetResInfo(resolution);
 +  return ConvertMode3dFlagsToRenderStereoMode(info.dwFlags);
@@ -70,48 +69,49 @@ index e3300e925c..6801245fa9 100644
  // call SetVideoResolutionInternal and ensure its done from mainthread
  void CGraphicContext::SetVideoResolution(RESOLUTION res, bool forceUpdate)
  {
-@@ -406,7 +444,9 @@ void CGraphicContext::SetVideoResolutionInternal(RESOLUTION res, bool forceUpdat
+@@ -408,7 +446,9 @@
    }
  
    // If we are switching to the same resolution and same window/full-screen, no need to do anything
 -  if (!forceUpdate && res == lastRes && m_bFullScreenRoot == CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_fullScreen)
 +  if (!forceUpdate && res == lastRes
-+		  && m_bFullScreenRoot == CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_fullScreen
-+		  && m_dvOutput == CServiceBroker::GetWinSystem()->IsDolbyVisionOutput())
++      && m_bFullScreenRoot == CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_fullScreen
++      && m_dvOutput == CServiceBroker::GetWinSystem()->IsDolbyVisionOutput())
    {
      return;
    }
-@@ -424,6 +464,8 @@ void CGraphicContext::SetVideoResolutionInternal(RESOLUTION res, bool forceUpdat
+@@ -426,6 +466,8 @@
  
-   std::unique_lock<CCriticalSection> lock(*this);
+   std::unique_lock lock(*this);
  
 +  m_dvOutput = CServiceBroker::GetWinSystem()->IsDolbyVisionOutput();
 +
    // FIXME Wayland windowing needs some way to "deny" resolution updates since what Kodi
    // requests might not get actually set by the compositor.
    // So in theory, m_iScreenWidth etc. would not need to be updated at all before the
-@@ -433,10 +475,19 @@ void CGraphicContext::SetVideoResolutionInternal(RESOLUTION res, bool forceUpdat
+@@ -435,10 +477,20 @@
    int origScreenWidth = m_iScreenWidth;
    int origScreenHeight = m_iScreenHeight;
    float origFPSOverride = m_fFPSOverride;
-+  RENDER_STEREO_MODE origStereoMode = m_stereoMode;
++  RenderStereoMode origStereoMode = m_stereoMode;
  
    UpdateInternalStateWithResolution(res);
    RESOLUTION_INFO info_org  = CDisplaySettings::GetInstance().GetResolutionInfo(res);
  
 +  // Get render stereo mode from flags
 +  m_stereoMode = ConvertMode3dFlagsToRenderStereoMode(info_org.dwFlags);
-+  if (m_stereoMode == RENDER_STEREO_MODE_OFF
-+	  && CServiceBroker::GetGUI() != nullptr && CServiceBroker::GetGUI()->GetStereoscopicsManager().GetStereoMode() != RENDER_STEREO_MODE_OFF) {
-+    // Stereoscopics manager has asked for a 3D mode but we've got a 2D resolution => switch to mono
-+    m_stereoMode = RENDER_STEREO_MODE_MONO;
++  if (m_stereoMode == RenderStereoMode::OFF && CServiceBroker::GetGUI() != nullptr &&
++      CServiceBroker::GetGUI()->GetStereoscopicsManager().GetStereoMode() != RenderStereoMode::OFF)
++  {
++    // Stereoscopics manager has asked for a 3D mode but we got a 2D resolution => switch to mono
++    m_stereoMode = RenderStereoMode::MONO;
 +  }
 +
    bool switched = false;
    if (CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_fullScreen)
    {
-@@ -460,7 +511,7 @@ void CGraphicContext::SetVideoResolutionInternal(RESOLUTION res, bool forceUpdat
-     SetStereoView(RENDER_STEREO_VIEW_OFF);
+@@ -462,7 +514,7 @@
+     SetStereoView(RenderStereoView::OFF);
  
      // update anyone that relies on sizing information
 -    CServiceBroker::GetInputManager().SetMouseResolution(info_org.iWidth, info_org.iHeight, 1, 1);
@@ -119,16 +119,15 @@ index e3300e925c..6801245fa9 100644
  
      CGUIComponent *gui = CServiceBroker::GetGUI();
      if (gui)
-@@ -472,6 +523,8 @@ void CGraphicContext::SetVideoResolutionInternal(RESOLUTION res, bool forceUpdat
+@@ -474,6 +526,7 @@
      m_iScreenWidth = origScreenWidth;
      m_iScreenHeight = origScreenHeight;
      m_fFPSOverride = origFPSOverride;
 +    m_stereoMode = origStereoMode;
-+
      if (IsValidResolution(lastRes))
      {
        m_Resolution = lastRes;
-@@ -573,10 +626,18 @@ void CGraphicContext::ResetScreenParameters(RESOLUTION res)
+@@ -575,10 +628,18 @@
  {
    RESOLUTION_INFO& info = CDisplaySettings::GetInstance().GetResolutionInfo(res);
  
@@ -147,15 +146,15 @@ index e3300e925c..6801245fa9 100644
 +  }
 +
 +  CLog::Log(LOGWARNING, "CGraphicContext::ResetScreenParameters: Should reset resolutions? {}/{} vs. {}/{}",
-+		  info.iWidth, info.iHeight, info.iScreenWidth, info.iScreenHeight);
++            info.iWidth, info.iHeight, info.iScreenWidth, info.iScreenHeight);
    ResetOverscan(res, info.Overscan);
  }
  
-@@ -599,33 +660,6 @@ const RESOLUTION_INFO CGraphicContext::GetResInfo(RESOLUTION res) const
+@@ -606,33 +667,6 @@
  {
    RESOLUTION_INFO info = CDisplaySettings::GetInstance().GetResolutionInfo(res);
  
--  if(m_stereoMode == RENDER_STEREO_MODE_SPLIT_HORIZONTAL)
+-  if (m_stereoMode == RenderStereoMode::SPLIT_HORIZONTAL)
 -  {
 -    if((info.dwFlags & D3DPRESENTFLAG_MODE3DTB) == 0)
 -    {
@@ -169,7 +168,7 @@ index e3300e925c..6801245fa9 100644
 -    info.iSubtitles       = (info.iSubtitles      - info.iBlanking) / 2;
 -  }
 -
--  if(m_stereoMode == RENDER_STEREO_MODE_SPLIT_VERTICAL)
+-  if (m_stereoMode == RenderStereoMode::SPLIT_VERTICAL)
 -  {
 -    if((info.dwFlags & D3DPRESENTFLAG_MODE3DSBS) == 0)
 -    {
@@ -185,11 +184,10 @@ index e3300e925c..6801245fa9 100644
    if (res == m_Resolution && m_fFPSOverride != 0)
    {
      info.fRefreshRate = m_fFPSOverride;
-@@ -985,13 +1019,6 @@ const std::string& CGraphicContext::GetMediaDir() const
- void CGraphicContext::Flip(bool rendered, bool videoLayer)
+@@ -1008,12 +1042,6 @@
  {
    CServiceBroker::GetRenderSystem()->PresentRender(rendered, videoLayer);
--
+ 
 -  if(m_stereoMode != m_nextStereoMode)
 -  {
 -    m_stereoMode = m_nextStereoMode;
