@@ -2,15 +2,15 @@ diff --git a/xbmc/utils/EGLUtils.cpp b/xbmc/utils/EGLUtils.cpp
 index 85f889dc9f..72aaf282b8 100644
 --- a/xbmc/utils/EGLUtils.cpp
 +++ b/xbmc/utils/EGLUtils.cpp
-@@ -84,41 +84,11 @@ std::map<EGLenum, const char*> eglErrors =
+@@ -85,29 +85,11 @@ constexpr auto eglErrors = make_map<EGLenum, std::string_view>({
+ });
  
- std::map<EGLint, const char*> eglErrorType =
- {
--  X(EGL_DEBUG_MSG_CRITICAL_KHR),
--  X(EGL_DEBUG_MSG_ERROR_KHR),
--  X(EGL_DEBUG_MSG_WARN_KHR),
--  X(EGL_DEBUG_MSG_INFO_KHR),
- };
+ constexpr auto eglErrorType = make_map<EGLint, std::string_view>({
+-    X(EGL_DEBUG_MSG_CRITICAL_KHR),
+-    X(EGL_DEBUG_MSG_ERROR_KHR),
+-    X(EGL_DEBUG_MSG_WARN_KHR),
+-    X(EGL_DEBUG_MSG_INFO_KHR),
+ });
  #undef X
  
  } // namespace
@@ -22,20 +22,8 @@ index 85f889dc9f..72aaf282b8 100644
 -                      EGLLabelKHR objectLabel,
 -                      const char* message)
 -{
--  std::string errorStr;
--  std::string typeStr;
--
--  auto eglError = eglErrors.find(error);
--  if (eglError != eglErrors.end())
--  {
--    errorStr = eglError->second;
--  }
--
--  auto eglType = eglErrorType.find(messageType);
--  if (eglType != eglErrorType.end())
--  {
--    typeStr = eglType->second;
--  }
+-  const std::string_view errorStr = eglErrors.get(error).value_or("");
+-  const std::string_view typeStr = eglErrorType.get(messageType).value_or("");
 -
 -  CLog::Log(LOGDEBUG, "EGL Debugging:\nError: {}\nCommand: {}\nType: {}\nMessage: {}", errorStr,
 -            command, typeStr, message ? message : "");
@@ -44,7 +32,7 @@ index 85f889dc9f..72aaf282b8 100644
  std::set<std::string> CEGLUtils::GetClientExtensions()
  {
    const char* extensions = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
-@@ -172,19 +142,6 @@ void CEGLUtils::Log(int logLevel, const std::string& what)
+@@ -161,19 +143,6 @@ void CEGLUtils::Log(int logLevel, const std::string& what)
  CEGLContextUtils::CEGLContextUtils(EGLenum platform, std::string const& platformExtension)
  : m_platform{platform}
  {
@@ -61,10 +49,10 @@ index 85f889dc9f..72aaf282b8 100644
 -    eglDebugMessageControl(EglErrorCallback, eglDebugAttribs);
 -  }
 -
-   m_platformSupported = CEGLUtils::HasClientExtension("EGL_EXT_platform_base") && CEGLUtils::HasClientExtension(platformExtension);
+   m_platformSupported = CEGLUtils::HasClientExtension("EGL_EXT_platform_base") &&
+                         CEGLUtils::HasClientExtension(platformExtension);
  }
- 
-@@ -395,18 +352,9 @@ bool CEGLContextUtils::CreateContext(CEGLAttributesVec contextAttribs)
+@@ -380,18 +349,9 @@ bool CEGLContextUtils::CreateContext(CEGLAttributesVec contextAttribs)
  
    EGLConfig eglConfig{m_eglConfig};
  
