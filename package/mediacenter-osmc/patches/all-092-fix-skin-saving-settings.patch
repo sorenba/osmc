@@ -8,39 +8,41 @@ Subject: [PATCH] FIX: save skin setting changes immediately
  1 file changed, 4 insertions(+)
 
 diff --git a/xbmc/settings/SkinSettings.cpp b/xbmc/settings/SkinSettings.cpp
-index 71ff616c6c..1f8216c199 100644
+index 00fa6aa8ef..8a85e2be5d 100644
 --- a/xbmc/settings/SkinSettings.cpp
 +++ b/xbmc/settings/SkinSettings.cpp
-@@ -50,6 +50,7 @@ const std::string& CSkinSettings::GetString(int setting) const
- void CSkinSettings::SetString(int setting, const std::string &label)
- {
-   g_SkinInfo->SetString(setting, label);
-+  g_SkinInfo->SaveSettings();
+@@ -56,6 +56,7 @@ void CSkinSettings::SetString(int setting, const std::string& label) const
+   if (!skin)
+     return;
+   skin->SetString(setting, label);
++  skin->SaveSettings();
  }
  
- int CSkinSettings::TranslateBool(const std::string &setting)
-@@ -70,11 +71,13 @@ int CSkinSettings::GetInt(int setting) const
- void CSkinSettings::SetBool(int setting, bool set)
- {
-   g_SkinInfo->SetBool(setting, set);
-+  g_SkinInfo->SaveSettings();
+ int CSkinSettings::TranslateBool(const std::string& setting) const
+@@ -84,6 +85,7 @@ void CSkinSettings::SetBool(int setting, bool set) const
+   if (!skin)
+     return;
+   skin->SetBool(setting, set);
++  skin->SaveSettings();
  }
  
- void CSkinSettings::Reset(const std::string &setting)
- {
-   g_SkinInfo->Reset(setting);
-+  g_SkinInfo->SaveSettings();
+ void CSkinSettings::Reset(const std::string& setting) const
+@@ -92,6 +94,7 @@ void CSkinSettings::Reset(const std::string& setting) const
+   if (!skin)
+     return;
+   skin->Reset(setting);
++  skin->SaveSettings();
  }
  
  std::set<ADDON::CSkinSettingPtr> CSkinSettings::GetSettings() const
-@@ -96,6 +99,7 @@ std::shared_ptr<const ADDON::CSkinSetting> CSkinSettings::GetSetting(
- void CSkinSettings::Reset()
- {
-   g_SkinInfo->Reset();
-+  g_SkinInfo->SaveSettings();
+@@ -122,6 +125,7 @@ void CSkinSettings::Reset() const
+     return;
+ 
+   skin->Reset();
++  skin->SaveSettings();
  
    CGUIInfoManager& infoMgr = CServiceBroker::GetGUI()->GetInfoManager();
    infoMgr.ResetCache();
 -- 
-2.25.1
+2.34.1
 
