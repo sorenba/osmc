@@ -92,6 +92,11 @@ These patches were validated with Linux `patch` against Kodi 22 Alpha 3.
 - `all-035-Do-not-update-repositories-or-addons-while-we-are-ru.patch`
   - Applies cleanly.
 
+- `all-040-Ensure-that-Kodi-devicename-reflects-etc-hostname.patch`
+  - Updated `SystemGUIInfo.cpp` for Kodi 22 `info.GetInfo()` handling.
+  - Updated `NetworkServices.cpp` callback registration and device-name changed handling for Kodi 22.
+  - Dry-run validation still needed in a clean Kodi 22 Alpha 3 tree.
+
 - `all-041-allow-hostname-to-be-changed-via-xbmc.patch`
   - Applies cleanly.
 
@@ -121,6 +126,14 @@ These patches were validated with Linux `patch` against Kodi 22 Alpha 3.
 
 - `all-090-do-not-notify-when-boot-is-mounted.patch`
   - Applies cleanly.
+
+- `all-092-fix-skin-saving-settings.patch`
+  - Updated for Kodi 22 local `skin` pointer usage in `SkinSettings.cpp`.
+  - Dry-run validation still needed in a clean Kodi 22 Alpha 3 tree.
+
+- `all-093-fix-setting-loss-when-rebooting-from-profile-login-screen.patch`
+  - Moved shutdown/reboot message handling from `Application.cpp` to `ApplicationMessageHandling.cpp` for Kodi 22.
+  - Dry-run validation still needed in a clean Kodi 22 Alpha 3 tree.
 
 - `all-099-fix-for-iptv-blocking-osmc.patch`
   - Applies cleanly.
@@ -201,23 +214,14 @@ These patches still need work for Kodi 22 Alpha 3.
   - Fails because `xbmc/platform/posix/PosixTimezone.cpp` no longer exists in Kodi 22.
   - Need to identify the new timezone handling path, or skip if obsolete.
 
-- `all-040-Ensure-that-Kodi-devicename-reflects-etc-hostname.patch`
-  - Fails in `SystemGUIInfo.cpp` and `NetworkServices.cpp`.
-
 - `all-086-add-osmc-privacy-policy.patch`
   - Fails because `privacy-policy.txt` already exists before the add half of the patch.
   - Needs review as a two-part delete/add patch.
 
-- `all-092-fix-skin-saving-settings.patch`
-  - Fails in `SkinSettings.cpp`.
-
-- `all-093-fix-setting-loss-when-rebooting-from-profile-login-screen.patch`
-  - Fails in `Application.cpp`.
-  - Likely needs migration to `ApplicationMessageHandling.cpp`, similar to `all-014`.
-
 - `all-094-fix-setting-loss-when-rebooting-from-Kodi.patch`
   - Reported as reversed or previously applied during the current sequence.
   - Needs review after `all-093` is rebased.
+  - May be obsolete because Kodi 22 already gates settings saves during shutdown via `CApplication::OnSettingsSaving()`.
 
 - `all-113-add-support-to-mix-LFE.patch`
   - Settings hunk applies with fuzz.
