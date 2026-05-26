@@ -290,7 +290,6 @@ then
             -DOPENGLES_gl_LIBRARY=/opt/vero5/lib/libEGL.so \
             -DENABLE_AML=ON \
             -DAPP_RENDER_SYSTEM=gles \
-            -DASS_INCLUDE_DIR=/usr/osmc/lib \
             -DAML_INCLUDE_DIR=/opt/vero5/include \
             -DSHAIRPLAY_INCLUDE_DIR=/usr/osmc/include/shairplay/ \
             -DENABLE_OPENGLES=ON \
