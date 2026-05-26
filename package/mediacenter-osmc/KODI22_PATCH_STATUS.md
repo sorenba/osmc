@@ -162,6 +162,15 @@ These patches were validated with Linux `patch` against Kodi 22 Alpha 3.
 - `all-127-improve-CEC-behaviour.patch`
   - Applies cleanly.
 
+- `all-128-allow-downstream-strings.patch`
+  - Updated for Kodi 22 `xbmc/resources/LocalizeStrings.cpp` path and `std::unordered_map` string storage.
+  - Dry-run validation still needed in a clean Kodi 22 Alpha 3 tree.
+
+- `all-129-support-string-override.patch`
+  - Updated for Kodi 22 `xbmc/resources/LocalizeStrings.cpp` path and `std::unordered_map` string storage.
+  - Keeps `strings-osmc.po` loaded before `strings.po` so English overrides work.
+  - Dry-run validation still needed in a clean Kodi 22 Alpha 3 tree.
+
 - `all-130-fix-no-git-found.patch`
   - Applies cleanly.
 
@@ -214,13 +223,6 @@ These patches still need work for Kodi 22 Alpha 3.
   - Settings hunk applies with fuzz.
   - Fails in `ActiveAEResampleFFMPEG.cpp`.
 
-- `all-128-allow-downstream-strings.patch`
-  - Fails in `LanguageResource.cpp`.
-  - Also references `xbmc/guilib/LocalizeStrings.cpp`, which no longer exists at that path.
-
-- `all-129-support-string-override.patch`
-  - References `xbmc/guilib/LocalizeStrings.cpp`, which no longer exists at that path.
-
 ## Binary patches needing git-aware validation
 
 These fail under plain Linux `patch` because git binary diffs are not supported by `patch`. They need validation with `git apply` or during the real OSMC build patch step.
@@ -241,6 +243,7 @@ These are out of scope for this Kodi 22 Vero 5 build.
 
 - Non-English `resource.language.*` addon copies/downloads
   - Skipped. Keep English only for this build.
+  - Move skipped non-English overlays to `package/mediacenter-osmc/patches_skipped/`.
 
 - Other non-Vero 5 device-specific work
   - Skipped. Vero 5 only.
