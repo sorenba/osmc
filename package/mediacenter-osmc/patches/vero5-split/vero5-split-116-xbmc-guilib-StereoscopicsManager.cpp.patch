@@ -120,7 +120,7 @@ diff --git a/xbmc/guilib/StereoscopicsManager.cpp b/xbmc/guilib/StereoscopicsMan
        return VideoModeToGuiModeMap[i].mode;
      ++i;
    }
-@@ -522,8 +596,25 @@
+@@ -522,8 +596,23 @@
  
    const auto& components = CServiceBroker::GetAppComponents();
    const auto appPlayer = components.GetComponent<CApplicationPlayer>();
