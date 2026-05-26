@@ -5,60 +5,38 @@ Subject: [PATCH] Support mixing LFE channel
 
 Signed-off-by: Sam Nazarko <email@samnazarko.co.uk>
 ---
- system/settings/settings.xml                         | 12 ++++++++++++
- .../Engines/ActiveAE/ActiveAEResampleFFMPEG.cpp      |  9 +++++++++
- 2 files changed, 21 insertions(+)
+ system/settings/settings.xml | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/system/settings/settings.xml b/system/settings/settings.xml
-index 912ba411a5..4d7731df1e 100755
+index 135745674b..d42cb93e87 100644
 --- a/system/settings/settings.xml
 +++ b/system/settings/settings.xml
-@@ -2959,6 +2959,18 @@
-           </dependencies>
+@@ -3316,18 +3316,18 @@
+           <default>true</default>
            <control type="toggle" />
          </setting>
-+        <setting id="audiooutput.mixlfe" type="integer" label="36457" help="36458">
-+          <level>2</level>
-+          <default>0</default>
-+          <constraints>
+-        <setting id="audiooutput.mixsublevel" type="integer" label="34114" help="34115">
++        <setting id="audiooutput.mixsublevel" type="integer" label="36457" help="36458">
+           <level>2</level>
+           <default>0</default>
+           <constraints>
+-            <options>
+-              <option label="34116">0</option>
+-              <option label="34117">50</option>
+-              <option label="34118">100</option>
+-            </options>
 +            <minimum>0</minimum>
 +            <step>10</step>
 +            <maximum>100</maximum>
-+          </constraints>
+           </constraints>
+-          <control type="list" format="string" />
 +          <control type="spinner" format="string">
 +            <formatlabel>36459</formatlabel>
 +          </control>
-+        </setting>
-         <setting id="audiooutput.processquality" type="integer" label="13505" help="36169">
-           <requirement>HAS_AE_QUALITY_LEVELS</requirement>
-           <level>2</level>
-diff --git a/xbmc/cores/AudioEngine/Engines/ActiveAE/ActiveAEResampleFFMPEG.cpp b/xbmc/cores/AudioEngine/Engines/ActiveAE/ActiveAEResampleFFMPEG.cpp
-index bfef837114..0badf8b065 100644
---- a/xbmc/cores/AudioEngine/Engines/ActiveAE/ActiveAEResampleFFMPEG.cpp
-+++ b/xbmc/cores/AudioEngine/Engines/ActiveAE/ActiveAEResampleFFMPEG.cpp
-@@ -9,6 +9,9 @@
- #include "cores/AudioEngine/Utils/AEUtil.h"
- #include "ActiveAEResampleFFMPEG.h"
- #include "utils/log.h"
-+#include "settings/SettingsComponent.h"
-+#include "settings/Settings.h"
-+#include "ServiceBroker.h"
- 
- extern "C" {
- #include <libavutil/channel_layout.h>
-@@ -63,6 +66,12 @@ bool CActiveAEResampleFFMPEG::Init(SampleConfig dstConfig, SampleConfig srcConfi
-     return false;
-   }
- 
-+  double mix_lfe = (float) CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt("audiooutput.mixlfe") / (float) 100;
-+  if (mix_lfe)
-+  {
-+    av_opt_set_double(m_pContext, "lfe_mix_level", mix_lfe, 0);
-+  }
-+
-   if(quality == AE_QUALITY_HIGH)
-   {
-     av_opt_set_double(m_pContext, "cutoff", 1.0, 0);
+         </setting>
+       </group>
+       <group id="2" label="15108">
 -- 
-2.25.1
+2.34.1
 
