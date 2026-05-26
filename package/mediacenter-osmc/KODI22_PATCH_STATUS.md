@@ -13,6 +13,13 @@ patch --batch --forward -p1 < patchfile
 
 Patches are tested in sorted order against a clean Kodi 22 Alpha 3 source tree, applying successful patches before testing later patches.
 
+For patches containing git binary diffs, use:
+
+```bash
+git apply --check --binary < patchfile
+git apply --binary < patchfile
+```
+
 ## Completed and validated
 
 These patches were validated with Linux `patch` against Kodi 22 Alpha 3.
@@ -130,6 +137,10 @@ These patches were validated with Linux `patch` against Kodi 22 Alpha 3.
 - `all-114-set-system-defaults-for-osmc.patch`
   - Applies cleanly.
 
+- `all-117-use-osmc-binary-addon-repo.patch`
+  - Updated for Kodi 22 `Piers` binary add-on branch.
+  - Dry-run validation still needed in a clean Kodi 22 Alpha 3 tree.
+
 - `all-122-add-support-for-osmc-long-press.patch`
   - Applies cleanly.
 
@@ -150,6 +161,15 @@ These patches were validated with Linux `patch` against Kodi 22 Alpha 3.
 
 - `all-134-add-bdj-keymap.patch`
   - Applies cleanly.
+
+- `all-999-use-older-libfmt.patch`
+  - Rebasing reduced this to the remaining Kodi 22-relevant `fmt/xchar.h` include removal.
+  - Dry-run validation still needed in a clean Kodi 22 Alpha 3 tree.
+
+- `vero5-000-add-vero-support.patch`
+  - Required for target device.
+  - Fixed and regenerated from `package/mediacenter-osmc/patches/vero5-split/` using `package/mediacenter-osmc/tools/combine-vero5-splits.py`.
+  - Dry-run validated cleanly against a fresh Kodi 22 Alpha 3 tree.
 
 ## Remaining failures / needs rebase
 
@@ -181,9 +201,6 @@ These patches still need work for Kodi 22 Alpha 3.
   - Settings hunk applies with fuzz.
   - Fails in `ActiveAEResampleFFMPEG.cpp`.
 
-- `all-117-use-osmc-binary-addon-repo.patch`
-  - Fails in `cmake/addons/bootstrap/repositories/binary-addons.txt`.
-
 - `all-119-fix-playback-of-m3u-internet-streams.patch`
   - Fails in `PlayListFactory.cpp`.
 
@@ -201,15 +218,6 @@ These patches still need work for Kodi 22 Alpha 3.
 - `all-132-fix-skin-reloading-crash.patch`
   - Fails first hunk in `ApplicationSkinHandling.cpp`.
   - Other hunk applies.
-
-- `all-999-use-older-libfmt.patch`
-  - Fails in `URL.cpp`.
-  - `URL.h` hunk applies.
-
-- `vero5-000-add-vero-support.patch`
-  - Required for target device.
-  - Fails in `FindFFMPEG.cmake` and several `system/settings/settings.xml` hunks.
-  - Other hunks apply.
 
 ## Binary patches needing git-aware validation
 
