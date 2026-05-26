@@ -45,6 +45,13 @@ if 'arm-linux-gnueabihf/pkgconfig' not in tail:
         raise SystemExit('Could not find Vero 5 LDFLAGS export in build.sh')
     tail = tail.replace(old, new, 1)
 
+if 'Vero 5 pkg-config libass check' not in tail:
+    old = '        export PKG_CONFIG_PATH="/usr/lib/arm-linux-gnueabihf/pkgconfig:/usr/share/pkgconfig:/usr/osmc/lib/pkgconfig:/opt/vero5/lib/pkgconfig:${PKG_CONFIG_PATH:-}" && \\\n        cmake -DCMAKE_INSTALL_PREFIX=/usr \\\n'
+    new = '        export PKG_CONFIG_PATH="/usr/lib/arm-linux-gnueabihf/pkgconfig:/usr/share/pkgconfig:/usr/osmc/lib/pkgconfig:/opt/vero5/lib/pkgconfig:${PKG_CONFIG_PATH:-}" && \\\n        echo "Vero 5 pkg-config libass check:" && \\\n        pkg-config --modversion libass && \\\n        pkg-config --libs libass && \\\n        pkg-config --cflags libass && \\\n        cmake -DPKG_CONFIG_EXECUTABLE=/usr/bin/pkg-config -DCMAKE_INSTALL_PREFIX=/usr \\\n'
+    if old not in tail:
+        raise SystemExit('Could not find Vero 5 PKG_CONFIG_PATH/cmake block in build.sh')
+    tail = tail.replace(old, new, 1)
+
 path.write_text(head + tail)
 PY
 
@@ -59,7 +66,7 @@ if ! grep -q -- 'arm-linux-gnueabihf/pkgconfig' "${build_sh}"; then
 fi
 
 echo "Patched Vero 5 configure block:"
-sed -n '/if \[ "\$1" == "vero5" \]/,/^        fi/p' "${build_sh}" | grep -E 'PKG_CONFIG_PATH|ENABLE_INTERNAL_ASS|ENABLE_INTERNAL_FMT|cmake|LDFLAGS|vero5'
+sed -n '/if \[ "\$1" == "vero5" \]/,/^        fi/p' "${build_sh}" | grep -E 'pkg-config|PKG_CONFIG|ENABLE_INTERNAL_ASS|ENABLE_INTERNAL_FMT|cmake|LDFLAGS|vero5'
 
 if [ -d "${kodi_src_dir}/kodi-build" ]; then
     echo "Removing stale Kodi CMake build directory"
