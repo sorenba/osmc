@@ -9,10 +9,9 @@ Signed-off-by: Sam Nazarko <email@samnazarko.co.uk>
  1 file changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/system/settings/settings.xml b/system/settings/settings.xml
-index 135745674b..d42cb93e87 100644
 --- a/system/settings/settings.xml
 +++ b/system/settings/settings.xml
-@@ -3316,18 +3316,18 @@
+@@ -3315,17 +3315,17 @@
            <default>true</default>
            <control type="toggle" />
          </setting>
