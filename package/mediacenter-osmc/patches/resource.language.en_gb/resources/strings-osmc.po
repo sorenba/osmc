@@ -16,8 +16,8 @@ msgstr ""
 
 #: xbmc/video/dialogs/GUIDialogVideoSettings.cpp
 msgctxt "#10636"
-msgid "Use HDMI AVI signalling"
-msgstr "Send 4:3 a/r signal through HDMI"
+msgid "Send 4:3 a/r signal through HDMI"
+msgstr ""
 
 #: xbmc/powermanagement/PowerManager.cpp
 #: system/keymaps/osmc_classic.xml
@@ -47,7 +47,7 @@ msgstr ""
 #: system/settings/settings.xml
 msgctxt "#13438"
 msgid "Allow hardware acceleration"
-msgstr "Allow hardware acceleration"
+msgstr ""
 
 #: system/settings/settings.xml
 msgctxt "#34210"
