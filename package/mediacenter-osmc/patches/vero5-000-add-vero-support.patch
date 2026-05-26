@@ -53,22 +53,21 @@ index 0000000000..89d1fd985d
 +endif()
 +
 +mark_as_advanced(AMLCODEC_INCLUDE_DIR)
+
 diff --git a/cmake/modules/FindFFMPEG.cmake b/cmake/modules/FindFFMPEG.cmake
-index 6c6bf973de..215280a4e6 100644
+index 407859b..a8e004b 100644
 --- a/cmake/modules/FindFFMPEG.cmake
 +++ b/cmake/modules/FindFFMPEG.cmake
-@@ -80,7 +80,10 @@ macro(buildFFMPEG)
-                  -DPKG_CONFIG_PATH=${CMAKE_BINARY_DIR}/${CORE_BUILD_DIR}/lib/pkgconfig)
-   set(PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-                     ${CMAKE_SOURCE_DIR}/tools/depends/target/ffmpeg/CMakeLists.txt
--                    <SOURCE_DIR>)
-+                    <SOURCE_DIR> &&
-+                    /bin/bash -c "patch -p1 < ${CMAKE_SOURCE_DIR}/tools/depends/target/ffmpeg/0001-added_upstream_mvc_patches.patch" &&
-+                    /bin/bash -c "patch -p1 < ${CMAKE_SOURCE_DIR}/tools/depends/target/ffmpeg/0002-MKV-added-basic-block-addition-mapping-support-for-m.patch"
-+)
+@@ -177,6 +177,8 @@ macro(buildFFMPEG)
+     set(PATCH_COMMAND ${CMAKE_COMMAND} -E copy
+                       ${CMAKE_SOURCE_DIR}/tools/depends/target/ffmpeg/CMakeLists.txt
+                       <SOURCE_DIR>
++                      COMMAND /bin/bash -c "cd <SOURCE_DIR> && patch -p1 < ${CMAKE_SOURCE_DIR}/tools/depends/target/ffmpeg/0001-added_upstream_mvc_patches.patch"
++                      COMMAND /bin/bash -c "cd <SOURCE_DIR> && patch -p1 < ${CMAKE_SOURCE_DIR}/tools/depends/target/ffmpeg/0002-MKV-added-basic-block-addition-mapping-support-for-m.patch"
+     )
  
-   if(CMAKE_GENERATOR STREQUAL Xcode)
-     set(FFMPEG_GENERATOR CMAKE_GENERATOR "Unix Makefiles")
+     if(NOT DISABLE_FFMPEG_SOURCE_PLUGINS)
+
 diff --git a/cmake/platform/linux/aml.cmake b/cmake/platform/linux/aml.cmake
 new file mode 100644
 index 0000000000..4206c283e2
@@ -77,6 +76,7 @@ index 0000000000..4206c283e2
 @@ -0,0 +1,2 @@
 +list(APPEND PLATFORM_REQUIRED_DEPS OpenGLES AML EGL LibInput Xkbcommon)
 +set(APP_RENDER_SYSTEM gles)
+
 diff --git a/cmake/scripts/android/ArchSetup.cmake b/cmake/scripts/android/ArchSetup.cmake
 index 935af74930..d32a359cfb 100644
 --- a/cmake/scripts/android/ArchSetup.cmake
@@ -89,6 +89,7 @@ index 935af74930..d32a359cfb 100644
  set(ENABLE_OPTICAL OFF CACHE BOOL "" FORCE)
  set(ENABLE_MDNS OFF CACHE BOOL "" FORCE)
  
+
 diff --git a/cmake/scripts/common/ArchSetup.cmake b/cmake/scripts/common/ArchSetup.cmake
 index a83d2ae198..dc7effa58f 100644
 --- a/cmake/scripts/common/ArchSetup.cmake
@@ -119,6 +120,7 @@ index a83d2ae198..dc7effa58f 100644
  endif()
  
  # set for compile info to help detect binary addons
+
 diff --git a/cmake/scripts/common/Platform.cmake b/cmake/scripts/common/Platform.cmake
 index 397d8d46e8..7a4a35a31b 100644
 --- a/cmake/scripts/common/Platform.cmake
@@ -135,6 +137,7 @@ index 397d8d46e8..7a4a35a31b 100644
  
    if(NOT APP_RENDER_SYSTEM)
      message(SEND_ERROR "You need to decide whether you want to use GL- or GLES-based rendering. Please set APP_RENDER_SYSTEM to either \"gl\" or \"gles\". For normal desktop systems, you will usually want to use \"gl\".")
+
 diff --git a/cmake/treedata/common/aml/aml.txt b/cmake/treedata/common/aml/aml.txt
 new file mode 100644
 index 0000000000..1e4856fcd4
@@ -143,6 +146,7 @@ index 0000000000..1e4856fcd4
 @@ -0,0 +1,2 @@
 +xbmc/cores/RetroPlayer/process/amlogic cores/RetroPlayer/process/amlogic
 +xbmc/windowing/amlogic windowing/amlogic
+
 diff --git a/system/keymaps/remote.xml b/system/keymaps/remote.xml
 index 5c0baf7e9d..fb38ee9575 100644
 --- a/system/keymaps/remote.xml
@@ -156,6 +160,7 @@ index 5c0baf7e9d..fb38ee9575 100644
        <myvideo>ActivateWindow(Videos)</myvideo>
        <mymusic>ActivateWindow(Music)</mymusic>
        <mypictures>ActivateWindow(Pictures)</mypictures>
+
 diff --git a/system/settings/linux.xml b/system/settings/linux.xml
 index 531974f3f4..9b85a3bf92 100644
 --- a/system/settings/linux.xml
@@ -172,8 +177,7 @@ index 531974f3f4..9b85a3bf92 100644
        </group>
      </category>
      <category id="input">
-diff --git a/system/settings/settings.xml b/system/settings/settings.xml
-index 6e69bb9cab..7438999ea4 100755
+
 --- a/system/settings/settings.xml
 +++ b/system/settings/settings.xml
 @@ -87,6 +87,125 @@
@@ -310,25 +314,16 @@ index 6e69bb9cab..7438999ea4 100755
              </options>
            </constraints>
            <control type="list" format="string" />
-@@ -2517,7 +2637,7 @@
+@@ -2614,7 +2734,7 @@
        <group id="1" label="16000">
          <setting id="filecache.buffermode" type="integer" label="37103" help="37104">
            <level>2</level>
--          <default>4</default>
-+          <default>1</default>
+-          <default>4</default> <!-- All network filesystems -->
++          <default>1</default> <!-- All internet filesystems -->
            <constraints>
              <options>filecachebuffermodes</options>
            </constraints>
-@@ -2525,7 +2645,7 @@
-         </setting>
-         <setting id="filecache.memorysize" type="integer" label="37105" help="37106">
-           <level>2</level>
--          <default>20</default>
-+          <default>64</default>
-           <dependencies>
-             <dependency type="enable">
-               <condition setting="filecache.buffermode" operator="!is">3</condition>
-@@ -2757,6 +2877,50 @@
+@@ -2854,6 +2974,50 @@
            </dependencies>
            <control type="toggle" />
          </setting>
@@ -379,7 +374,7 @@ index 6e69bb9cab..7438999ea4 100755
          <setting id="videoscreen.delayrefreshchange" type="integer" parent="videoscreen.screen" label="13550" help="36165">
            <level>2</level>
            <default>0</default>
-@@ -2778,6 +2942,21 @@
+@@ -2875,6 +3039,21 @@
            </constraints>
            <control type="spinner" format="string" />
          </setting>
@@ -401,15 +396,15 @@ index 6e69bb9cab..7438999ea4 100755
          <setting id="videoscreen.dither" type="boolean" label="36099" help="36598">
            <requirement>
              <or>
-@@ -3002,6 +3181,7 @@
-           <or>
+@@ -3100,6 +3279,7 @@
              <condition>HAS_DX</condition>
              <condition>HAS_MEDIACODEC</condition>
+             <condition>HAVE_WEBOS</condition>
 +            <condition>HAS_GLES</condition>
            </or>
          </requirement>
          <dependencies>
-@@ -3010,6 +3190,7 @@
+@@ -3108,6 +3288,7 @@
              <or>
                <condition on="property" name="hassystemsdrpeakluminance" operator="!is" />
                <condition setting="videoscreen.usesystemsdrpeakluminance" operator="is">false</condition>
@@ -417,7 +412,7 @@ index 6e69bb9cab..7438999ea4 100755
              </or>
            </dependency>
          </dependencies>
-@@ -3033,7 +3214,7 @@
+@@ -3131,7 +3312,7 @@
          </setting>
          <setting id="videoscreen.whitelistpulldown" type="boolean" parent="videoscreen.whitelist" label="14127" help="36444">
            <level>3</level>
@@ -426,7 +421,7 @@ index 6e69bb9cab..7438999ea4 100755
            <dependencies>
              <dependency type="enable" setting="videoscreen.whitelist" operator="!is"></dependency>
            </dependencies>
-@@ -3041,7 +3222,7 @@
+@@ -3139,7 +3320,7 @@
          </setting>
          <setting id="videoscreen.whitelistdoublerefreshrate" type="boolean" parent="videoscreen.whitelist" label="14128" help="36445">
            <level>3</level>
@@ -435,7 +430,7 @@ index 6e69bb9cab..7438999ea4 100755
            <dependencies>
              <dependency type="enable" setting="videoscreen.whitelist" operator="!is"></dependency>
            </dependencies>
-@@ -3123,7 +3304,7 @@
+@@ -3221,7 +3402,7 @@
          </setting>
          <setting id="audiooutput.config" type="integer" label="337" help="36361">
            <level>2</level>
@@ -444,9 +439,9 @@ index 6e69bb9cab..7438999ea4 100755
            <constraints>
              <options>
                <option label="338">1</option>
-@@ -3168,6 +3349,18 @@
-             <formatlabel>36459</formatlabel>
-           </control>
+@@ -3259,6 +3440,18 @@
+           <default>true</default>
+           <control type="toggle" />
          </setting>
 +        <setting id="audiooutput.boostcenter" type="integer" label="38007" help="38008">
 +          <level>2</level>
@@ -463,7 +458,7 @@ index 6e69bb9cab..7438999ea4 100755
          <setting id="audiooutput.processquality" type="integer" label="13505" help="36169">
            <requirement>HAS_AE_QUALITY_LEVELS</requirement>
            <level>2</level>
-@@ -3213,7 +3406,7 @@
+@@ -3304,7 +3497,7 @@
          </setting>
          <setting id="audiooutput.streamsilence" type="integer" label="421" help="34111">
            <level>2</level>
@@ -472,7 +467,7 @@ index 6e69bb9cab..7438999ea4 100755
            <constraints>
              <options>audiostreamsilence</options>
            </constraints>
-@@ -3221,7 +3414,7 @@
+@@ -3312,7 +3505,7 @@
          </setting>
          <setting id="audiooutput.streamnoise" type="boolean" label="34112" help="34113">
            <level>2</level>
@@ -480,7 +475,8 @@ index 6e69bb9cab..7438999ea4 100755
 +          <default>false</default>
            <control type="toggle" />
          </setting>
-       </group>
+         <setting id="audiooutput.mixsublevel" type="integer" label="34114" help="34115">
+
 diff --git a/tools/depends/target/ffmpeg/0001-added_upstream_mvc_patches.patch b/tools/depends/target/ffmpeg/0001-added_upstream_mvc_patches.patch
 new file mode 100644
 index 0000000000..0585fdc83f
@@ -777,6 +773,7 @@ index 0000000000..0585fdc83f
 +-- 
 +2.34.1
 +
+
 diff --git a/tools/depends/target/ffmpeg/0002-MKV-added-basic-block-addition-mapping-support-for-m.patch b/tools/depends/target/ffmpeg/0002-MKV-added-basic-block-addition-mapping-support-for-m.patch
 new file mode 100644
 index 0000000000..7b9b0ca295
@@ -900,6 +897,7 @@ index 0000000000..7b9b0ca295
 +-- 
 +2.34.1
 +
+
 diff --git a/xbmc/CMakeLists.txt b/xbmc/CMakeLists.txt
 index b7c838b3da..70c96fd319 100644
 --- a/xbmc/CMakeLists.txt
@@ -922,6 +920,7 @@ index b7c838b3da..70c96fd319 100644
              PartyModeManager.h
              PasswordManager.h
              PlayListPlayer.h
+
 diff --git a/xbmc/OSMCHelper.cpp b/xbmc/OSMCHelper.cpp
 new file mode 100644
 index 0000000000..2b605881b1
@@ -964,6 +963,7 @@ index 0000000000..2b605881b1
 +     }                                                                                     
 +   #endif // __arm__                                                                       
 +}                                                                                          
+
 diff --git a/xbmc/OSMCHelper.h b/xbmc/OSMCHelper.h
 new file mode 100644
 index 0000000000..709d21afbe
@@ -1008,6 +1008,7 @@ index 0000000000..709d21afbe
 +      int uname(struct utsname *buf);                                                      
 +    #endif // __arm__                                                                      
 +}                                                                                          
+
 diff --git a/xbmc/OSMCSecureOS.cpp b/xbmc/OSMCSecureOS.cpp
 new file mode 100644
 index 0000000000..8a5b7e4da3
@@ -1199,6 +1200,7 @@ index 0000000000..8a5b7e4da3
 +
 +	return false;
 +}
+
 diff --git a/xbmc/OSMCSecureOS.h b/xbmc/OSMCSecureOS.h
 new file mode 100644
 index 0000000000..c359ad742f
@@ -1246,6 +1248,7 @@ index 0000000000..c359ad742f
 +
 +	bool isVeroV() const;
 +};
+
 diff --git a/xbmc/addons/kodi-dev-kit/include/kodi/c-api/addon-instance/inputstream/demux_packet.h b/xbmc/addons/kodi-dev-kit/include/kodi/c-api/addon-instance/inputstream/demux_packet.h
 index 79686abc9b..84aa11512c 100644
 --- a/xbmc/addons/kodi-dev-kit/include/kodi/c-api/addon-instance/inputstream/demux_packet.h
@@ -1262,56 +1265,38 @@ index 79686abc9b..84aa11512c 100644
      /// @brief Optional data to allow decryption at processing site if
      /// necessary.
      ///
+
 diff --git a/xbmc/application/Application.cpp b/xbmc/application/Application.cpp
-index 1791ed607a..714ea913e3 100644
+index b638730..4ca3ef9 100644
 --- a/xbmc/application/Application.cpp
 +++ b/xbmc/application/Application.cpp
-@@ -139,6 +139,7 @@
+@@ -145,6 +145,7 @@
  #include "utils/TimeUtils.h"
  #include "utils/URIUtils.h"
  #include "utils/Variant.h"
 +#include "utils/SysfsUtils.h"
- #include "utils/XTimeUtils.h"
  #include "utils/log.h"
- #include "video/Bookmark.h"
-@@ -1232,8 +1233,15 @@ bool CApplication::OnAction(const CAction &action)
+ #include "video/PlayerController.h"
+ #include "video/VideoLibraryQueue.h"
+@@ -1207,8 +1208,17 @@ bool CApplication::OnAction(const CAction &action)
    }
  
    // forward action to graphic context and see if it can handle it
--  if (CServiceBroker::GetGUI()->GetStereoscopicsManager().OnAction(action))
--    return true;
-+  RENDER_STEREO_MODE oldRsm = CServiceBroker::GetGUI()->GetStereoscopicsManager().GetStereoMode();
-+  if (CServiceBroker::GetGUI()->GetStereoscopicsManager().OnAction(action)) {
-+    RENDER_STEREO_MODE newRsm = CServiceBroker::GetGUI()->GetStereoscopicsManager().GetStereoMode();
-+    if (oldRsm != newRsm) {
++  RenderStereoMode oldRsm = CServiceBroker::GetGUI()->GetStereoscopicsManager().GetStereoMode();
+   if (CServiceBroker::GetGUI()->GetStereoscopicsManager().OnAction(action))
++  {
++    RenderStereoMode newRsm = CServiceBroker::GetGUI()->GetStereoscopicsManager().GetStereoMode();
++    if (oldRsm != newRsm)
++    {
 +      // stereo mode changed
 +      appPlayer->TriggerUpdateResolution();
 +    }
-+  return true;
+     return true;
 +  }
  
    if (appPlayer->IsPlaying())
    {
-@@ -1598,6 +1606,18 @@ void CApplication::OnApplicationMessage(ThreadMessage* pMsg)
-       break;
-   }
- 
-+  case TMSG_AML_RESIZE:
-+  {
-+    if (! appPlayer->IsPlayingVideo()) {
-+      CDisplaySettings::GetInstance().ClearCustomResolutions();
-+      CServiceBroker::GetWinSystem()->UpdateResolutions();
-+      CDisplaySettings::GetInstance().SetCurrentResolution(RES_DESKTOP);
-+      CServiceBroker::GetWinSystem()->GetGfxContext().SetVideoResolution(RES_DESKTOP, true);
-+      CLog::Log(LOGINFO, "Updated resolutions and set desktop");
-+    }
-+    break;
-+  }
-+
-   case TMSG_NETWORKMESSAGE:
-     m_ServiceManager->GetNetwork().NetworkMessage(static_cast<CNetworkBase::EMESSAGE>(pMsg->param1),
-                                                   pMsg->param2);
-@@ -2641,6 +2661,7 @@ void CApplication::PlaybackCleanup()
+@@ -2081,6 +2091,7 @@ void CApplication::PlaybackCleanup()
      else
      {
        //  resets to res_desktop or look&feel resolution (including refreshrate)
@@ -1319,7 +1304,7 @@ index 1791ed607a..714ea913e3 100644
        CServiceBroker::GetWinSystem()->GetGfxContext().SetFullScreenVideo(false);
      }
  #ifdef TARGET_DARWIN_EMBEDDED
-@@ -3694,7 +3715,7 @@ void CApplication::SetLoggingIn(bool switchingProfiles)
+@@ -2777,7 +2788,7 @@ void CApplication::SetLoggingIn(bool switchingProfiles)
  void CApplication::PrintStartupLog()
  {
    CLog::Log(LOGINFO, "-----------------------------------------------------------------------");
@@ -1328,6 +1313,44 @@ index 1791ed607a..714ea913e3 100644
              CSysInfo::GetVersion(), g_sysinfo.GetBuildTargetPlatformName(),
              g_sysinfo.GetBuildTargetCpuFamily(), g_sysinfo.GetXbmcBitness());
  
+diff --git a/xbmc/application/ApplicationMessageHandling.cpp b/xbmc/application/ApplicationMessageHandling.cpp
+index 5396c24..fdd2fa6 100644
+--- a/xbmc/application/ApplicationMessageHandling.cpp
++++ b/xbmc/application/ApplicationMessageHandling.cpp
+@@ -56,10 +56,12 @@
+ #include "resources/LocalizeStrings.h"
+ #include "resources/ResourcesComponent.h"
+ #include "settings/Settings.h"
++#include "settings/DisplaySettings.h"
+ #include "settings/SettingsComponent.h"
+ #include "utils/ContentUtils.h"
+ #include "utils/FileExtensionProvider.h"
+ #include "utils/URIUtils.h"
++#include "utils/log.h"
+ #include "video/VideoFileItemClassify.h"
+ #include "windowing/WinSystem.h"
+ 
+@@ -217,6 +219,19 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
+     }
+     break;
+ 
++    case TMSG_AML_RESIZE:
++    {
++      if (!appPlayer->IsPlayingVideo())
++      {
++        CDisplaySettings::GetInstance().ClearCustomResolutions();
++        CServiceBroker::GetWinSystem()->UpdateResolutions();
++        CDisplaySettings::GetInstance().SetCurrentResolution(RES_DESKTOP);
++        CServiceBroker::GetWinSystem()->GetGfxContext().SetVideoResolution(RES_DESKTOP, true);
++        CLog::Log(LOGINFO, "Updated resolutions and set desktop");
++      }
++      break;
++    }
++
+     case TMSG_NETWORKMESSAGE:
+       m_app.m_ServiceManager->GetNetwork().NetworkMessage(
+           static_cast<CNetworkBase::EMESSAGE>(pMsg->param1), pMsg->param2);
+
 diff --git a/xbmc/application/ApplicationPlayerCallback.cpp b/xbmc/application/ApplicationPlayerCallback.cpp
 index ed36a27e18..2b4ae95884 100644
 --- a/xbmc/application/ApplicationPlayerCallback.cpp
@@ -1352,6 +1375,7 @@ index ed36a27e18..2b4ae95884 100644
    CGUIMessage msg(GUI_MSG_PLAYBACK_AVCHANGE, 0, 0);
    CServiceBroker::GetGUI()->GetWindowManager().SendThreadMessage(msg);
  }
+
 diff --git a/xbmc/application/ApplicationPowerHandling.cpp b/xbmc/application/ApplicationPowerHandling.cpp
 index 8000a7ee9e..6278a7a671 100644
 --- a/xbmc/application/ApplicationPowerHandling.cpp
@@ -1450,6 +1474,7 @@ index 8000a7ee9e..6278a7a671 100644
  void CApplicationPowerHandling::CheckOSScreenSaverInhibitionSetting()
  {
    // Kodi screen saver overrides OS one: always inhibit OS screen saver then
+
 diff --git a/xbmc/application/ApplicationPowerHandling.h b/xbmc/application/ApplicationPowerHandling.h
 index 9d78c6e36d..12310a029e 100644
 --- a/xbmc/application/ApplicationPowerHandling.h
@@ -1483,6 +1508,7 @@ index 9d78c6e36d..12310a029e 100644
  
    bool m_dpmsIsActive = false;
    bool m_dpmsIsManual = false;
+
 diff --git a/xbmc/cores/AudioEngine/Engines/ActiveAE/ActiveAEResampleFFMPEG.cpp b/xbmc/cores/AudioEngine/Engines/ActiveAE/ActiveAEResampleFFMPEG.cpp
 index 6aee94c6d3..dcbae016ef 100644
 --- a/xbmc/cores/AudioEngine/Engines/ActiveAE/ActiveAEResampleFFMPEG.cpp
@@ -1509,6 +1535,7 @@ index 6aee94c6d3..dcbae016ef 100644
  
    // tell resampler to clamp float values
    // not required for sink stage (remapLayout == true)
+
 diff --git a/xbmc/cores/AudioEngine/Sinks/AESinkALSA.cpp b/xbmc/cores/AudioEngine/Sinks/AESinkALSA.cpp
 index d861faacca..3dada19c7f 100644
 --- a/xbmc/cores/AudioEngine/Sinks/AESinkALSA.cpp
@@ -1772,11 +1799,12 @@ index d861faacca..3dada19c7f 100644
        info.m_displayNameExtra = "";
      }
  
+
 diff --git a/xbmc/cores/AudioEngine/Sinks/AESinkAUDIOTRACK.cpp b/xbmc/cores/AudioEngine/Sinks/AESinkAUDIOTRACK.cpp
 index 6da358f792..07da243ef9 100644
 --- a/xbmc/cores/AudioEngine/Sinks/AESinkAUDIOTRACK.cpp
 +++ b/xbmc/cores/AudioEngine/Sinks/AESinkAUDIOTRACK.cpp
-@@ -26,6 +26,8 @@
+@@ -28,6 +28,8 @@
  #include <androidjni/Build.h>
  #include <unistd.h>
  
@@ -1785,7 +1813,7 @@ index 6da358f792..07da243ef9 100644
  // This is an alternative to the linear weighted delay smoothing
  // advantages: only one history value needs to be stored
  // in tests the linear weighted average smoother yield better results
-@@ -47,6 +49,24 @@ static const AEChannel KnownChannels[] = {AE_CH_FL, AE_CH_FR,   AE_CH_FC,   AE_C
+@@ -47,6 +49,24 @@
                                            AE_CH_SL, AE_CH_SR,   AE_CH_BL,   AE_CH_BR,
                                            AE_CH_BC, AE_CH_BLOC, AE_CH_BROC, AE_CH_NULL};
  
@@ -1810,7 +1838,7 @@ index 6da358f792..07da243ef9 100644
  static int AEStreamFormatToATFormat(const CAEStreamInfo::DataType& dt)
  {
    switch (dt)
-@@ -408,6 +428,10 @@ bool CAESinkAUDIOTRACK::Initialize(AEAudioFormat &format, std::string &device)
+@@ -393,6 +413,10 @@
        atChannelMask = CJNIAudioFormat::CHANNEL_OUT_STEREO;
    }
  
@@ -1821,7 +1849,7 @@ index 6da358f792..07da243ef9 100644
    bool retried = false;
    while (!m_at_jni)
    {
-@@ -490,8 +514,14 @@ bool CAESinkAUDIOTRACK::Initialize(AEAudioFormat &format, std::string &device)
+@@ -475,8 +499,14 @@
      else
      {
        m_format.m_frameSize = m_format.m_channelLayout.Count() * (CAEUtil::DataFormatToBits(m_format.m_dataFormat) / 8);
@@ -1838,7 +1866,7 @@ index 6da358f792..07da243ef9 100644
        // make sure periods are actually not smaller than 32 ms (32, cause 32 * 2 = 64)
        // but also lower than 64 ms
        // which is large enough to not cause CPU hogging in case 32 ms periods are used
-@@ -509,6 +539,19 @@ bool CAESinkAUDIOTRACK::Initialize(AEAudioFormat &format, std::string &device)
+@@ -494,6 +524,19 @@
          m_min_buffer_size = buffer_frames * m_sink_frameSize;
          c = 5; // 50 ms
        }
@@ -1858,7 +1886,7 @@ index 6da358f792..07da243ef9 100644
        // update potential new buffertime
        m_audiotrackbuffer_sec =
            static_cast<double>(m_min_buffer_size) / (m_sink_frameSize * m_sink_sampleRate);
-@@ -672,7 +715,16 @@ void CAESinkAUDIOTRACK::GetDelay(AEDelayStatus& status)
+@@ -664,7 +707,16 @@
      m_headPosOld = m_headPos;
    }
  
@@ -1876,10 +1904,11 @@ index 6da358f792..07da243ef9 100644
  
    // if sink is run dry without buffer time written anymore
    if (gone > m_duration_written)
-@@ -1119,6 +1171,25 @@ void CAESinkAUDIOTRACK::UpdateAvailablePassthroughCapabilities(bool isRaw)
+@@ -1193,6 +1245,25 @@
+         }
        }
      }
- 
++
 +    if (aml_present() && CJNIAudioManager::GetSDKVersion() < 23)
 +    {
 +      // passthrough
@@ -1898,11 +1927,10 @@ index 6da358f792..07da243ef9 100644
 +      std::copy(m_sink_sampleRates.begin(), m_sink_sampleRates.end(), std::back_inserter(m_info.m_sampleRates));
 +      return;  // all done here
 +    }
-+
-     if (CJNIAudioManager::GetSDKVersion() >= 23)
-     {
-       if (CJNIAudioFormat::ENCODING_DTS_HD != -1)
-@@ -1216,15 +1287,21 @@ void CAESinkAUDIOTRACK::UpdateAvailablePCMCapabilities()
+   }
+ }
+ 
+@@ -1223,15 +1294,21 @@
      CLog::Log(LOGINFO, "Multi channel Float is supported");
    }
  
@@ -1931,11 +1959,7 @@ index 6da358f792..07da243ef9 100644
      }
    }
    std::copy(m_sink_sampleRates.begin(), m_sink_sampleRates.end(), std::back_inserter(m_info.m_sampleRates));
-@@ -1268,4 +1345,3 @@ double CAESinkAUDIOTRACK::GetMovingAverageDelay(double newestdelay)
- 
-   return sum * denom;
- }
--
+
 diff --git a/xbmc/cores/AudioEngine/Sinks/AESinkAUDIOTRACK.h b/xbmc/cores/AudioEngine/Sinks/AESinkAUDIOTRACK.h
 index db476bb8d4..ad28ef5331 100644
 --- a/xbmc/cores/AudioEngine/Sinks/AESinkAUDIOTRACK.h
@@ -1948,6 +1972,7 @@ index db476bb8d4..ad28ef5331 100644
    static void UpdateAvailablePCMCapabilities();
    static void UpdateAvailablePassthroughCapabilities(bool isRaw = false);
  
+
 diff --git a/xbmc/cores/AudioEngine/Utils/AEChannelInfo.cpp b/xbmc/cores/AudioEngine/Utils/AEChannelInfo.cpp
 index e3d74ca3a1..d724ab4bd5 100644
 --- a/xbmc/cores/AudioEngine/Utils/AEChannelInfo.cpp
@@ -1962,8 +1987,9 @@ index e3d74ca3a1..d724ab4bd5 100644
        return false;
    }
    return true;
+
 diff --git a/xbmc/cores/RetroPlayer/process/RPProcessInfo.h b/xbmc/cores/RetroPlayer/process/RPProcessInfo.h
-index f5ffe670d6..cc505bac26 100644
+index 7706c2e..4d5efc4 100644
 --- a/xbmc/cores/RetroPlayer/process/RPProcessInfo.h
 +++ b/xbmc/cores/RetroPlayer/process/RPProcessInfo.h
 @@ -146,6 +146,14 @@ public:
@@ -1978,9 +2004,10 @@ index f5ffe670d6..cc505bac26 100644
 +   */
 +  virtual void ConfigureRenderSystem(AVPixelFormat format) { }
 +
-   ///}
- 
-   /// @name Player video info
+   /*!
+    * \brief Get a symbol from the hardware context
+    *
+
 diff --git a/xbmc/cores/RetroPlayer/process/amlogic/CMakeLists.txt b/xbmc/cores/RetroPlayer/process/amlogic/CMakeLists.txt
 new file mode 100644
 index 0000000000..be5fcbdabe
@@ -1993,6 +2020,7 @@ index 0000000000..be5fcbdabe
 +
 +  core_add_library(rp-process-amlogic)
 +endif()
+
 diff --git a/xbmc/cores/RetroPlayer/process/amlogic/RPProcessInfoAmlogic.cpp b/xbmc/cores/RetroPlayer/process/amlogic/RPProcessInfoAmlogic.cpp
 new file mode 100644
 index 0000000000..12c1302c3f
@@ -2047,6 +2075,7 @@ index 0000000000..12c1302c3f
 +      CLog::Log(LOGDEBUG, "RetroPlayer[RENDER]: Amlogic unset to ignore alpha");
 +  }
 +}
+
 diff --git a/xbmc/cores/RetroPlayer/process/amlogic/RPProcessInfoAmlogic.h b/xbmc/cores/RetroPlayer/process/amlogic/RPProcessInfoAmlogic.h
 new file mode 100644
 index 0000000000..007915d750
@@ -2083,6 +2112,7 @@ index 0000000000..007915d750
 +  };
 +}
 +}
+
 diff --git a/xbmc/cores/RetroPlayer/rendering/RPRenderManager.cpp b/xbmc/cores/RetroPlayer/rendering/RPRenderManager.cpp
 index a09c5c29f1..9a3c6d2bf2 100644
 --- a/xbmc/cores/RetroPlayer/rendering/RPRenderManager.cpp
@@ -2106,6 +2136,7 @@ index a09c5c29f1..9a3c6d2bf2 100644
        m_state = RENDER_STATE::CONFIGURED;
  
        CLog::Log(LOGINFO, "RetroPlayer[RENDER]: Renderer configured on first frame");
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/DVDCodecUtils.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/DVDCodecUtils.cpp
 index 5b7f34d6e5..b758fab06a 100644
 --- a/xbmc/cores/VideoPlayer/DVDCodecs/DVDCodecUtils.cpp
@@ -2210,6 +2241,7 @@ index 5b7f34d6e5..b758fab06a 100644
 +
 +  return *mvcIndex >= 0;
 +}
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/DVDCodecUtils.h b/xbmc/cores/VideoPlayer/DVDCodecs/DVDCodecUtils.h
 index 37872d1624..9936faacae 100644
 --- a/xbmc/cores/VideoPlayer/DVDCodecs/DVDCodecUtils.h
@@ -2233,6 +2265,7 @@ index 37872d1624..9936faacae 100644
 +  static bool GetH264MvcStreamIndex(AVFormatContext *fmt, int *mvcIndex);
  };
  
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Overlay/DVDOverlay.h b/xbmc/cores/VideoPlayer/DVDCodecs/Overlay/DVDOverlay.h
 index 96b4cbbc57..3e970bd5dd 100644
 --- a/xbmc/cores/VideoPlayer/DVDCodecs/Overlay/DVDOverlay.h
@@ -2262,17 +2295,19 @@ index 96b4cbbc57..3e970bd5dd 100644
  protected:
    DVDOverlayType m_type;
    bool m_enableTextAlign;
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Overlay/DVDOverlayCodecFFmpeg.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Overlay/DVDOverlayCodecFFmpeg.cpp
-index 3eb85be4ee..d46be3d2cf 100644
+index b292bd8..1d06e9e 100644
 --- a/xbmc/cores/VideoPlayer/DVDCodecs/Overlay/DVDOverlayCodecFFmpeg.cpp
 +++ b/xbmc/cores/VideoPlayer/DVDCodecs/Overlay/DVDOverlayCodecFFmpeg.cpp
-@@ -243,22 +243,6 @@ std::shared_ptr<CDVDOverlay> CDVDOverlayCodecFFmpeg::GetOverlay()
+@@ -245,23 +245,6 @@ std::shared_ptr<CDVDOverlay> CDVDOverlayCodecFFmpeg::GetOverlay()
        }
      }
  
--    RENDER_STEREO_MODE render_stereo_mode = CServiceBroker::GetWinSystem()->GetGfxContext().GetStereoMode();
--    if (render_stereo_mode != RENDER_STEREO_MODE_OFF &&
--        render_stereo_mode != RENDER_STEREO_MODE_HARDWAREBASED)
+-    RenderStereoMode render_stereo_mode =
+-        CServiceBroker::GetWinSystem()->GetGfxContext().GetStereoMode();
+-    if (render_stereo_mode != RenderStereoMode::OFF &&
+-        render_stereo_mode != RenderStereoMode::HARDWAREBASED)
 -    {
 -      if (rect.h > m_height / 2)
 -      {
@@ -2289,6 +2324,7 @@ index 3eb85be4ee..d46be3d2cf 100644
      auto overlay = std::make_shared<CDVDOverlayImage>();
  
      overlay->iPTSStartTime = m_StartTime;
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/CMakeLists.txt b/xbmc/cores/VideoPlayer/DVDCodecs/Video/CMakeLists.txt
 index 452ed873be..539499eb3e 100644
 --- a/xbmc/cores/VideoPlayer/DVDCodecs/Video/CMakeLists.txt
@@ -2336,6 +2372,7 @@ index 452ed873be..539499eb3e 100644
  if(CORE_SYSTEM_NAME STREQUAL windows OR CORE_SYSTEM_NAME STREQUAL windowsstore)
    list(APPEND SOURCES DXVA.cpp)
    list(APPEND HEADERS DXVA.h)
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodec.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodec.cpp
 index d8554d33b6..c6bad23ed8 100644
 --- a/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodec.cpp
@@ -2349,6 +2386,7 @@ index d8554d33b6..c6bad23ed8 100644
    qp_table = nullptr;
    qstride = 0;
    qscale_type = 0;
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodec.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodec.h
 index adb8b51242..2e61bf4b3e 100644
 --- a/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodec.h
@@ -2369,6 +2407,7 @@ index adb8b51242..2e61bf4b3e 100644
  
    bool hasDisplayMetadata = false;
    AVMasteringDisplayMetadata displayMetadata;
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecAmlogic.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecAmlogic.cpp
 new file mode 100644
 index 0000000000..61d777e494
@@ -2686,6 +2725,7 @@ index 0000000000..61d777e494
 +  if (m_codec)
 +    m_codec->setSpeed(iSpeed);
 +}
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecAmlogic.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecAmlogic.h
 new file mode 100644
 index 0000000000..4d0b1730c0
@@ -2780,6 +2820,7 @@ index 0000000000..4d0b1730c0
 +  std::shared_ptr<CAMLVideoBufferPool> m_videoBufferPool;
 +  static std::atomic<bool> m_InstanceGuard;
 +};
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLCodecList.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLCodecList.cpp
 new file mode 100644
 index 0000000000..e831e9ecb6
@@ -2845,6 +2886,7 @@ index 0000000000..e831e9ecb6
 +{
 +	return *m_codecInfo.at(index);
 +}
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLCodecList.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLCodecList.h
 new file mode 100644
 index 0000000000..ef2832e1cb
@@ -2886,6 +2928,7 @@ index 0000000000..ef2832e1cb
 +	unsigned getCodecCount() const;
 +	AMLVideoCodecInfo &getCodecInfoAt(unsigned index) const;
 +};
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLDecoderInputQueueStats.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLDecoderInputQueueStats.cpp
 new file mode 100644
 index 0000000000..10b20aea96
@@ -2957,6 +3000,7 @@ index 0000000000..10b20aea96
 +	m_inputBufferLength = 0;
 +	m_frameSizes.clear();
 +}
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLDecoderInputQueueStats.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLDecoderInputQueueStats.h
 new file mode 100644
 index 0000000000..a71daa354e
@@ -2997,6 +3041,7 @@ index 0000000000..a71daa354e
 +	unsigned frameCount();
 +	void reset();
 +};
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLInsecureVideoCodec.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLInsecureVideoCodec.cpp
 new file mode 100644
 index 0000000000..3573b92003
@@ -4358,6 +4403,7 @@ index 0000000000..3573b92003
 +{
 +	return m_opened ? m_hints.aspect : 0;
 +}
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLInsecureVideoCodec.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLInsecureVideoCodec.h
 new file mode 100644
 index 0000000000..4d9a1b5925
@@ -4516,6 +4562,7 @@ index 0000000000..4d9a1b5925
 +
 +	virtual void reset();
 +};
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLVideoCodec.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLVideoCodec.cpp
 new file mode 100644
 index 0000000000..3d3e1a838f
@@ -4562,6 +4609,7 @@ index 0000000000..3d3e1a838f
 +
 +	return m_videoCodec->poll();
 +}
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLVideoCodec.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLVideoCodec.h
 new file mode 100644
 index 0000000000..16fff937f0
@@ -4629,6 +4677,7 @@ index 0000000000..16fff937f0
 +
 +	virtual void reset() = 0;
 +};
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLVideoCodecConstants.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLVideoCodecConstants.h
 new file mode 100644
 index 0000000000..deda336fae
@@ -4675,6 +4724,7 @@ index 0000000000..deda336fae
 +#define UNIT_FREQ       96000
 +#define AV_SYNC_THRESH  PTS_FREQ*30
 +
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLVideoCodecDataTypes.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLVideoCodecDataTypes.h
 new file mode 100644
 index 0000000000..1f54531bf1
@@ -4782,6 +4832,7 @@ index 0000000000..1f54531bf1
 +	unsigned int extrasize;
 +	uint8_t *extradata;
 +} am_private_t;
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLVideoCodecInfo.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLVideoCodecInfo.h
 new file mode 100644
 index 0000000000..0c7740448b
@@ -4821,6 +4872,7 @@ index 0000000000..0c7740448b
 +	virtual bool canPlay(const CDVDStreamInfo &hints) const = 0;
 +	virtual AMLVideoCodec *createCodec(CProcessInfo &processInfo, const CDVDStreamInfo &hints) = 0;
 +};
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AV1Codec.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AV1Codec.cpp
 new file mode 100644
 index 0000000000..5b9bb5fa05
@@ -5411,6 +5463,7 @@ index 0000000000..5b9bb5fa05
 +
 +	return 0;
 +}
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AV1Codec.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AV1Codec.h
 new file mode 100644
 index 0000000000..07efe40027
@@ -5475,6 +5528,7 @@ index 0000000000..07efe40027
 +	virtual bool prepareFrame(CDVDStreamInfo &hints, uint8_t *&data, size_t &size, double dts, double pts);
 +
 +};
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/DVCodec.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/DVCodec.cpp
 new file mode 100644
 index 0000000000..3c5df6b5a6
@@ -5620,6 +5674,7 @@ index 0000000000..3c5df6b5a6
 +	}
 +	return ret;
 +}
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/DVCodec.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/DVCodec.h
 new file mode 100644
 index 0000000000..dfadd027f9
@@ -5663,6 +5718,7 @@ index 0000000000..dfadd027f9
 +	DVCodec(CProcessInfo &processInfo, const CDVDStreamInfo &hints);
 +	virtual ~DVCodec();
 +};
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/H264Codec.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/H264Codec.cpp
 new file mode 100644
 index 0000000000..09e9342ca9
@@ -5914,6 +5970,7 @@ index 0000000000..09e9342ca9
 +
 +    return true;
 +}
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/H264Codec.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/H264Codec.h
 new file mode 100644
 index 0000000000..7261cebbcb
@@ -5970,6 +6027,7 @@ index 0000000000..7261cebbcb
 +
 +	virtual void reset();
 +};
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/HEVCCodec.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/HEVCCodec.cpp
 new file mode 100644
 index 0000000000..2b5d8b108c
@@ -6122,6 +6180,7 @@ index 0000000000..2b5d8b108c
 +		CLog::Log(LOGERROR, "HEVCCodec: unable to set NAL skip policy");
 +	}
 +}
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/HEVCCodec.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/HEVCCodec.h
 new file mode 100644
 index 0000000000..b09d2b48a9
@@ -6164,6 +6223,7 @@ index 0000000000..b09d2b48a9
 +
 +	virtual bool prepareFrame(CDVDStreamInfo &hints, uint8_t *&data, size_t &size, double dts, double pts);
 +};
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/LibAmcodec.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/LibAmcodec.cpp
 new file mode 100644
 index 0000000000..da707f4a3d
@@ -6486,6 +6546,7 @@ index 0000000000..da707f4a3d
 +{
 +	m_codec->stream_type = type;
 +}
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/LibAmcodec.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/LibAmcodec.h
 new file mode 100644
 index 0000000000..00b8e6e8f6
@@ -6593,6 +6654,7 @@ index 0000000000..00b8e6e8f6
 +	void setNoBlockMode(bool noblock);
 +	void setStreamType(stream_type_t type);
 +};
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/MPEG12Codec.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/MPEG12Codec.cpp
 new file mode 100644
 index 0000000000..939a1b273c
@@ -6751,6 +6813,7 @@ index 0000000000..939a1b273c
 +
 +	params.decoder_type = DECODER_TYPE_SINGLE_MODE;
 +}
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/MPEG12Codec.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/MPEG12Codec.h
 new file mode 100644
 index 0000000000..f53fc4e4c5
@@ -6800,6 +6863,7 @@ index 0000000000..f53fc4e4c5
 +	virtual void reset();
 +
 +};
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/MPEG4Codec.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/MPEG4Codec.cpp
 new file mode 100644
 index 0000000000..1717b28500
@@ -7015,6 +7079,7 @@ index 0000000000..1717b28500
 +
 +	params.param = (void*) EXTERNAL_PTS;
 +}
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/MPEG4Codec.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/MPEG4Codec.h
 new file mode 100644
 index 0000000000..26ddcd801f
@@ -7050,6 +7115,7 @@ index 0000000000..26ddcd801f
 +
 +	virtual std::string getFormatName() const;
 +};
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/PosixFile.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/PosixFile.h
 new file mode 100644
 index 0000000000..b590b4d18e
@@ -7104,6 +7170,7 @@ index 0000000000..b590b4d18e
 +	}
 +};
 +
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/VC1Codec.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/VC1Codec.cpp
 new file mode 100644
 index 0000000000..e21a32b65f
@@ -7482,6 +7549,7 @@ index 0000000000..e21a32b65f
 +
 +	return PLAYER_SUCCESS;
 +}
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/VC1Codec.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/VC1Codec.h
 new file mode 100644
 index 0000000000..19a19e3fd5
@@ -7530,6 +7598,7 @@ index 0000000000..19a19e3fd5
 +	virtual bool prepareFrame(CDVDStreamInfo &hints, uint8_t *&data, size_t &size, double dts, double pts);
 +
 +};
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/VP9Codec.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/VP9Codec.cpp
 new file mode 100644
 index 0000000000..ad889756d4
@@ -7757,6 +7826,7 @@ index 0000000000..ad889756d4
 +		params.param = (void*) (EXTERNAL_PTS | SYNC_OUTSIDE);
 +	}
 +}
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/VP9Codec.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/VP9Codec.h
 new file mode 100644
 index 0000000000..a6bf4c91a7
@@ -7792,6 +7862,7 @@ index 0000000000..a6bf4c91a7
 +
 +	virtual std::string getFormatName() const;
 +};
+
 diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/namespace.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/namespace.h
 new file mode 100644
 index 0000000000..98f20775cc
@@ -7830,6 +7901,7 @@ index 0000000000..98f20775cc
 +	class VC1Codec;
 +	class VP9Codec;
 +}
+
 diff --git a/xbmc/cores/VideoPlayer/DVDDemuxers/CMakeLists.txt b/xbmc/cores/VideoPlayer/DVDDemuxers/CMakeLists.txt
 old mode 100644
 new mode 100755
@@ -7856,21 +7928,22 @@ index 48710f847c..06dc3c38f8
              DVDFactoryDemuxer.h)
  
  core_add_library(dvddemuxers)
+
 diff --git a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemux.h b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemux.h
-index a1d229b5b6..b0ae61db1e 100644
+index 7e41418..ca4430e 100644
 --- a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemux.h
 +++ b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemux.h
-@@ -189,7 +189,10 @@ public:
-     : CDemuxStream()
-   {
-     type = STREAM_SUBTITLE;
-+    m_3dSubtitlePlane = 0;
-   }
+@@ -201,6 +201,8 @@ class CDemuxStreamSubtitle : public CDemuxStream
+ {
+ public:
+-  CDemuxStreamSubtitle() : CDemuxStream(StreamType::SUBTITLE) {}
++  CDemuxStreamSubtitle() : CDemuxStream(StreamType::SUBTITLE), m_3dSubtitlePlane(0) {}
 +
 +  int m_3dSubtitlePlane;
  };
  
  class CDemuxStreamTeletext : public CDemuxStream
+
 diff --git a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxClient.cpp b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxClient.cpp
 index 0cdf8c3864..0f82d44372 100644
 --- a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxClient.cpp
@@ -7883,8 +7956,7 @@ index 0cdf8c3864..0f82d44372 100644
      m_displayTime = 0;
      m_dtsAtDisplayTime = DVD_NOPTS_VALUE;
      return m_IDemux->SeekTime(timems, backwards, startpts);
-diff --git a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxFFmpeg.cpp b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxFFmpeg.cpp
-index 1aebc3dcbc..6ffbda9575 100644
+
 --- a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxFFmpeg.cpp
 +++ b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxFFmpeg.cpp
 @@ -9,6 +9,8 @@
@@ -7904,7 +7976,7 @@ index 1aebc3dcbc..6ffbda9575 100644
  #include "filesystem/CurlFile.h"
  #include "filesystem/Directory.h"
  #include "filesystem/File.h"
-@@ -206,6 +209,7 @@ CDVDDemuxFFmpeg::CDVDDemuxFFmpeg() : CDVDDemux()
+@@ -207,6 +210,7 @@
    m_bMatroska = false;
    m_bAVI = false;
    m_bSup = false;
@@ -7912,19 +7984,8 @@ index 1aebc3dcbc..6ffbda9575 100644
    m_speed = DVD_PLAYSPEED_NORMAL;
    m_program = UINT_MAX;
    m_pkt.result = -1;
-@@ -516,6 +520,10 @@ bool CDVDDemuxFFmpeg::Open(const std::shared_ptr<CDVDInputStream>& pInput, bool
-   bool skipCreateStreams = false;
-   bool isBluray = pInput->IsStreamType(DVDSTREAM_TYPE_BLURAY);
- 
-+  // increase probesize for mpegts streams only
-+  if (iformat && strcmp(iformat->name, "mpegts") == 0)
-+    av_opt_set_int(m_pFormatContext, "probesize", 10000000, 0);
-+
-   // this should never happen. Log it to inform about the error.
-   if (m_pFormatContext->nb_streams > 0 && m_pFormatContext->streams == nullptr)
-   {
-@@ -528,7 +536,7 @@ bool CDVDDemuxFFmpeg::Open(const std::shared_ptr<CDVDInputStream>& pInput, bool
-       m_pFormatContext->nb_streams > 0 && m_pFormatContext->streams != nullptr &&
+@@ -479,7 +483,7 @@
+       !isBluray && m_pFormatContext->nb_streams > 0 && m_pFormatContext->streams != nullptr &&
        m_pFormatContext->streams[0]->codecpar->codec_id != AV_CODEC_ID_HEVC)
    {
 -    av_opt_set_int(m_pFormatContext, "analyzeduration", 500000, 0);
@@ -7932,7 +7993,7 @@ index 1aebc3dcbc..6ffbda9575 100644
      m_checkTransportStream = true;
      skipCreateStreams = true;
    }
-@@ -659,17 +667,6 @@ bool CDVDDemuxFFmpeg::Open(const std::shared_ptr<CDVDInputStream>& pInput, bool
+@@ -610,17 +614,6 @@
    m_startTime = 0;
    m_seekStream = -1;
  
@@ -7950,7 +8011,7 @@ index 1aebc3dcbc..6ffbda9575 100644
    return true;
  }
  
-@@ -678,6 +675,8 @@ void CDVDDemuxFFmpeg::Dispose()
+@@ -629,6 +622,8 @@
    m_pkt.result = -1;
    av_packet_unref(&m_pkt.pkt);
  
@@ -7959,7 +8020,7 @@ index 1aebc3dcbc..6ffbda9575 100644
    if (m_pFormatContext)
    {
      if (m_ioContext && m_pFormatContext->pb && m_pFormatContext->pb != m_ioContext)
-@@ -727,6 +726,10 @@ void CDVDDemuxFFmpeg::Flush()
+@@ -678,6 +673,10 @@
    m_displayTime = 0;
    m_dtsAtDisplayTime = DVD_NOPTS_VALUE;
    m_seekToKeyFrame = false;
@@ -7970,7 +8031,7 @@ index 1aebc3dcbc..6ffbda9575 100644
  }
  
  void CDVDDemuxFFmpeg::Abort()
-@@ -1086,7 +1089,7 @@ DemuxPacket* CDVDDemuxFFmpeg::ReadInternal(bool keep)
+@@ -1036,7 +1035,7 @@
  
          if (IsProgramChange())
          {
@@ -7979,8 +8040,8 @@ index 1aebc3dcbc..6ffbda9575 100644
            av_dump_format(m_pFormatContext, 0, CURL::GetRedacted(m_pInput->GetFileName()).c_str(),
                           0);
  
-@@ -1225,7 +1228,8 @@ DemuxPacket* CDVDDemuxFFmpeg::ReadInternal(bool keep)
-     else if (stream->type == STREAM_VIDEO)
+@@ -1175,7 +1174,8 @@
+     else if (stream->type == StreamType::VIDEO)
      {
        if (static_cast<CDemuxStreamVideo*>(stream)->iWidth != m_pFormatContext->streams[pPacket->iStreamId]->codecpar->width ||
 -          static_cast<CDemuxStreamVideo*>(stream)->iHeight != m_pFormatContext->streams[pPacket->iStreamId]->codecpar->height)
@@ -7989,7 +8050,7 @@ index 1aebc3dcbc..6ffbda9575 100644
        {
          // content has changed
          stream = AddStream(pPacket->iStreamId);
-@@ -1249,7 +1253,13 @@ DemuxPacket* CDVDDemuxFFmpeg::ReadInternal(bool keep)
+@@ -1199,7 +1199,13 @@
  
  DemuxPacket* CDVDDemuxFFmpeg::Read()
  {
@@ -8004,7 +8065,7 @@ index 1aebc3dcbc..6ffbda9575 100644
  }
  
  bool CDVDDemuxFFmpeg::SeekTime(double time, bool backwards, double* startpts)
-@@ -1306,6 +1316,7 @@ bool CDVDDemuxFFmpeg::SeekTime(double time, bool backwards, double* startpts)
+@@ -1255,6 +1261,7 @@
        m_pkt.result = -1;
        av_packet_unref(&m_pkt.pkt);
  
@@ -8012,7 +8073,7 @@ index 1aebc3dcbc..6ffbda9575 100644
        if (timer.IsTimePast())
        {
          CLog::Log(LOGERROR, "CDVDDemuxFFmpeg::{} - Timed out waiting for video to be ready",
-@@ -1380,8 +1391,8 @@ bool CDVDDemuxFFmpeg::SeekTime(double time, bool backwards, double* startpts)
+@@ -1329,8 +1336,8 @@
    if (m_currentPts == DVD_NOPTS_VALUE)
      CLog::Log(LOGDEBUG, "{} - unknown position after seek", __FUNCTION__);
    else
@@ -8023,7 +8084,7 @@ index 1aebc3dcbc..6ffbda9575 100644
  
    // in this case the start time is requested time
    if (startpts)
-@@ -1584,6 +1595,49 @@ void CDVDDemuxFFmpeg::CreateStreams(unsigned int program)
+@@ -1533,6 +1540,49 @@
      for (unsigned int i = 0; i < m_pFormatContext->nb_streams; i++)
        AddStream(i);
    }
@@ -8073,7 +8134,7 @@ index 1aebc3dcbc..6ffbda9575 100644
  }
  
  void CDVDDemuxFFmpeg::DisposeStreams()
-@@ -1595,6 +1649,17 @@ void CDVDDemuxFFmpeg::DisposeStreams()
+@@ -1544,6 +1594,17 @@
    m_parsers.clear();
  }
  
@@ -8091,7 +8152,7 @@ index 1aebc3dcbc..6ffbda9575 100644
  CDemuxStream* CDVDDemuxFFmpeg::AddStream(int streamIdx)
  {
    AVStream* pStream = m_pFormatContext->streams[streamIdx];
-@@ -1650,11 +1715,23 @@ CDemuxStream* CDVDDemuxFFmpeg::AddStream(int streamIdx)
+@@ -1614,11 +1675,23 @@
            st->bVFR = false;
  
          // never trust pts in avi files with h264.
@@ -8116,7 +8177,7 @@ index 1aebc3dcbc..6ffbda9575 100644
          //average fps is more accurate for mkv files
          if (m_bMatroska && pStream->avg_frame_rate.den && pStream->avg_frame_rate.num)
          {
-@@ -1666,6 +1743,11 @@ CDemuxStream* CDVDDemuxFFmpeg::AddStream(int streamIdx)
+@@ -1630,6 +1703,11 @@
            st->iFpsRate = r_frame_rate.num;
            st->iFpsScale = r_frame_rate.den;
          }
@@ -8128,7 +8189,7 @@ index 1aebc3dcbc..6ffbda9575 100644
          else
          {
            st->iFpsRate  = 0;
-@@ -1677,13 +1759,32 @@ CDemuxStream* CDVDDemuxFFmpeg::AddStream(int streamIdx)
+@@ -1641,13 +1719,33 @@
                           pStream->codecpar->field_order == AV_FIELD_TB ||
                           pStream->codecpar->field_order == AV_FIELD_BT;
  
@@ -8139,8 +8200,8 @@ index 1aebc3dcbc..6ffbda9575 100644
 +
 +        int tbc = st->interlaced && fps > 24.0 && fps < 30.0 ? st->iFpsRate * 2 : st->iFpsRate;
 +        CLog::Log(LOGDEBUG, "CDVDDemuxFFmpeg::AddStream video - interlaced: {}, fps: {:f}, tba: {}/{}, tbr: {}/{}, tbc: {}/{}",
-+				  st->interlaced, fps, pStream->avg_frame_rate.num, pStream->avg_frame_rate.den,
-+				  r_frame_rate.num, r_frame_rate.den, tbc, st->iFpsScale);
++                  st->interlaced, fps, pStream->avg_frame_rate.num, pStream->avg_frame_rate.den,
++                  r_frame_rate.num, r_frame_rate.den, tbc, st->iFpsScale);
 +
          st->iWidth = pStream->codecpar->width;
          st->iHeight = pStream->codecpar->height;
@@ -8150,19 +8211,20 @@ index 1aebc3dcbc..6ffbda9575 100644
          st->iOrientation = 0;
 -        st->iBitsPerPixel = pStream->codecpar->bits_per_coded_sample;
 +        st->iBitsPerPixel = pStream->codecpar->bits_per_raw_sample;
-+        if (st->iBitsPerPixel == 0) {
++        if (st->iBitsPerPixel == 0)
++        {
 +          if (pStream->codecpar->color_trc == AVCOL_TRC_BT2020_12)
 +            st->iBitsPerPixel = 12;
-+        else if(pStream->codecpar->color_trc >= AVCOL_TRC_BT2020_10)
++          else if (pStream->codecpar->color_trc >= AVCOL_TRC_BT2020_10)
 +            /* Assume all 10-bit until 12-bit gets common */
 +            st->iBitsPerPixel = 10;
-+            else
++          else
 +            st->iBitsPerPixel = 8;
 +        }
-         st->iBitRate = static_cast<int>(pStream->codecpar->bit_rate);
-         st->bitDepth = 8;
-         const AVPixFmtDescriptor* desc =
-@@ -1763,6 +1864,15 @@ CDemuxStream* CDVDDemuxFFmpeg::AddStream(int streamIdx)
+ 
+         // Read bitrate from BPS tag for MKVs missing bitrate info in stream header
+         if (pStream->codecpar->bit_rate == 0 && av_dict_get(pStream->metadata, "BPS", NULL, 0))
+@@ -1744,6 +1842,15 @@
          if (av_dict_get(pStream->metadata, "title", NULL, 0))
            st->m_description = av_dict_get(pStream->metadata, "title", NULL, 0)->value;
  
@@ -8178,16 +8240,19 @@ index 1aebc3dcbc..6ffbda9575 100644
          break;
        }
        case AVMEDIA_TYPE_DATA:
-@@ -1788,6 +1898,16 @@ CDemuxStream* CDVDDemuxFFmpeg::AddStream(int streamIdx)
+@@ -1790,6 +1897,19 @@
+ 
            if (av_dict_get(pStream->metadata, "title", NULL, 0))
              st->m_description = av_dict_get(pStream->metadata, "title", NULL, 0)->value;
- 
++
 +          AVDictionaryEntry *tag = av_dict_get(pStream->metadata, "3d-plane", NULL, AV_DICT_IGNORE_SUFFIX);
-+          if (tag && tag->value && *tag->value) {
++          if (tag && tag->value && *tag->value)
++          {
 +            st->m_3dSubtitlePlane = std::atoi(tag->value);
 +          }
 +
-+          if (m_pInput->IsStreamType(DVDSTREAM_TYPE_BLURAY)) {
++          if (m_pInput->IsStreamType(DVDSTREAM_TYPE_BLURAY))
++          {
 +            st->m_3dSubtitlePlane = std::static_pointer_cast<CDVDInputStreamBluray>(m_pInput)->Get3dSubtitlePlane(pStream->id);
 +          }
 +
@@ -8195,7 +8260,7 @@ index 1aebc3dcbc..6ffbda9575 100644
            break;
          }
        }
-@@ -1908,15 +2028,6 @@ CDemuxStream* CDVDDemuxFFmpeg::AddStream(int streamIdx)
+@@ -1911,15 +2031,6 @@
  #ifdef HAVE_LIBBLURAY
      if (m_pInput->IsStreamType(DVDSTREAM_TYPE_BLURAY))
      {
@@ -8211,7 +8276,7 @@ index 1aebc3dcbc..6ffbda9575 100644
        stream->dvdNavId = pStream->id;
  
        auto it = std::find_if(m_streams.begin(), m_streams.end(),
-@@ -2101,7 +2212,20 @@ bool CDVDDemuxFFmpeg::SeekChapter(int chapter, double* startpts)
+@@ -2122,7 +2233,20 @@
  
    AVChapter* ch = m_pFormatContext->chapters[chapter - 1];
    double dts = ConvertTimestamp(ch->start, ch->time_base.den, ch->time_base.num);
@@ -8233,7 +8298,7 @@ index 1aebc3dcbc..6ffbda9575 100644
  }
  
  std::string CDVDDemuxFFmpeg::GetStreamCodecName(int iStreamId)
-@@ -2135,6 +2259,10 @@ bool CDVDDemuxFFmpeg::IsProgramChange()
+@@ -2140,6 +2264,10 @@
    if (m_program == UINT_MAX)
      return false;
  
@@ -8244,7 +8309,7 @@ index 1aebc3dcbc..6ffbda9575 100644
    if (m_program == 0 && !m_pFormatContext->nb_programs)
      return false;
  
-@@ -2184,7 +2312,7 @@ bool CDVDDemuxFFmpeg::IsProgramChange()
+@@ -2189,7 +2317,7 @@
          return true;
        }
      }
@@ -8253,7 +8318,7 @@ index 1aebc3dcbc..6ffbda9575 100644
          static_cast<int>(stream->extraData.GetSize()))
        return true;
    }
-@@ -2289,7 +2417,7 @@ void CDVDDemuxFFmpeg::ParsePacket(AVPacket* pkt)
+@@ -2294,7 +2422,7 @@
  {
    AVStream* st = m_pFormatContext->streams[pkt->stream_index];
  
@@ -8262,9 +8327,9 @@ index 1aebc3dcbc..6ffbda9575 100644
    {
      auto parser = m_parsers.find(st->index);
      if (parser == m_parsers.end())
-@@ -2557,6 +2685,31 @@ StreamHdrType CDVDDemuxFFmpeg::DetermineHdrType(AVStream* pStream)
- 
-   if (av_stream_get_side_data(pStream, AV_PKT_DATA_DOVI_CONF, nullptr)) // DoVi
+@@ -2564,6 +2692,31 @@
+                               pStream->codecpar->nb_coded_side_data,
+                               AV_PKT_DATA_DOVI_CONF)) // DoVi
      hdrType = StreamHdrType::HDR_TYPE_DOLBYVISION;
 +  else if (pStream->id == 0x1015)
 +  {
@@ -8294,6 +8359,7 @@ index 1aebc3dcbc..6ffbda9575 100644
    else if (pStream->codecpar->color_trc == AVCOL_TRC_SMPTE2084) // HDR10
      hdrType = StreamHdrType::HDR_TYPE_HDR10;
    else if (pStream->codecpar->color_trc == AVCOL_TRC_ARIB_STD_B67) // HLG
+
 diff --git a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxFFmpeg.h b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxFFmpeg.h
 index 03fb98552c..d559a2f1f2 100644
 --- a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxFFmpeg.h
@@ -8318,6 +8384,7 @@ index 03fb98552c..d559a2f1f2 100644
 +  void checkNeedMuxer();
  };
  
+
 diff --git a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDoviStreamMuxer.cpp b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDoviStreamMuxer.cpp
 new file mode 100755
 index 0000000000..2f5207d4bc
@@ -8466,6 +8533,7 @@ index 0000000000..2f5207d4bc
 +
 +	return newpkt;
 +}
+
 diff --git a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDoviStreamMuxer.h b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDoviStreamMuxer.h
 new file mode 100755
 index 0000000000..80b41c9940
@@ -8506,6 +8574,7 @@ index 0000000000..80b41c9940
 +private:
 +	DemuxPacket *dynMemToDemuxPacket(DemuxPacket *srcPkt) const;
 +};
+
 diff --git a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDMvcStreamMuxer.cpp b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDMvcStreamMuxer.cpp
 new file mode 100644
 index 0000000000..b9259353da
@@ -8592,6 +8661,7 @@ index 0000000000..b9259353da
 +
 +	return getNextPacket();
 +}
+
 diff --git a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDMvcStreamMuxer.h b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDMvcStreamMuxer.h
 new file mode 100644
 index 0000000000..4eb290e8e2
@@ -8628,6 +8698,7 @@ index 0000000000..4eb290e8e2
 +
 +	virtual DemuxPacket *addPacket(DemuxPacket *pkt);
 +};
+
 diff --git a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDStreamMuxer.cpp b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDStreamMuxer.cpp
 new file mode 100644
 index 0000000000..9011953154
@@ -8741,6 +8812,7 @@ index 0000000000..9011953154
 +		m_extensionQueue.pop();
 +	}
 +}
+
 diff --git a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDStreamMuxer.h b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDStreamMuxer.h
 new file mode 100644
 index 0000000000..e9a75f306d
@@ -8789,6 +8861,7 @@ index 0000000000..e9a75f306d
 +	virtual DemuxPacket *addPacket(DemuxPacket *pkt);
 +	virtual void flush();
 +};
+
 diff --git a/xbmc/cores/VideoPlayer/DVDFileInfo.cpp b/xbmc/cores/VideoPlayer/DVDFileInfo.cpp
 index bd89cb4629..03989dbc22 100644
 --- a/xbmc/cores/VideoPlayer/DVDFileInfo.cpp
@@ -8811,14 +8884,15 @@ index bd89cb4629..03989dbc22 100644
              iDecoderState = pVideoCodec->GetPicture(&picture);
            }
  
+
 diff --git a/xbmc/cores/VideoPlayer/DVDInputStreams/CMakeLists.txt b/xbmc/cores/VideoPlayer/DVDInputStreams/CMakeLists.txt
-index 576ddda150..26ccf8f434 100644
+index 0f587ac..df126ff 100644
 --- a/xbmc/cores/VideoPlayer/DVDInputStreams/CMakeLists.txt
 +++ b/xbmc/cores/VideoPlayer/DVDInputStreams/CMakeLists.txt
 @@ -31,8 +31,10 @@ set(HEADERS BlurayStateSerializer.h
              InputStreamPVRRecording.h)
  
- if(BLURAY_FOUND)
+ if(TARGET ${APP_NAME_LC}::Bluray)
 -  list(APPEND SOURCES DVDInputStreamBluray.cpp)
 -  list(APPEND HEADERS DVDInputStreamBluray.h)
 +  list(APPEND SOURCES DVDInputStreamBluray.cpp
@@ -8828,18 +8902,20 @@ index 576ddda150..26ccf8f434 100644
  endif()
  
  core_add_library(dvdinputstreams)
+
 diff --git a/xbmc/cores/VideoPlayer/DVDInputStreams/DVDInputStream.h b/xbmc/cores/VideoPlayer/DVDInputStreams/DVDInputStream.h
-index 46337576ab..8f8e8b1bc6 100644
+index 6c6f2fa..15e7d32 100644
 --- a/xbmc/cores/VideoPlayer/DVDInputStreams/DVDInputStream.h
 +++ b/xbmc/cores/VideoPlayer/DVDInputStreams/DVDInputStream.h
-@@ -46,6 +46,7 @@ namespace XFILE
+@@ -49,6 +49,7 @@ namespace XFILE
  
  struct DemuxPacket;
  class CDemuxStream;
 +class CDVDDemux;
+ class CStreamDetails;
+ struct SPlayerState;
  
- class CDVDInputStream
- {
+
 diff --git a/xbmc/cores/VideoPlayer/DVDInputStreams/DVDInputStreamBluray.cpp b/xbmc/cores/VideoPlayer/DVDInputStreams/DVDInputStreamBluray.cpp
 index f554ee4f1d..96bf9ae1e8 100644
 --- a/xbmc/cores/VideoPlayer/DVDInputStreams/DVDInputStreamBluray.cpp
@@ -9071,6 +9147,7 @@ index f554ee4f1d..96bf9ae1e8 100644
  void CDVDInputStreamBluray::SetupPlayerSettings()
  {
    int region = CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(CSettings::SETTING_BLURAY_PLAYERREGION);
+
 diff --git a/xbmc/cores/VideoPlayer/DVDInputStreams/DVDInputStreamBluray.h b/xbmc/cores/VideoPlayer/DVDInputStreams/DVDInputStreamBluray.h
 index fc7940bbed..ab79c5fce2 100644
 --- a/xbmc/cores/VideoPlayer/DVDInputStreams/DVDInputStreamBluray.h
@@ -9127,6 +9204,7 @@ index fc7940bbed..ab79c5fce2 100644
      /* used during bd_open_stream read block*/
      CCriticalSection m_readBlocksLock;
  };
+
 diff --git a/xbmc/cores/VideoPlayer/DVDInputStreams/DVDInputStreamBlurayExtension.cpp b/xbmc/cores/VideoPlayer/DVDInputStreams/DVDInputStreamBlurayExtension.cpp
 new file mode 100644
 index 0000000000..bcd421382c
@@ -9413,6 +9491,7 @@ index 0000000000..bcd421382c
 +
 +	return bd_clip_seek(reinterpret_cast<struct bd_file_s*>(h), clip_block_pos, whence & ~AVSEEK_FORCE);
 +}
+
 diff --git a/xbmc/cores/VideoPlayer/DVDInputStreams/DVDInputStreamBlurayExtension.h b/xbmc/cores/VideoPlayer/DVDInputStreams/DVDInputStreamBlurayExtension.h
 new file mode 100644
 index 0000000000..ca4ad60a89
@@ -9474,6 +9553,7 @@ index 0000000000..ca4ad60a89
 +
 +	double convertTimestamp(int64_t pts, int den, int num) const;
 +};
+
 diff --git a/xbmc/cores/VideoPlayer/DVDStreamInfo.cpp b/xbmc/cores/VideoPlayer/DVDStreamInfo.cpp
 index 08c1c6805d..22a564bdc9 100644
 --- a/xbmc/cores/VideoPlayer/DVDStreamInfo.cpp
@@ -9511,6 +9591,7 @@ index 08c1c6805d..22a564bdc9 100644
 +    m_3dSubtitlePlane = stream->m_3dSubtitlePlane;
    }
  }
+
 diff --git a/xbmc/cores/VideoPlayer/DVDStreamInfo.h b/xbmc/cores/VideoPlayer/DVDStreamInfo.h
 index 1da58a7e6a..274cc9526d 100644
 --- a/xbmc/cores/VideoPlayer/DVDStreamInfo.h
@@ -9523,6 +9604,7 @@ index 1da58a7e6a..274cc9526d 100644
  
    // CODEC EXTRADATA
    FFmpegExtraData extradata; // extra data for codec to use
+
 diff --git a/xbmc/cores/VideoPlayer/DVDSubtitles/DVDSubtitlesLibass.cpp b/xbmc/cores/VideoPlayer/DVDSubtitles/DVDSubtitlesLibass.cpp
 index 7bcdf8c684..a3ddcb7ccd 100644
 --- a/xbmc/cores/VideoPlayer/DVDSubtitles/DVDSubtitlesLibass.cpp
@@ -9537,6 +9619,7 @@ index 7bcdf8c684..a3ddcb7ccd 100644
    ass_set_pixel_aspect(m_renderer, static_cast<double>(par));
  
    ass_set_frame_size(m_renderer, static_cast<int>(opts.frameWidth),
+
 diff --git a/xbmc/cores/VideoPlayer/IVideoPlayer.h b/xbmc/cores/VideoPlayer/IVideoPlayer.h
 index cf30266692..c8b7cbc346 100644
 --- a/xbmc/cores/VideoPlayer/IVideoPlayer.h
@@ -9550,6 +9633,7 @@ index cf30266692..c8b7cbc346 100644
  };
  
  class CDVDAudioCodec;
+
 diff --git a/xbmc/cores/VideoPlayer/Interface/DemuxPacket.h b/xbmc/cores/VideoPlayer/Interface/DemuxPacket.h
 index a8ffb9807b..25f43406b0 100644
 --- a/xbmc/cores/VideoPlayer/Interface/DemuxPacket.h
@@ -9563,30 +9647,30 @@ index a8ffb9807b..25f43406b0 100644
        cryptoInfo = nullptr;
      }
  
-diff --git a/xbmc/cores/VideoPlayer/VideoPlayer.cpp b/xbmc/cores/VideoPlayer/VideoPlayer.cpp
-index 5a42065fc9..78c91a6e0a 100644
+
 --- a/xbmc/cores/VideoPlayer/VideoPlayer.cpp
 +++ b/xbmc/cores/VideoPlayer/VideoPlayer.cpp
-@@ -1334,17 +1334,14 @@ void CVideoPlayer::Prepare()
+@@ -1478,10 +1478,7 @@
      if (m_pDemuxer)
      {
-       if (m_pDemuxer->SeekTime(starttime, true, &startpts))
+       if (m_pDemuxer->SeekTime(starttime.count(), true, &startpts))
 -      {
--        FlushBuffers(starttime / 1000 * AV_TIME_BASE, true, true);
-         CLog::Log(LOGDEBUG, "{} - starting demuxer from: {}", __FUNCTION__, starttime);
+-        FlushBuffers(starttime.count() / 1000 * AV_TIME_BASE, true, true);
+         CLog::Log(LOGDEBUG, "{} - starting demuxer from: {}", __FUNCTION__, starttime.count());
 -      }
        else
-         CLog::Log(LOGDEBUG, "{} - failed to start demuxing from: {}", __FUNCTION__, starttime);
-     }
+         CLog::Log(LOGDEBUG, "{} - failed to start demuxing from: {}", __FUNCTION__,
+                   starttime.count());
+@@ -1489,7 +1486,7 @@
  
      if (m_pSubtitleDemuxer)
      {
--      if(m_pSubtitleDemuxer->SeekTime(starttime, true, &startpts))
-+      if(m_pSubtitleDemuxer->SeekTime(starttime, false, &startpts))
-         CLog::Log(LOGDEBUG, "{} - starting subtitle demuxer from: {}", __FUNCTION__, starttime);
+-      if (m_pSubtitleDemuxer->SeekTime(starttime.count(), true, &startpts))
++      if (m_pSubtitleDemuxer->SeekTime(starttime.count(), false, &startpts))
+         CLog::Log(LOGDEBUG, "{} - starting subtitle demuxer from: {}", __FUNCTION__,
+                   starttime.count());
        else
-         CLog::Log(LOGDEBUG, "{} - failed to start subtitle demuxing from: {}", __FUNCTION__,
-@@ -1574,6 +1571,11 @@ void CVideoPlayer::Process()
+@@ -1720,6 +1717,11 @@
      CheckBetterStream(m_CurrentRadioRDS, pStream);
      CheckBetterStream(m_CurrentAudioID3, pStream);
  
@@ -9598,7 +9682,7 @@ index 5a42065fc9..78c91a6e0a 100644
      // demux video stream
      if (CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_SUBTITLES_PARSECAPTIONS) && CheckIsCurrent(m_CurrentVideo, pStream, pPacket))
      {
-@@ -1734,6 +1736,11 @@ void CVideoPlayer::ProcessVideoData(CDemuxStream* pStream, DemuxPacket* pPacket)
+@@ -1884,6 +1886,11 @@
    if (CheckSceneSkip(m_CurrentVideo))
      drop = true;
  
@@ -9610,16 +9694,16 @@ index 5a42065fc9..78c91a6e0a 100644
    m_VideoPlayerVideo->SendMessage(std::make_shared<CDVDMsgDemuxerPacket>(pPacket, drop));
  
    if (!drop)
-@@ -1878,7 +1885,7 @@ void CVideoPlayer::HandlePlaySpeed()
+@@ -2028,7 +2035,7 @@
      {
        if (cache.level < 0.0)
        {
--        CGUIDialogKaiToast::QueueNotification(g_localizeStrings.Get(21454), g_localizeStrings.Get(21455));
-+        //CGUIDialogKaiToast::QueueNotification(g_localizeStrings.Get(21454), g_localizeStrings.Get(21455));
+-        CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "SourceSlow");
++        //CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::Player, "SourceSlow");
          SetCaching(CACHESTATE_INIT);
        }
        // Note: Previously used cache.level >= 1 would keep video stalled
-@@ -1983,10 +1990,10 @@ void CVideoPlayer::HandlePlaySpeed()
+@@ -2133,10 +2140,10 @@
          if (m_CurrentAudio.id >= 0)
          {
            double adjust = -1.0; // a unique value
@@ -9632,7 +9716,7 @@ index 5a42065fc9..78c91a6e0a 100644
              adjust = 0.0;
  
            if (adjust != -1.0)
-@@ -2026,6 +2033,7 @@ void CVideoPlayer::HandlePlaySpeed()
+@@ -2176,6 +2183,7 @@
               (m_CurrentVideo.avsync == CCurrentStream::AV_SYNC_CONT ||
               m_CurrentAudio.syncState == IDVDStreamPlayer::SYNC_INSYNC))
      {
@@ -9640,7 +9724,7 @@ index 5a42065fc9..78c91a6e0a 100644
        m_CurrentVideo.syncState = IDVDStreamPlayer::SYNC_INSYNC;
        m_CurrentVideo.avsync = CCurrentStream::AV_SYNC_NONE;
        m_VideoPlayerVideo->SendMessage(
-@@ -2051,7 +2059,7 @@ void CVideoPlayer::HandlePlaySpeed()
+@@ -2201,7 +2209,7 @@
          if (m_pInputStream->IsRealtime())
            clock = m_CurrentAudio.starttime - m_CurrentAudio.cachetotal - DVD_MSEC_TO_TIME(400);
          else
@@ -9649,7 +9733,7 @@ index 5a42065fc9..78c91a6e0a 100644
  
          if (m_CurrentVideo.starttime != DVD_NOPTS_VALUE && (m_CurrentVideo.packets > 0))
          {
-@@ -2173,17 +2181,19 @@ void CVideoPlayer::HandlePlaySpeed()
+@@ -2323,17 +2331,19 @@
            error /= errorwin;
          }
  
@@ -9672,7 +9756,7 @@ index 5a42065fc9..78c91a6e0a 100644
              CDVDMsgPlayerSeek::CMode mode;
              mode.time = iTime;
              mode.backward = (m_playSpeed < 0);
-@@ -2702,14 +2712,14 @@ void CVideoPlayer::HandleMessages()
+@@ -2878,14 +2888,14 @@
        if (m_pInputStream->GetIPosTime() == nullptr)
          time -= m_State.time_offset/1000l;
  
@@ -9690,7 +9774,7 @@ index 5a42065fc9..78c91a6e0a 100644
          }
          // dts after successful seek
          if (start == DVD_NOPTS_VALUE)
-@@ -2719,6 +2729,7 @@ void CVideoPlayer::HandleMessages()
+@@ -2895,6 +2905,7 @@
          m_State.lastSeek = m_clock.GetAbsoluteClock();
  
          FlushBuffers(start, msg.GetAccurate(), msg.GetSync());
@@ -9698,7 +9782,7 @@ index 5a42065fc9..78c91a6e0a 100644
        }
        else if (m_pDemuxer)
        {
-@@ -3091,7 +3102,9 @@ void CVideoPlayer::SetCaching(ECacheState state)
+@@ -3328,7 +3339,9 @@
    if(m_caching == state)
      return;
  
@@ -9709,7 +9793,7 @@ index 5a42065fc9..78c91a6e0a 100644
    if (state == CACHESTATE_FULL ||
        state == CACHESTATE_INIT)
    {
-@@ -3756,23 +3769,6 @@ bool CVideoPlayer::OpenVideoStream(CDVDStreamInfo& hint, bool reset)
+@@ -4007,23 +4020,6 @@
    if (hint.flags & AV_DISPOSITION_ATTACHED_PIC)
      return false;
  
@@ -9733,7 +9817,7 @@ index 5a42065fc9..78c91a6e0a 100644
    IDVDStreamPlayer* player = GetStreamPlayer(m_CurrentVideo.player);
    if(player == nullptr)
      return false;
-@@ -3786,6 +3782,24 @@ bool CVideoPlayer::OpenVideoStream(CDVDStreamInfo& hint, bool reset)
+@@ -4037,6 +4033,24 @@
      if (!player->OpenStream(hint))
        return false;
  
@@ -9758,7 +9842,7 @@ index 5a42065fc9..78c91a6e0a 100644
      player->SendMessage(std::make_shared<CDVDMsgBool>(CDVDMsg::GENERAL_PAUSE, m_displayLost), 1);
  
      // look for any EDL files
-@@ -3976,6 +3990,7 @@ void CVideoPlayer::FlushBuffers(double pts, bool accurate, bool sync)
+@@ -4232,6 +4246,7 @@
    m_CurrentVideo.dts         = DVD_NOPTS_VALUE;
    m_CurrentVideo.startpts    = startpts;
    m_CurrentVideo.packets = 0;
@@ -9766,7 +9850,7 @@ index 5a42065fc9..78c91a6e0a 100644
  
    m_CurrentSubtitle.dts      = DVD_NOPTS_VALUE;
    m_CurrentSubtitle.startpts = startpts;
-@@ -4023,7 +4038,8 @@ void CVideoPlayer::FlushBuffers(double pts, bool accurate, bool sync)
+@@ -4279,7 +4294,8 @@
    }
  
    if(pts != DVD_NOPTS_VALUE && sync)
@@ -9776,23 +9860,16 @@ index 5a42065fc9..78c91a6e0a 100644
    UpdatePlayState(0);
  
    m_demuxerSpeed = DVD_PLAYSPEED_NORMAL;
-@@ -4915,15 +4931,7 @@ void CVideoPlayer::UpdatePlayState(double timeout)
- 
-     bool realtime = m_pInputStream->IsRealtime();
- 
--    if (CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_VIDEOPLAYER_USEDISPLAYASCLOCK) &&
--        !realtime)
--    {
--      state.cantempo = true;
--    }
--    else
--    {
--      state.cantempo = false;
--    }
-+    state.cantempo = false;
- 
-     m_processInfo->SetStateRealtime(realtime);
+@@ -5270,6 +5286,8 @@
+     state.canpause = true;
    }
+ 
++  state.cantempo = false;
++
+   m_processInfo->SetPlayTimes(state.startTime, state.time, state.timeMin, state.timeMax);
+ 
+   std::unique_lock lock(m_StateSection);
+
 diff --git a/xbmc/cores/VideoPlayer/VideoPlayerAudio.cpp b/xbmc/cores/VideoPlayer/VideoPlayerAudio.cpp
 index d7795f7311..d34b7cf145 100644
 --- a/xbmc/cores/VideoPlayer/VideoPlayerAudio.cpp
@@ -9826,6 +9903,7 @@ index d7795f7311..d34b7cf145 100644
    if (m_processInfo.IsRealtimeStream() || m_synctype == SYNC_RESAMPLE)
      allowpassthrough = false;
  
+
 diff --git a/xbmc/cores/VideoPlayer/VideoPlayerVideo.cpp b/xbmc/cores/VideoPlayer/VideoPlayerVideo.cpp
 index c42f8f3dd7..21176a818a 100644
 --- a/xbmc/cores/VideoPlayer/VideoPlayerVideo.cpp
@@ -9860,6 +9938,7 @@ index c42f8f3dd7..21176a818a 100644
          if(pOverlay->IsOverlayType(DVDOVERLAY_TYPE_GROUP))
            overlays.insert(overlays.end(),
                            static_cast<CDVDOverlayGroup&>(*pOverlay).m_overlays.begin(),
+
 diff --git a/xbmc/cores/VideoPlayer/VideoReferenceClock.cpp b/xbmc/cores/VideoPlayer/VideoReferenceClock.cpp
 index 236db07780..06d537f32a 100644
 --- a/xbmc/cores/VideoPlayer/VideoReferenceClock.cpp
@@ -9877,17 +9956,19 @@ index 236db07780..06d537f32a 100644
  }
  
  void CVideoReferenceClock::UpdateClock(int NrVBlanks, uint64_t time)
+
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/BaseRenderer.cpp b/xbmc/cores/VideoPlayer/VideoRenderers/BaseRenderer.cpp
-index a451bc4be7..4466603f00 100644
+index 66a7d39..9c0c8e3 100644
 --- a/xbmc/cores/VideoPlayer/VideoRenderers/BaseRenderer.cpp
 +++ b/xbmc/cores/VideoPlayer/VideoRenderers/BaseRenderer.cpp
-@@ -19,7 +19,11 @@
+@@ -18,8 +18,12 @@
  #include "settings/lib/SettingDefinitions.h"
  #include "utils/MathUtils.h"
  #include "utils/log.h"
 +#include "utils/StringUtils.h"
- #include "windowing/GraphicContext.h"
 +#include "utils/SysfsUtils.h"
+ #include "windowing/GraphicContext.h"
+ #include "windowing/WinSystem.h"
 +#include "xbmc/application/Application.h"
 +#include "application/ApplicationPlayer.h"
  
@@ -9897,12 +9978,12 @@ index a451bc4be7..4466603f00 100644
    // and the output pixel ratio setting)
  
    float outputFrameRatio = inputFrameRatio / CServiceBroker::GetWinSystem()->GetGfxContext().GetResInfo().fPixelRatio;
-+  
++
 +  static int countdown = 0;
 +
 +  std::string hdmiAspect;
 +  SysfsUtils::GetString("/sys/class/amhdmitx/amhdmitx0/aspect", hdmiAspect);
-+  
++
 +  if (((MathUtils::FloatEquals(inputFrameRatio, 4.0f / 3.0f, 0.01f) &&
 +      !MathUtils::FloatEquals(inputFrameRatio, (float) m_sourceWidth / (float) m_sourceHeight, 0.01f)) ||
 +      (StringUtils::EndsWith(hdmiAspect, "0x01/0x08") && countdown > 0)) &&
@@ -9955,6 +10036,7 @@ index a451bc4be7..4466603f00 100644
    }
  
    // Scale the movie up by set zoom amount
+
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/BaseRenderer.h b/xbmc/cores/VideoPlayer/VideoRenderers/BaseRenderer.h
 index 9482272957..a246e167f0 100644
 --- a/xbmc/cores/VideoPlayer/VideoRenderers/BaseRenderer.h
@@ -9968,6 +10050,7 @@ index 9482272957..a246e167f0 100644
  
  class CSetting;
  struct IntegerSettingOption;
+
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/CMakeLists.txt b/xbmc/cores/VideoPlayer/VideoRenderers/CMakeLists.txt
 index bc367887af..437fc6f072 100644
 --- a/xbmc/cores/VideoPlayer/VideoRenderers/CMakeLists.txt
@@ -9980,6 +10063,7 @@ index bc367887af..437fc6f072 100644
                              "x11" IN_LIST CORE_PLATFORM_NAME_LC OR
                              "wayland" IN_LIST CORE_PLATFORM_NAME_LC))
    list(APPEND SOURCES LinuxRendererGLES.cpp
+
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/CMakeLists.txt b/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/CMakeLists.txt
 index 8598052b41..98b41313c0 100644
 --- a/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/CMakeLists.txt
@@ -9996,6 +10080,7 @@ index 8598052b41..98b41313c0 100644
  if(CORE_SYSTEM_NAME STREQUAL android)
    list(APPEND SOURCES RendererMediaCodec.cpp
                        RendererMediaCodecSurface.cpp)
+
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/RendererAML.cpp b/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/RendererAML.cpp
 new file mode 100644
 index 0000000000..73ed403b84
@@ -10227,6 +10312,7 @@ index 0000000000..73ed403b84
 +    }
 +  }
 +}
+
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/RendererAML.h b/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/RendererAML.h
 new file mode 100644
 index 0000000000..be598196f8
@@ -10292,6 +10378,7 @@ index 0000000000..be598196f8
 +  int m_prevVPts;
 +  bool m_bConfigured;
 +};
+
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRenderer.cpp b/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRenderer.cpp
 index dfd4b31227..1774eba28f 100644
 --- a/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRenderer.cpp
@@ -10364,6 +10451,7 @@ index dfd4b31227..1774eba28f 100644
    m_textureCache[m_textureid] = r;
    o.m_textureid = m_textureid;
    m_textureid++;
+
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRenderer.h b/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRenderer.h
 index a6690004e6..8126ebc90f 100644
 --- a/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRenderer.h
@@ -10378,11 +10466,12 @@ index a6690004e6..8126ebc90f 100644
    protected:
      /*!
       * \brief Given the resolution ratio determines if it is a 4/3 resolution
+
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRendererUtil.cpp b/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRendererUtil.cpp
-index 57566719cc..6ef6463185 100644
+index 0ca9252..f94715b 100644
 --- a/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRendererUtil.cpp
 +++ b/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRendererUtil.cpp
-@@ -271,18 +271,27 @@ bool convert_quad(ASS_Image* images, SQuads& quads, int max_x)
+@@ -272,21 +272,27 @@ bool convert_quad(ASS_Image* images, SQuads& quads, int max_x)
    return true;
  }
  
@@ -10390,14 +10479,17 @@ index 57566719cc..6ef6463185 100644
 +int GetStereoscopicDepth(bool isPgs, int subtitleDepth)
  {
 -  int depth = 0;
-+  RENDER_STEREO_MODE stereoMode = CServiceBroker::GetWinSystem()->GetGfxContext().GetStereoMode();
++  RenderStereoMode stereoMode = CServiceBroker::GetWinSystem()->GetGfxContext().GetStereoMode();
  
--  if(CServiceBroker::GetWinSystem()->GetGfxContext().GetStereoMode() != RENDER_STEREO_MODE_MONO
--  && CServiceBroker::GetWinSystem()->GetGfxContext().GetStereoMode() != RENDER_STEREO_MODE_OFF)
-+  if (stereoMode == RENDER_STEREO_MODE_MONO || stereoMode == RENDER_STEREO_MODE_OFF)
+-  if (CServiceBroker::GetWinSystem()->GetGfxContext().GetStereoMode() != RenderStereoMode::MONO &&
+-      CServiceBroker::GetWinSystem()->GetGfxContext().GetStereoMode() != RenderStereoMode::OFF)
++  if (stereoMode == RenderStereoMode::MONO || stereoMode == RenderStereoMode::OFF)
    {
 -    depth  = CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(CSettings::SETTING_SUBTITLES_STEREOSCOPICDEPTH);
--    depth *= (CServiceBroker::GetWinSystem()->GetGfxContext().GetStereoView() == RENDER_STEREO_VIEW_LEFT ? 1 : -1);
+-    depth *=
+-        (CServiceBroker::GetWinSystem()->GetGfxContext().GetStereoView() == RenderStereoView::LEFT
+-             ? 1
+-             : -1);
 +    // 2D display, so there's no subtitle depth
 +    return 0;
    }
@@ -10407,16 +10499,17 @@ index 57566719cc..6ef6463185 100644
 +  int depth = CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(CSettings::SETTING_SUBTITLES_STEREOSCOPICDEPTH);
 +
 +  // in case of MVC playback and PGS subtitles, use the subtitle depth info additionally to the configured one
-+  if(stereoMode == RENDER_STEREO_MODE_HARDWAREBASED && isPgs)
++  if (stereoMode == RenderStereoMode::HARDWAREBASED && isPgs)
 +  {
 +    depth += subtitleDepth;
 +  }
 +
 +  // correct depth according to the current left/right eye view
-+  return depth * (CServiceBroker::GetWinSystem()->GetGfxContext().GetStereoView() == RENDER_STEREO_VIEW_LEFT ? 1 : -1);
++  return depth * (CServiceBroker::GetWinSystem()->GetGfxContext().GetStereoView() == RenderStereoView::LEFT ? 1 : -1);
  }
  
  }
+
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRendererUtil.h b/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRendererUtil.h
 index 9e56aad071..e2580ca595 100644
 --- a/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRendererUtil.h
@@ -10429,6 +10522,7 @@ index 9e56aad071..e2580ca595 100644
 +int GetStereoscopicDepth(bool isPgs, int subtitleDepth);
  
  } // namespace OVERLAY
+
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/RenderFlags.cpp b/xbmc/cores/VideoPlayer/VideoRenderers/RenderFlags.cpp
 index 5a4a2e6e90..0e5fa5659e 100644
 --- a/xbmc/cores/VideoPlayer/VideoRenderers/RenderFlags.cpp
@@ -10444,6 +10538,7 @@ index 5a4a2e6e90..0e5fa5659e 100644
    }
    return convert[mode];
  }
+
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/RenderFlags.h b/xbmc/cores/VideoPlayer/VideoRenderers/RenderFlags.h
 index 54f0524848..ae9ec99dc1 100644
 --- a/xbmc/cores/VideoPlayer/VideoRenderers/RenderFlags.h
@@ -10456,6 +10551,7 @@ index 54f0524848..ae9ec99dc1 100644
  
  #define CONF_FLAGS_STEREO_CADENCE(a) ((a) & 0x008000)
  #define CONF_FLAGS_STEREO_CADANCE_LEFT_RIGHT 0x000000
+
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/RenderManager.cpp b/xbmc/cores/VideoPlayer/VideoRenderers/RenderManager.cpp
 index 51bbbc514a..17224fd135 100644
 --- a/xbmc/cores/VideoPlayer/VideoRenderers/RenderManager.cpp
@@ -10563,6 +10659,7 @@ index 51bbbc514a..17224fd135 100644
  
      m_presentstep = PRESENT_FLIP;
      m_discard.push_back(m_presentsource);
+
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/VideoShaders/CMakeLists.txt b/xbmc/cores/VideoPlayer/VideoRenderers/VideoShaders/CMakeLists.txt
 index 5bb02199e7..41c87b778a 100644
 --- a/xbmc/cores/VideoPlayer/VideoRenderers/VideoShaders/CMakeLists.txt
@@ -10575,6 +10672,7 @@ index 5bb02199e7..41c87b778a 100644
                              "gbm" IN_LIST CORE_PLATFORM_NAME_LC OR
                              "x11" IN_LIST CORE_PLATFORM_NAME_LC OR
                              "wayland" IN_LIST CORE_PLATFORM_NAME_LC))
+
 diff --git a/xbmc/cores/VideoSettings.h b/xbmc/cores/VideoSettings.h
 index a7135da5d8..aeedf893cd 100644
 --- a/xbmc/cores/VideoSettings.h
@@ -10589,225 +10687,105 @@ index a7135da5d8..aeedf893cd 100644
  };
  
  class CVideoSettings
+
 diff --git a/xbmc/guilib/GUITextLayout.cpp b/xbmc/guilib/GUITextLayout.cpp
-index 11c671b110..7259e00206 100644
+index 6d826e1..90cf1fd 100644
 --- a/xbmc/guilib/GUITextLayout.cpp
 +++ b/xbmc/guilib/GUITextLayout.cpp
-@@ -580,63 +580,117 @@ void CGUITextLayout::WrapText(const vecText &text, float maxWidth)
+@@ -580,12 +580,15 @@
        continue;
      }
  
--    vecText::const_iterator pos = line.m_text.begin();
--    vecText::const_iterator lastBeginPos = line.m_text.begin();
--    vecText::const_iterator lastSpacePos = line.m_text.end();
--    vecText curLine;
 +    std::vector<character_t> tmp;
 +    tmp.reserve(line.m_text.size());
-+    auto widthOf = [&](const std::vector<character_t>::const_iterator start,
+     auto widthOf = [&](const std::vector<character_t>::const_iterator start,
+-                       const std::vector<character_t>::const_iterator end)
 +                       const std::vector<character_t>::const_iterator end) -> float
-+    {
-+      if (start == end)
-+        return 0.0f;
+     {
+       if (start == end)
+         return 0.0f;
+-      return m_font->GetTextWidth({start, end});
 +      tmp.assign(start, end);
 +      return m_font->GetTextWidth(tmp);
-+    };
+     };
  
--    while (pos < line.m_text.end())
-+    auto skipLeadingSpaces = [&](vecText::const_iterator& it)
-     {
--      // Get the current letter in the string
--      const character_t& letter = *pos;
-+      while (it != line.m_text.end() && CanWrapAtLetter(*it))
-+        ++it;
-+    };
-+
-+    auto current = line.m_text.begin();
-+    skipLeadingSpaces(current);
+     auto skipLeadingSpaces = [&](vecText::const_iterator& it)
+@@ -659,11 +662,13 @@
  
--      if (CanWrapAtLetter(letter)) // Check for a space char
--        lastSpacePos = pos;
-+    float currentWidth = 0.0f;
-+    std::vector<character_t>::const_iterator currentStart = current;
-+    // track end without trailing spaces
-+    std::vector<character_t>::const_iterator lastNonSpaceInLine = currentStart;
- 
--      curLine.emplace_back(letter);
-+    while (current != line.m_text.end())
-+    {
-+      // Find next candidate wrap position
-+      std::vector<character_t>::const_iterator wordEnd = current;
-+      while (wordEnd != line.m_text.end() && !CanWrapAtLetter(*wordEnd))
-+        ++wordEnd;
- 
--      const float currWidth = m_font->GetTextWidth(curLine);
-+      const bool hasSpace = (wordEnd != line.m_text.end());
-+      const float wordWidth = widthOf(current, wordEnd);
-+      const float spaceWidth = hasSpace ? widthOf(wordEnd, wordEnd + 1) : 0.0f;
- 
--      if (currWidth > maxWidth)
-+      // Try to include word + trailing space
-+      if (currentWidth + wordWidth + spaceWidth <= maxWidth)
-       {
--        if (lastSpacePos > pos) // No space char where split the line, so split by char
--        {
--          // If the pos is equal to lastBeginPos, maxWidth is not large enough to contain 1 character
--          // Push a line with the single character and move on to the next character.
--          if (pos == lastBeginPos)
--            ++pos;
--
--          CGUIString linePart{lastBeginPos, pos, false};
--          m_lines.emplace_back(linePart);
--        }
--        else
--        {
--          CGUIString linePart{lastBeginPos, lastSpacePos, false};
--          m_lines.emplace_back(linePart);
-+        currentWidth += wordWidth + spaceWidth;
-+        lastNonSpaceInLine = wordEnd; // exclude trailing space
-+        current = wordEnd;
-+        if (hasSpace)
-+          ++current;
-+        continue;
-+      }
- 
--          pos = lastSpacePos + 1;
--          lastSpacePos = line.m_text.end();
--        }
-+      // Try to include word without trailing space
-+      if (currentWidth + wordWidth <= maxWidth)
-+      {
-+        m_lines.emplace_back(currentStart, wordEnd, false);
-+        if (m_lines.size() >= nMaxLines)
-+          return;
- 
--        curLine.clear();
--        lastBeginPos = pos;
-+        current = hasSpace ? (wordEnd + 1) : wordEnd;
-+        skipLeadingSpaces(current);
-+        currentStart = current;
-+        currentWidth = 0.0f;
-+        lastNonSpaceInLine = currentStart;
-+        continue;
-+      }
- 
-+      // word itself doesn't fit after existing content: wrap before it (trim trailing spaces)
-+      if (currentWidth > 0.0f)
-+      {
-+        const std::vector<character_t>::const_iterator emitEnd =
-+            lastNonSpaceInLine > currentStart ? lastNonSpaceInLine : wordEnd;
-+        m_lines.emplace_back(currentStart, emitEnd, false);
-         if (m_lines.size() >= nMaxLines)
-           return;
- 
-+        // Start a new line; keep pos at start of the overflowing word
-+        skipLeadingSpaces(current);
-+        currentStart = current;
-+        currentWidth = 0.0f;
-+        lastNonSpaceInLine = currentStart;
-         continue;
-       }
- 
--      ++pos;
--    }
-+      if (current == wordEnd)
-+        break;
- 
--    // Add the remaining text part
--    if (!curLine.empty())
--    {
--      CGUIString linePart{curLine.begin(), curLine.end(), false};
--      m_lines.emplace_back(linePart);
-+      // current line is empty and word is too long: split by character using a safe linear scan.
-+      // Do not assume monotonic width because shaping/kerning can make width shrink or grow non-linearly.
+       // current line is empty and word is too long: split by character using a safe linear scan.
+       // Do not assume monotonic width because shaping/kerning can make width shrink or grow non-linearly.
 +      tmp.clear();
-+      size_t bestCount = 0;
+       size_t bestCount = 0;
+-      for (auto it = std::next(current); it < wordEnd; ++it)
 +      for (auto it = current; it != wordEnd; ++it)
-+      {
+       {
+-        if (m_font->GetTextWidth({current, it}) <= maxWidth)
+-          bestCount = std::distance(current, it);
 +        tmp.push_back(*it);
 +        if (m_font->GetTextWidth(tmp) <= maxWidth)
 +          bestCount = tmp.size();
-+      }
-+      if (bestCount == 0)
-+        bestCount = 1; // ensure progress even if a single glyph is wider than maxWidth
-+
-+      const auto cut = current + static_cast<ptrdiff_t>(bestCount);
-+      m_lines.emplace_back(current, cut, false);
-+      if (m_lines.size() >= nMaxLines)
-+        return;
-+
-+      current = cut;
-+      skipLeadingSpaces(current);
-+      currentStart = current;
-+      currentWidth = 0.0f;
-+      lastNonSpaceInLine = currentStart;
-     }
- 
-+    // Add remaining text part of this paragraph line
-+    if (currentStart < line.m_text.end())
-+      m_lines.emplace_back(currentStart, line.m_text.end(), false);
-+
-     // Restore carriage return marker for the end of paragraph
-     if (!m_lines.empty())
-       m_lines.back().m_carriageReturn = line.m_carriageReturn;
+       }
+       if (bestCount == 0)
+         bestCount = 1; // ensure progress even if a single glyph is wider than maxWidth
+
 diff --git a/xbmc/guilib/StereoscopicsManager.cpp b/xbmc/guilib/StereoscopicsManager.cpp
-index 3aa269bca3..e281b550a7 100644
 --- a/xbmc/guilib/StereoscopicsManager.cpp
 +++ b/xbmc/guilib/StereoscopicsManager.cpp
-@@ -52,6 +52,10 @@ static const struct StereoModeMap VideoModeToGuiModeMap[] =
-   { "right_left",               RENDER_STEREO_MODE_SPLIT_VERTICAL },
-   { "top_bottom",               RENDER_STEREO_MODE_SPLIT_HORIZONTAL },
-   { "bottom_top",               RENDER_STEREO_MODE_SPLIT_HORIZONTAL },
-+  { "full_left_right",          RENDER_STEREO_MODE_HARDWAREBASED },
-+  { "full_right_left",          RENDER_STEREO_MODE_HARDWAREBASED },
-+  { "full_top_bottom",          RENDER_STEREO_MODE_HARDWAREBASED },
-+  { "full_bottom_top",          RENDER_STEREO_MODE_HARDWAREBASED },
-   { "checkerboard_rl",          RENDER_STEREO_MODE_CHECKERBOARD },
-   { "checkerboard_lr",          RENDER_STEREO_MODE_CHECKERBOARD },
-   { "row_interleaved_rl",       RENDER_STEREO_MODE_INTERLACED },
-@@ -61,8 +65,8 @@ static const struct StereoModeMap VideoModeToGuiModeMap[] =
-   { "anaglyph_cyan_red",        RENDER_STEREO_MODE_ANAGLYPH_RED_CYAN },
-   { "anaglyph_green_magenta",   RENDER_STEREO_MODE_ANAGLYPH_GREEN_MAGENTA },
-   { "anaglyph_yellow_blue",     RENDER_STEREO_MODE_ANAGLYPH_YELLOW_BLUE },
--  { "block_lr",                 RENDER_STEREO_MODE_OFF }, // unsupported
--  { "block_rl",                 RENDER_STEREO_MODE_OFF }, // unsupported
-+  { "block_lr",                 RENDER_STEREO_MODE_HARDWAREBASED },
-+  { "block_rl",                 RENDER_STEREO_MODE_HARDWAREBASED },
-   {}
- };
+@@ -53,6 +53,10 @@
+     {"right_left", RenderStereoMode::SPLIT_VERTICAL},
+     {"top_bottom", RenderStereoMode::SPLIT_HORIZONTAL},
+     {"bottom_top", RenderStereoMode::SPLIT_HORIZONTAL},
++    {"full_left_right", RenderStereoMode::HARDWAREBASED},
++    {"full_right_left", RenderStereoMode::HARDWAREBASED},
++    {"full_top_bottom", RenderStereoMode::HARDWAREBASED},
++    {"full_bottom_top", RenderStereoMode::HARDWAREBASED},
+     {"checkerboard_rl", RenderStereoMode::CHECKERBOARD},
+     {"checkerboard_lr", RenderStereoMode::CHECKERBOARD},
+     {"row_interleaved_rl", RenderStereoMode::INTERLACED},
+@@ -62,8 +66,8 @@
+     {"anaglyph_cyan_red", RenderStereoMode::ANAGLYPH_RED_CYAN},
+     {"anaglyph_green_magenta", RenderStereoMode::ANAGLYPH_GREEN_MAGENTA},
+     {"anaglyph_yellow_blue", RenderStereoMode::ANAGLYPH_YELLOW_BLUE},
+-    {"block_lr", RenderStereoMode::OFF}, // unsupported
+-    {"block_rl", RenderStereoMode::OFF}, // unsupported
++    {"block_lr", RenderStereoMode::HARDWAREBASED},
++    {"block_rl", RenderStereoMode::HARDWAREBASED},
+     {}};
  
-@@ -130,10 +134,76 @@ void CStereoscopicsManager::SetStereoMode(const RENDER_STEREO_MODE &mode)
-   RENDER_STEREO_MODE currentMode = GetStereoMode();
-   RENDER_STEREO_MODE applyMode = mode;
+ static const struct StereoModeMap StringToGuiModeMap[] = {
+@@ -127,10 +131,71 @@
+   RenderStereoMode currentMode = GetStereoMode();
+   RenderStereoMode applyMode = mode;
  
 +  const auto& components = CServiceBroker::GetAppComponents();
 +  const auto appPlayer = components.GetComponent<CApplicationPlayer>();
 +
    // resolve automatic mode before applying
-   if (mode == RENDER_STEREO_MODE_AUTO)
+   if (mode == RenderStereoMode::AUTO)
      applyMode = GetStereoModeOfPlayingVideo();
  
-+  // Check if we're allowed to switch the stereo mode
++  // Check if we are allowed to switch the stereo mode
 +  if (CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(CSettings::SETTING_VIDEOPLAYER_ADJUSTREFRESHRATE) == ADJUST_REFRESHRATE_OFF)
 +  {
 +    // mode switches are not allowed
-+    if (currentMode == RENDER_STEREO_MODE_MONO || currentMode == RENDER_STEREO_MODE_OFF)
++    if (currentMode == RenderStereoMode::MONO || currentMode == RenderStereoMode::OFF)
 +    {
 +      // we are in 2D mode
 +      if (IsVideoStereoscopic())
 +      {
-+        // no mode switches allowed, but we've got a 3D video and are running in 2D then set the stereo mode to mono
-+        applyMode = RENDER_STEREO_MODE_MONO;
++        // no mode switches allowed, but we have a 3D video and are running in 2D then set the stereo mode to mono
++        applyMode = RenderStereoMode::MONO;
 +      }
 +    }
 +    else if (IsVideoStereoscopic())
 +    {
-+      // no mode switches allowed, and we've got a 3D video and are running in 3D => done
++      // no mode switches allowed, and we have a 3D video and are running in 3D => done
 +      applyMode = currentMode;
 +    }
 +    else
 +    {
-+      // TODO: we're in 3D mode, the video is 2D and mode switching is not allowed,
-+      // then we've a bit of bad luck because we can't do anything about it :-(
++      // TODO: we are in 3D mode, the video is 2D and mode switching is not allowed,
++      // then we have a bit of bad luck because we cannot do anything about it.
 +      applyMode = currentMode;
 +    }
 +
@@ -10815,48 +10793,43 @@ index 3aa269bca3..e281b550a7 100644
 +  }
 +  else if (appPlayer->IsPlaying() && IsVideoStereoscopic())
 +  {
-+    // a 3D video is playing, let's check if we really support the requested stereoscopic mode
++    // a 3D video is playing, check if we support the requested stereoscopic mode
 +    float fps = CServiceBroker::GetDataCacheCore().GetVideoFps();
 +    int width = CServiceBroker::GetDataCacheCore().GetVideoWidth();
 +    int height = CServiceBroker::GetDataCacheCore().GetVideoHeight();
 +
-+    // request a matching resolution
 +    uint32_t mode3dFlags = CServiceBroker::GetWinSystem()->GetGfxContext().ConvertRenderStereoModeToMode3dFlags(applyMode);
 +    RESOLUTION res = CResolutionUtils::ChooseBestResolution(static_cast<float>(fps), width, height, mode3dFlags);
-+    RENDER_STEREO_MODE rsm = CServiceBroker::GetWinSystem()->GetGfxContext().GetRenderStereoModeFromResolution(res);
++    RenderStereoMode rsm = CServiceBroker::GetWinSystem()->GetGfxContext().GetRenderStereoModeFromResolution(res);
 +
-+    // check if we've got what we've requested
-+    if (rsm != applyMode && rsm == RENDER_STEREO_MODE_OFF)
++    if (rsm != applyMode && rsm == RenderStereoMode::OFF)
 +    {
-+      // nope, check for possible fallbacks in case of MVC/FP playback
-+      if (applyMode == RENDER_STEREO_MODE_HARDWAREBASED)
++      if (applyMode == RenderStereoMode::HARDWAREBASED)
 +      {
-+        // check SBS fallback for MVC/FP output
-+   	    res = CResolutionUtils::ChooseBestResolution(static_cast<float>(fps), width, height, D3DPRESENTFLAG_MODE3DSBS);
-+   	    rsm = CServiceBroker::GetWinSystem()->GetGfxContext().GetRenderStereoModeFromResolution(res);
-+   	    if (rsm != RENDER_STEREO_MODE_SPLIT_VERTICAL)
-+   	    {
-+          // check TAB fallback for MVC/FP output
-+   	      res = CResolutionUtils::ChooseBestResolution(static_cast<float>(fps), width, height, D3DPRESENTFLAG_MODE3DTB);
-+   	      rsm = CServiceBroker::GetWinSystem()->GetGfxContext().GetRenderStereoModeFromResolution(res);
-+          if (rsm != RENDER_STEREO_MODE_SPLIT_HORIZONTAL)
-+        	rsm = RENDER_STEREO_MODE_MONO;
-+   	    }
-+      	applyMode = rsm;
++        res = CResolutionUtils::ChooseBestResolution(static_cast<float>(fps), width, height, D3DPRESENTFLAG_MODE3DSBS);
++        rsm = CServiceBroker::GetWinSystem()->GetGfxContext().GetRenderStereoModeFromResolution(res);
++        if (rsm != RenderStereoMode::SPLIT_VERTICAL)
++        {
++          res = CResolutionUtils::ChooseBestResolution(static_cast<float>(fps), width, height, D3DPRESENTFLAG_MODE3DTB);
++          rsm = CServiceBroker::GetWinSystem()->GetGfxContext().GetRenderStereoModeFromResolution(res);
++          if (rsm != RenderStereoMode::SPLIT_HORIZONTAL)
++            rsm = RenderStereoMode::MONO;
++        }
++        applyMode = rsm;
 +      }
 +      else
-+        applyMode = RENDER_STEREO_MODE_MONO;
++        applyMode = RenderStereoMode::MONO;
 +    }
 +  }
 +
-   if (applyMode != currentMode && applyMode >= RENDER_STEREO_MODE_OFF)
+   if (applyMode != currentMode && applyMode >= RenderStereoMode::OFF)
    {
      if (CServiceBroker::GetRenderSystem()->SupportsStereo(applyMode))
-@@ -198,6 +268,15 @@ std::string CStereoscopicsManager::DetectStereoModeByString(const std::string &n
+@@ -198,6 +263,15 @@
    if (re.RegFind(searchString) > -1)
      stereoMode = "top_bottom";
  
-+  if (!re.RegComp(CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_stereoscopicregex_mvc))
++  if (!re.RegComp(CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_stereoscopicregex_mvc.c_str()))
 +  {
 +    CLog::Log(LOGERROR, "{}: Invalid RegExp for matching 3d MVC content:'{}'", __FUNCTION__, CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_stereoscopicregex_mvc);
 +    return stereoMode;
@@ -10868,43 +10841,42 @@ index 3aa269bca3..e281b550a7 100644
    return stereoMode;
  }
  
-@@ -304,7 +383,7 @@ int CStereoscopicsManager::ConvertVideoToGuiStereoMode(const std::string &mode)
+@@ -307,7 +381,7 @@
    size_t i = 0;
    while (VideoModeToGuiModeMap[i].name)
    {
 -    if (mode == VideoModeToGuiModeMap[i].name)
 +    if (mode == VideoModeToGuiModeMap[i].name && CServiceBroker::GetRenderSystem()->SupportsStereo(VideoModeToGuiModeMap[i].mode))
        return VideoModeToGuiModeMap[i].mode;
-     i++;
+     ++i;
    }
-@@ -512,8 +591,25 @@ std::string CStereoscopicsManager::GetVideoStereoMode() const
+@@ -522,8 +596,25 @@
  
    const auto& components = CServiceBroker::GetAppComponents();
    const auto appPlayer = components.GetComponent<CApplicationPlayer>();
 -  if (appPlayer->IsPlaying())
 -    playerMode = CServiceBroker::GetDataCacheCore().GetVideoStereoMode();
-+  if (appPlayer->IsPlaying()) {
-+	  playerMode = CServiceBroker::GetDataCacheCore().GetVideoStereoMode();
++  if (appPlayer->IsPlaying())
++  {
++    playerMode = CServiceBroker::GetDataCacheCore().GetVideoStereoMode();
 +
-+	  if (playerMode.find("left") != std::string::npos) {
-+		  // check for Full-SBS
-+		  int width = CServiceBroker::GetDataCacheCore().GetVideoWidth();
-+
-+		  if (width == 3840) {
-+			  playerMode = "full_" + playerMode;
-+		  }
-+	  } else if (playerMode.find("bottom") != std::string::npos) {
-+		  // check for Full-TAB
-+		  int height = CServiceBroker::GetDataCacheCore().GetVideoHeight();
-+
-+		  if (height > 1080) {
-+			  playerMode = "full_" + playerMode;
-+		  }
-+	  }
++    if (playerMode.find("left") != std::string::npos)
++    {
++      int width = CServiceBroker::GetDataCacheCore().GetVideoWidth();
++      if (width == 3840)
++        playerMode = "full_" + playerMode;
++    }
++    else if (playerMode.find("bottom") != std::string::npos)
++    {
++      int height = CServiceBroker::GetDataCacheCore().GetVideoHeight();
++      if (height > 1080)
++        playerMode = "full_" + playerMode;
++    }
 +  }
  
    return playerMode;
  }
+
 diff --git a/xbmc/guilib/guiinfo/SystemGUIInfo.cpp b/xbmc/guilib/guiinfo/SystemGUIInfo.cpp
 index 02a2d6762a..c06cb8740a 100644
 --- a/xbmc/guilib/guiinfo/SystemGUIInfo.cpp
@@ -10932,8 +10904,9 @@ index 02a2d6762a..c06cb8740a 100644
  
          value = types;
        }
+
 diff --git a/xbmc/interfaces/generic/LanguageInvokerThread.cpp b/xbmc/interfaces/generic/LanguageInvokerThread.cpp
-index 67f3d14875..d2d785ef4c 100644
+index 67f3d14875..6b2d736 100644
 --- a/xbmc/interfaces/generic/LanguageInvokerThread.cpp
 +++ b/xbmc/interfaces/generic/LanguageInvokerThread.cpp
 @@ -60,6 +60,8 @@ bool CLanguageInvokerThread::execute(const std::string &script, const std::vecto
@@ -10945,26 +10918,21 @@ index 67f3d14875..d2d785ef4c 100644
    return true;
  }
  
-@@ -130,4 +132,4 @@ void CLanguageInvokerThread::OnException()
- 
-   m_invoker->onExecutionFailed();
-   m_invocationManager->OnExecutionDone(GetId());
--}
-\ No newline at end of file
-+}
+
 diff --git a/xbmc/messaging/ApplicationMessenger.h b/xbmc/messaging/ApplicationMessenger.h
-index 53ee579137..5825458464 100644
+index 72cb0a8..058b740 100644
 --- a/xbmc/messaging/ApplicationMessenger.h
 +++ b/xbmc/messaging/ApplicationMessenger.h
-@@ -93,6 +93,7 @@
+@@ -92,6 +92,8 @@
+ #define TMSG_SET_MUTE                     TMSG_MASK_APPLICATION + 37
  #define TMSG_RESUMEAPP                    TMSG_MASK_APPLICATION + 38
- 
- #define TMSG_SETOSMCWALKTHROUGHSTATE      TMSG_MASK_APPLICATION + 39
-+#define TMSG_AML_RESIZE                   TMSG_MASK_APPLICATION + 40
+ #define TMSG_PROCESS_DELETE_AFTER_WATCH   TMSG_MASK_APPLICATION + 39
++#define TMSG_SETOSMCWALKTHROUGHSTATE      TMSG_MASK_APPLICATION + 40
++#define TMSG_AML_RESIZE                   TMSG_MASK_APPLICATION + 41
  
  #define TMSG_GUI_INFOLABEL                TMSG_MASK_GUIINFOMANAGER + 0
  #define TMSG_GUI_INFOBOOL                 TMSG_MASK_GUIINFOMANAGER + 1
-@@ -101,6 +102,7 @@
+@@ -100,6 +102,7 @@
  #define TMSG_CECTOGGLESTATE               TMSG_MASK_PERIPHERALS + 1
  #define TMSG_CECACTIVATESOURCE            TMSG_MASK_PERIPHERALS + 2
  #define TMSG_CECSTANDBY                   TMSG_MASK_PERIPHERALS + 3
@@ -10972,6 +10940,7 @@ index 53ee579137..5825458464 100644
  
  #define TMSG_GUI_DIALOG_OPEN              TMSG_MASK_WINDOWMANAGER + 1
  #define TMSG_GUI_ACTIVATE_WINDOW          TMSG_MASK_WINDOWMANAGER + 2
+
 diff --git a/xbmc/network/Network.cpp b/xbmc/network/Network.cpp
 index 69a1513627..1dede45766 100644
 --- a/xbmc/network/Network.cpp
@@ -11011,6 +10980,7 @@ index 69a1513627..1dede45766 100644
  
    // check if we have at least one network interface to wait for
    if (!IsAvailable())
+
 diff --git a/xbmc/peripherals/Peripherals.cpp b/xbmc/peripherals/Peripherals.cpp
 index 4fdc64db0b..b51a4243a7 100644
 --- a/xbmc/peripherals/Peripherals.cpp
@@ -11026,6 +10996,7 @@ index 4fdc64db0b..b51a4243a7 100644
      case TMSG_CECSTANDBY:
        ToggleDeviceState(STATE_STANDBY);
        break;
+
 diff --git a/xbmc/peripherals/devices/Peripheral.h b/xbmc/peripherals/devices/Peripheral.h
 index 4c6d3c54b3..4c7fd2da6e 100644
 --- a/xbmc/peripherals/devices/Peripheral.h
@@ -11040,6 +11011,7 @@ index 4c6d3c54b3..4c7fd2da6e 100644
  } CecStateChange;
  
  /*!
+
 diff --git a/xbmc/peripherals/devices/PeripheralCecAdapter.cpp b/xbmc/peripherals/devices/PeripheralCecAdapter.cpp
 index a1043f6650..0fe9106c77 100644
 --- a/xbmc/peripherals/devices/PeripheralCecAdapter.cpp
@@ -11053,6 +11025,7 @@ index a1043f6650..0fe9106c77 100644
    {
      CLog::Log(LOGDEBUG, "{} - waking up CEC device...", __FUNCTION__);
      ActivateSource();
+
 diff --git a/xbmc/platform/linux/CMakeLists.txt b/xbmc/platform/linux/CMakeLists.txt
 index 6c5bceae7c..6161fa56f1 100644
 --- a/xbmc/platform/linux/CMakeLists.txt
@@ -11067,6 +11040,7 @@ index 6c5bceae7c..6161fa56f1 100644
 +endif()
 +
  core_add_library(linuxsupport)
+
 diff --git a/xbmc/platform/linux/PlatformLinux.cpp b/xbmc/platform/linux/PlatformLinux.cpp
 index e01f8216bf..9aa8f20ce6 100644
 --- a/xbmc/platform/linux/PlatformLinux.cpp
@@ -11091,6 +11065,7 @@ index e01f8216bf..9aa8f20ce6 100644
  #endif
  
  #if defined(HAS_GL)
+
 diff --git a/xbmc/platform/linux/ScreenshotSurfaceAML.cpp b/xbmc/platform/linux/ScreenshotSurfaceAML.cpp
 new file mode 100644
 index 0000000000..82468ab615
@@ -11172,6 +11147,7 @@ index 0000000000..82468ab615
 +  CScreenshotAML::CaptureVideoFrame(m_buffer, m_width, m_height);
 +  return true;
 +}
+
 diff --git a/xbmc/platform/linux/ScreenshotSurfaceAML.h b/xbmc/platform/linux/ScreenshotSurfaceAML.h
 new file mode 100644
 index 0000000000..49ee74c757
@@ -11201,20 +11177,22 @@ index 0000000000..49ee74c757
 +
 +  bool Capture() override;
 +};
+
 diff --git a/xbmc/platform/linux/input/CMakeLists.txt b/xbmc/platform/linux/input/CMakeLists.txt
-index 0859158c9c..988f0f3888 100644
+index 7e99c62..7ba473a 100644
 --- a/xbmc/platform/linux/input/CMakeLists.txt
 +++ b/xbmc/platform/linux/input/CMakeLists.txt
-@@ -6,7 +6,8 @@ if(TARGET LIRCCLIENT::LIRCCLIENT)
+@@ -6,7 +6,8 @@ if(TARGET ${APP_NAME_LC}::LircClient)
    list(APPEND HEADERS LIRC.h)
  endif()
  
 -if("gbm" IN_LIST CORE_PLATFORM_NAME_LC)
 +if("aml" IN_LIST CORE_PLATFORM_NAME_LC OR
 +   "gbm" IN_LIST CORE_PLATFORM_NAME_LC)
-   if(LIBINPUT_FOUND)
+   if(TARGET ${APP_NAME_LC}::LibInput)
      list(APPEND SOURCES LibInputHandler.cpp
                          LibInputKeyboard.cpp
+
 diff --git a/xbmc/platform/linux/powermanagement/LogindUPowerSyscall.cpp b/xbmc/platform/linux/powermanagement/LogindUPowerSyscall.cpp
 index bd04197a51..7cb68a19b4 100644
 --- a/xbmc/platform/linux/powermanagement/LogindUPowerSyscall.cpp
@@ -11230,24 +11208,33 @@ index bd04197a51..7cb68a19b4 100644
    m_canHibernate = LogindCheckCapability("CanHibernate");
    m_canSuspend   = LogindCheckCapability("CanSuspend");
  
+
 diff --git a/xbmc/platform/linux/storage/UDevProvider.cpp b/xbmc/platform/linux/storage/UDevProvider.cpp
-index 2d94c39daa..58e17c1882 100644
+index 9e9f7f1..c8d9abc 100644
 --- a/xbmc/platform/linux/storage/UDevProvider.cpp
 +++ b/xbmc/platform/linux/storage/UDevProvider.cpp
-@@ -142,6 +142,13 @@ void CUDevProvider::GetDisks(VECSOURCES& disks, bool removable)
+@@ -144,6 +144,20 @@ void CUDevProvider::GetDisks(std::vector<CMediaSource>& disks, bool removable)
+       continue;
+     }
  
-    // filter out osmc boot partition
-    if (strcmp(mountpoint, "/boot") == 0)
-+   {
++    // filter out osmc boot partition
++    if (strcmp(mountpoint, "/boot") == 0)
++    {
 +      udev_device_unref(device);
 +      continue;
-+   }
++    }
 +
-+   // filter out tee partition
-+   if (strcmp(mountpoint, "/tee") == 0)
-    {
-       udev_device_unref(device);
-       continue;
++    // filter out tee partition
++    if (strcmp(mountpoint, "/tee") == 0)
++    {
++      udev_device_unref(device);
++      continue;
++    }
++
+     // filter out things mounted on /tmp
+     if (strstr(mountpoint, "/tmp"))
+     {
+
 diff --git a/xbmc/platform/linux/threads/ThreadImplLinux.cpp b/xbmc/platform/linux/threads/ThreadImplLinux.cpp
 index 8c7edbb591..77a06bd431 100644
 --- a/xbmc/platform/linux/threads/ThreadImplLinux.cpp
@@ -11269,6 +11256,7 @@ index 8c7edbb591..77a06bd431 100644
  });
  
  static_assert(static_cast<size_t>(ThreadPriority::PRIORITY_COUNT) == nativeThreadPriorityMap.size(),
+
 diff --git a/xbmc/powermanagement/PowerManager.cpp b/xbmc/powermanagement/PowerManager.cpp
 index fb04187763..beec394924 100644
 --- a/xbmc/powermanagement/PowerManager.cpp
@@ -11286,20 +11274,21 @@ index fb04187763..beec394924 100644
  }
  
  bool CPowerManager::Hibernate()
+
 diff --git a/xbmc/settings/AdvancedSettings.cpp b/xbmc/settings/AdvancedSettings.cpp
-index 34dafe7ea7..76518d8db2 100644
+index 058faaf..c3075f1 100644
 --- a/xbmc/settings/AdvancedSettings.cpp
 +++ b/xbmc/settings/AdvancedSettings.cpp
-@@ -424,7 +424,7 @@ void CAdvancedSettings::Initialize()
+@@ -520,7 +520,7 @@ void CAdvancedSettings::Initialize()
    m_pictureExtensions =
-       ".png|.jpg|.jpeg|.bmp|.gif|.ico|.tif|.tiff|.tga|.pcx|.cbz|.zip|.rss|.webp|.jp2|.apng|.avif";
+       ".png|.jpg|.jpeg|.bmp|.gif|.ico|.tif|.tiff|.tga|.pcx|.cbz|.zip|.rss|.webp|.jp2|.apng|.avif|.heif|.heic";
    m_musicExtensions = ".b4s|.nsv|.m4a|.flac|.aac|.strm|.pls|.rm|.rma|.mpa|.wav|.wma|.ogg|.mp3|.mp2|.m3u|.gdm|.imf|.m15|.sfx|.uni|.ac3|.dts|.cue|.aif|.aiff|.wpl|.xspf|.ape|.mac|.mpc|.mp+|.mpp|.shn|.zip|.wv|.dsp|.xsp|.xwav|.waa|.wvs|.wam|.gcm|.idsp|.mpdsp|.mss|.spt|.rsd|.sap|.cmc|.cmr|.dmc|.mpt|.mpd|.rmt|.tmc|.tm8|.tm2|.oga|.url|.pxml|.tta|.rss|.wtv|.mka|.tak|.opus|.dff|.dsf|.m4b|.dtshd";
 -  m_videoExtensions = ".m4v|.3g2|.3gp|.nsv|.tp|.ts|.ty|.strm|.pls|.rm|.rmvb|.mpd|.m3u|.m3u8|.ifo|.mov|.qt|.divx|.xvid|.bivx|.vob|.nrg|.img|.iso|.udf|.pva|.wmv|.asf|.asx|.ogm|.m2v|.avi|.bin|.dat|.mpg|.mpeg|.mp4|.mkv|.mk3d|.avc|.vp3|.svq3|.nuv|.viv|.dv|.fli|.flv|.001|.wpl|.xspf|.zip|.vdr|.dvr-ms|.xsp|.mts|.m2t|.m2ts|.evo|.ogv|.sdp|.avs|.rec|.url|.pxml|.vc1|.h264|.rcv|.rss|.mpls|.mpl|.webm|.bdmv|.bdm|.wtv|.trp|.f4v";
 +  m_videoExtensions = ".m4v|.3g2|.3gp|.nsv|.tp|.ts|.ty|.strm|.pls|.rm|.rmvb|.mpd|.m3u|.m3u8|.ifo|.mov|.qt|.divx|.xvid|.bivx|.vob|.nrg|.img|.iso|.udf|.pva|.wmv|.asf|.asx|.ogm|.m2v|.avi|.bin|.dat|.mpg|.mpeg|.mp4|.mkv|.mk3d|.avc|.vp3|.svq3|.nuv|.viv|.dv|.fli|.flv|.001|.wpl|.xspf|.zip|.vdr|.dvr-ms|.xsp|.mts|.m2t|.m2ts|.evo|.ogv|.sdp|.avs|.rec|.url|.pxml|.vc1|.h264|.rcv|.rss|.mpls|.mpl|.webm|.bdmv|.bdm|.wtv|.trp|.f4v|.ssif";
-   m_subtitlesExtensions = ".utf|.utf8|.utf-8|.sub|.srt|.smi|.rt|.txt|.ssa|.text|.ssa|.aqt|.jss|"
-                           ".ass|.vtt|.idx|.ifo|.zip|.sup";
-   m_discStubExtensions = ".disc";
-@@ -436,6 +436,7 @@ void CAdvancedSettings::Initialize()
+   m_subtitlesExtensions = ".utf|.utf8|.utf-8|.sub|.srt|.smi|.rt|.txt|.ssa|.text|.ssa|.aqt|.jss|."
+                           "ass|.vtt|.idx|.ifo|.zip|.sup";
+   m_archiveExtensions = ".tgz|.tbz2|.xz|.7z|.bz2|.gz|.tar|.rar|.zip";
+@@ -534,6 +534,7 @@ void CAdvancedSettings::Initialize()
    m_stereoscopicregex_3d = "[-. _]3d[-. _]";
    m_stereoscopicregex_sbs = "[-. _]h?sbs[-. _]";
    m_stereoscopicregex_tab = "[-. _]h?tab[-. _]";
@@ -11307,14 +11296,15 @@ index 34dafe7ea7..76518d8db2 100644
  
    m_logLevelHint = m_logLevel = LOG_LEVEL_NORMAL;
  
-@@ -600,6 +601,7 @@ void CAdvancedSettings::ParseSettingsFile(const std::string &file)
+@@ -693,6 +694,7 @@ void CAdvancedSettings::ParseSettingsFile(const std::string &file)
      XMLUtils::GetString(pElement, "stereoscopicregex3d", m_stereoscopicregex_3d);
      XMLUtils::GetString(pElement, "stereoscopicregexsbs", m_stereoscopicregex_sbs);
      XMLUtils::GetString(pElement, "stereoscopicregextab", m_stereoscopicregex_tab);
 +    XMLUtils::GetString(pElement, "stereoscopicregexmvc", m_stereoscopicregex_mvc);
      XMLUtils::GetFloat(pElement, "subsdelayrange", m_videoSubsDelayRange, 10, 600);
+     XMLUtils::GetFloat(pElement, "subsdelaystep", m_videoSubsDelayStep, 0, 1.0f);
      XMLUtils::GetFloat(pElement, "audiodelayrange", m_videoAudioDelayRange, 10, 600);
-     XMLUtils::GetString(pElement, "defaultplayer", m_videoDefaultPlayer);
+
 diff --git a/xbmc/settings/AdvancedSettings.h b/xbmc/settings/AdvancedSettings.h
 index 5abbed2486..76d7c2b863 100644
 --- a/xbmc/settings/AdvancedSettings.h
@@ -11327,6 +11317,7 @@ index 5abbed2486..76d7c2b863 100644
  
      bool m_openGlDebugging;
  
+
 diff --git a/xbmc/settings/CMakeLists.txt b/xbmc/settings/CMakeLists.txt
 index d477f51d5d..fb703ddb1e 100644
 --- a/xbmc/settings/CMakeLists.txt
@@ -11351,13 +11342,10 @@ index d477f51d5d..fb703ddb1e 100644
  
  if(BLURAY_FOUND)
    list(APPEND SOURCES DiscSettings.cpp)
-diff --git a/xbmc/settings/DisplaySettings.cpp b/xbmc/settings/DisplaySettings.cpp
-old mode 100644
-new mode 100755
-index 75ce481a6c..8725779be0
+
 --- a/xbmc/settings/DisplaySettings.cpp
 +++ b/xbmc/settings/DisplaySettings.cpp
-@@ -73,6 +73,8 @@ static std::string ModeFlagsToString(unsigned int flags, bool identifier)
+@@ -76,6 +76,8 @@
      res += "sbs";
    else if(flags & D3DPRESENTFLAG_MODE3DTB)
      res += "tab";
@@ -11366,15 +11354,15 @@ index 75ce481a6c..8725779be0
    else if(identifier)
      res += "std";
    return res;
-@@ -251,7 +253,6 @@ bool CDisplaySettings::OnSettingChanging(const std::shared_ptr<const CSetting>&
+@@ -253,7 +255,6 @@
  {
-   if (setting == NULL)
+   if (!setting)
      return false;
 -
    const std::string &settingId = setting->GetId();
    if (settingId == CSettings::SETTING_VIDEOSCREEN_RESOLUTION ||
        settingId == CSettings::SETTING_VIDEOSCREEN_SCREEN)
-@@ -288,10 +289,21 @@ bool CDisplaySettings::OnSettingChanging(const std::shared_ptr<const CSetting>&
+@@ -291,10 +292,21 @@
      // in which case we don't show any prompt to the user
      if (oldRes != RES_WINDOW && newRes != RES_WINDOW && oldRes != newRes)
      {
@@ -11400,8 +11388,8 @@ index 75ce481a6c..8725779be0
          {
            m_resolutionChangeAborted = true;
            return false;
-@@ -497,24 +509,6 @@ void CDisplaySettings::AddResolutionInfo(const RESOLUTION_INFO &resolution)
-   std::unique_lock<CCriticalSection> lock(m_critical);
+@@ -501,24 +513,6 @@
+   std::unique_lock lock(m_critical);
    RESOLUTION_INFO res(resolution);
  
 -  if((res.dwFlags & D3DPRESENTFLAG_MODE3DTB) == 0)
@@ -11425,7 +11413,7 @@ index 75ce481a6c..8725779be0
    m_resolutions.push_back(res);
  }
  
-@@ -527,7 +521,14 @@ void CDisplaySettings::ApplyCalibrations()
+@@ -531,7 +525,14 @@
      // find resolutions
      for (size_t res = RES_DESKTOP; res < m_resolutions.size(); ++res)
      {
@@ -11441,7 +11429,7 @@ index 75ce481a6c..8725779be0
        {
          // overscan
          m_resolutions[res].Overscan.left = itCal->Overscan.left;
-@@ -565,7 +566,6 @@ void CDisplaySettings::ApplyCalibrations()
+@@ -569,7 +570,6 @@
            m_resolutions[res].fPixelRatio = 0.5f;
          if (m_resolutions[res].fPixelRatio > 2.0f)
            m_resolutions[res].fPixelRatio = 2.0f;
@@ -11449,7 +11437,7 @@ index 75ce481a6c..8725779be0
        }
      }
    }
-@@ -595,6 +595,8 @@ void CDisplaySettings::UpdateCalibrations()
+@@ -600,6 +600,8 @@
        cal = *res;
      }
    }
@@ -11458,7 +11446,7 @@ index 75ce481a6c..8725779be0
  }
  
  void CDisplaySettings::ClearCalibrations()
-@@ -661,6 +663,8 @@ RESOLUTION CDisplaySettings::GetResolutionFromString(const std::string &strResol
+@@ -669,6 +671,8 @@
        flags |= D3DPRESENTFLAG_MODE3DSBS;
      else if(StringUtils::Mid(strResolution, 20,3) == "tab")
        flags |= D3DPRESENTFLAG_MODE3DTB;
@@ -11467,7 +11455,7 @@ index 75ce481a6c..8725779be0
  
      std::map<RESOLUTION, RESOLUTION_INFO> resolutionInfos;
      for (size_t resolution = RES_DESKTOP; resolution < CDisplaySettings::GetInstance().ResolutionInfoSize(); resolution++)
-@@ -672,6 +676,37 @@ RESOLUTION CDisplaySettings::GetResolutionFromString(const std::string &strResol
+@@ -681,6 +685,37 @@
    return RES_DESKTOP;
  }
  
@@ -11505,8 +11493,8 @@ index 75ce481a6c..8725779be0
  std::string CDisplaySettings::GetStringFromResolution(RESOLUTION resolution, float refreshrate /* = 0.0f */)
  {
    if (resolution == RES_WINDOW)
-@@ -680,13 +715,9 @@ std::string CDisplaySettings::GetStringFromResolution(RESOLUTION resolution, flo
-   if (resolution >= RES_DESKTOP && resolution < (RESOLUTION)CDisplaySettings::GetInstance().ResolutionInfoSize())
+@@ -690,13 +725,9 @@
+       resolution < static_cast<RESOLUTION>(CDisplaySettings::GetInstance().ResolutionInfoSize()))
    {
      const RESOLUTION_INFO &info = CDisplaySettings::GetInstance().GetResolutionInfo(resolution);
 -    // also handle RES_DESKTOP resolutions with non-default refresh rates
@@ -11522,53 +11510,55 @@ index 75ce481a6c..8725779be0
    }
  
    return "DESKTOP";
-@@ -716,14 +747,8 @@ void CDisplaySettings::SettingOptionsModesFiller(const std::shared_ptr<const CSe
-     const auto mode = CDisplaySettings::GetInstance().GetResolutionInfo(index);
+@@ -721,15 +752,8 @@
+     const RESOLUTION_INFO& mode = CDisplaySettings::GetInstance().GetResolutionInfo(index);
  
      if (mode.dwFlags ^ D3DPRESENTFLAG_INTERLACED)
 -    {
--      auto setting = GetStringFromResolution((RESOLUTION)index, mode.fRefreshRate);
+-      const std::string screenmode =
+-          GetStringFromResolution(static_cast<RESOLUTION>(index), mode.fRefreshRate);
 -
 -      list.emplace_back(
 -          StringUtils::Format("{}x{}{} {:0.2f}Hz", mode.iScreenWidth, mode.iScreenHeight,
 -                              ModeFlagsToString(mode.dwFlags, false), mode.fRefreshRate),
--          setting);
+-          screenmode);
 -    }
-+      list.emplace_back(CDisplaySettings::GetInstance().GetDisplayStringFromRes((RESOLUTION)index),
-+                        GetStringFromResolution((RESOLUTION)index, mode.fRefreshRate));
++      list.emplace_back(CDisplaySettings::GetInstance().GetDisplayStringFromRes(static_cast<RESOLUTION>(index)),
++                        GetStringFromResolution(static_cast<RESOLUTION>(index), mode.fRefreshRate));
    }
  
-   std::sort(list.begin(), list.end(), ModeSort);
-@@ -795,15 +820,8 @@ void CDisplaySettings::SettingOptionsResolutionsFiller(const SettingConstPtr& se
+   std::ranges::sort(list, [](const StringSettingOption& i, const StringSettingOption& j)
+@@ -801,14 +825,8 @@
      std::vector<RESOLUTION_WHR> resolutions = CServiceBroker::GetWinSystem()->ScreenResolutions(info.fRefreshRate);
-     for (std::vector<RESOLUTION_WHR>::const_iterator resolution = resolutions.begin(); resolution != resolutions.end(); ++resolution)
+     for (const auto& resolution : resolutions)
      {
 -      const std::string resLabel =
--          StringUtils::Format("{}x{}{}{}", resolution->m_screenWidth, resolution->m_screenHeight,
--                              ModeFlagsToString(resolution->flags, false),
--                              resolution->width > resolution->m_screenWidth &&
--                                      resolution->height > resolution->m_screenHeight
+-          StringUtils::Format("{}x{}{}{}", resolution.m_screenWidth, resolution.m_screenHeight,
+-                              ModeFlagsToString(resolution.flags, false),
+-                              resolution.width > resolution.m_screenWidth &&
+-                                      resolution.height > resolution.m_screenHeight
 -                                  ? " (HiDPI)"
 -                                  : "");
--      list.emplace_back(resLabel, resolution->ResInfo_Index);
--
-+      bool hiDpi = resolution->width > resolution->m_screenWidth && resolution->height > resolution->m_screenHeight;
-+      list.emplace_back(CDisplaySettings::GetInstance().GetDisplayStringFromRes((RESOLUTION)resolution->ResInfo_Index, hiDpi, false), resolution->ResInfo_Index);
-       resolutionInfos.insert(std::make_pair((RESOLUTION)resolution->ResInfo_Index, CDisplaySettings::GetInstance().GetResolutionInfo(resolution->ResInfo_Index)));
-     }
+-      list.emplace_back(resLabel, resolution.ResInfo_Index);
++      bool hiDpi = resolution.width > resolution.m_screenWidth && resolution.height > resolution.m_screenHeight;
++      list.emplace_back(CDisplaySettings::GetInstance().GetDisplayStringFromRes(static_cast<RESOLUTION>(resolution.ResInfo_Index), hiDpi, false), resolution.ResInfo_Index);
  
+       resolutionInfos.try_emplace(
+           static_cast<RESOLUTION>(resolution.ResInfo_Index),
+
 diff --git a/xbmc/settings/DisplaySettings.h b/xbmc/settings/DisplaySettings.h
-index e02e80c8e3..9713f31000 100644
+index 9f4be62..34e1fab 100644
 --- a/xbmc/settings/DisplaySettings.h
 +++ b/xbmc/settings/DisplaySettings.h
-@@ -73,6 +73,7 @@ public:
-   RESOLUTION_INFO& GetCurrentResolutionInfo() { return GetResolutionInfo(m_currentResolution); }
-   RESOLUTION GetResFromString(const std::string &strResolution) { return GetResolutionFromString(strResolution); }
-   std::string GetStringFromRes(const RESOLUTION resolution, float refreshrate = 0.0f) { return GetStringFromResolution(resolution, refreshrate); }
+@@ -79,6 +79,7 @@ public:
+   {
+     return GetStringFromResolution(resolution, refreshrate);
+   }
 +  std::string GetDisplayStringFromRes(const RESOLUTION resolution, bool hiDpi = false, bool withRefreshRate = true) const;
  
    void ApplyCalibrations();
    void UpdateCalibrations();
+
 diff --git a/xbmc/settings/SettingConditions.cpp b/xbmc/settings/SettingConditions.cpp
 index 1f11a4995e..9aeb539c4f 100644
 --- a/xbmc/settings/SettingConditions.cpp
@@ -11594,6 +11584,7 @@ index 1f11a4995e..9aeb539c4f 100644
  #if defined(TARGET_WINDOWS)
    m_simpleConditions.emplace("has_dx");
    m_simpleConditions.emplace("hasdxva2");
+
 diff --git a/xbmc/settings/Settings.h b/xbmc/settings/Settings.h
 index bfc5e6072c..b9ef34e2be 100644
 --- a/xbmc/settings/Settings.h
@@ -11606,6 +11597,7 @@ index bfc5e6072c..b9ef34e2be 100644
    static constexpr auto SETTING_VIDEOSCREEN_FRAMEPACKING = "videoscreen.framepacking";
    static constexpr auto SETTING_VIDEOSCREEN_10BITSURFACES = "videoscreen.10bitsurfaces";
    static constexpr auto SETTING_VIDEOSCREEN_USESYSTEMSDRPEAKLUMINANCE =
+
 diff --git a/xbmc/settings/VeroSettings.cpp b/xbmc/settings/VeroSettings.cpp
 new file mode 100644
 index 0000000000..7398564b5f
@@ -11766,6 +11758,7 @@ index 0000000000..7398564b5f
 +
 +  return true;
 +}
+
 diff --git a/xbmc/settings/VeroSettings.h b/xbmc/settings/VeroSettings.h
 new file mode 100644
 index 0000000000..d710f7594e
@@ -11823,6 +11816,7 @@ index 0000000000..d710f7594e
 +  VeroSettings();
 +  virtual ~VeroSettings();
 +};
+
 diff --git a/xbmc/storage/MediaManager.cpp b/xbmc/storage/MediaManager.cpp
 index dad5da5528..4a9211342e 100644
 --- a/xbmc/storage/MediaManager.cpp
@@ -11837,6 +11831,7 @@ index dad5da5528..4a9211342e 100644
  #ifdef HAS_OPTICAL_DRIVE
    const std::shared_ptr<CSettings> settings = CServiceBroker::GetSettingsComponent()->GetSettings();
    if (settings->GetInt(CSettings::SETTING_AUDIOCDS_AUTOACTION) != AUTOCD_NONE || settings->GetBool(CSettings::SETTING_DVDS_AUTORUN))
+
 diff --git a/xbmc/utils/AMLUtils.cpp b/xbmc/utils/AMLUtils.cpp
 new file mode 100644
 index 0000000000..b450b6ff83
@@ -12761,6 +12756,7 @@ index 0000000000..b450b6ff83
 +  return false;
 +}
 +
+
 diff --git a/xbmc/utils/AMLUtils.h b/xbmc/utils/AMLUtils.h
 new file mode 100644
 index 0000000000..83ca38c3d5
@@ -12837,37 +12833,37 @@ index 0000000000..83ca38c3d5
 +bool aml_has_capability_ignore_alpha();
 +bool aml_set_reg_ignore_alpha();
 +bool aml_unset_reg_ignore_alpha();
+
 diff --git a/xbmc/utils/BitstreamConverter.cpp b/xbmc/utils/BitstreamConverter.cpp
-index fe08a00a00..30f84a7db8 100644
 --- a/xbmc/utils/BitstreamConverter.cpp
 +++ b/xbmc/utils/BitstreamConverter.cpp
-@@ -455,7 +455,7 @@ bool CBitstreamConverter::Open(enum AVCodecID codec, uint8_t *in_extradata, int
+@@ -435,7 +435,7 @@
        // valid hvcC data (bitstream) always starts with the value 1 (version)
-       if(m_to_annexb)
+       if (m_to_annexb)
        {
--       /**
-+       /** @todo from Amlogic
+-        /**
++        /** @todo from Amlogic
          * It seems the extradata is encoded as hvcC format.
          * Temporarily, we support configurationVersion==0 until 14496-15 3rd
          * is finalized. When finalized, configurationVersion will be 1 and we
-@@ -558,7 +558,7 @@ bool CBitstreamConverter::Convert(uint8_t *pData, int iSize)
+@@ -539,7 +539,7 @@
          if (m_convert_bitstream)
          {
            // convert demuxer packet from bitstream to bytestream (AnnexB)
 -          int bytestream_size = 0;
 +          uint32_t bytestream_size = 0;
-           uint8_t *bytestream_buff = NULL;
+           uint8_t* bytestream_buff = NULL;
  
            BitstreamConvert(demuxer_content, demuxer_bytes, &bytestream_buff, &bytestream_size);
-@@ -708,6 +708,7 @@ bool CBitstreamConverter::BitstreamConvertInitAVC(void *in_extradata, int in_ext
+@@ -690,6 +690,7 @@
    uint16_t unit_size;
    uint32_t total_size = 0;
    uint8_t *out = NULL, unit_nb, sps_done = 0, sps_seen = 0, pps_seen = 0;
 +  uint8_t mvc_done = 0;
-   const uint8_t *extradata = (uint8_t*)in_extradata + 4;
+   const uint8_t* extradata = (uint8_t*)in_extradata + 4;
    static const uint8_t nalu_header[4] = {0, 0, 0, 1};
  
-@@ -756,6 +757,18 @@ pps:
+@@ -738,6 +739,18 @@
        if (unit_nb)
          pps_seen = 1;
      }
@@ -12886,26 +12882,26 @@ index fe08a00a00..30f84a7db8 100644
    }
  
    if (out)
-@@ -898,7 +911,7 @@ bool CBitstreamConverter::IsSlice(uint8_t unit_type)
-   }
- }
- 
--bool CBitstreamConverter::BitstreamConvert(uint8_t* pData, int iSize, uint8_t **poutbuf, int *poutbuf_size)
-+bool CBitstreamConverter::BitstreamConvert(uint8_t* pData, int iSize, uint8_t **poutbuf, uint32_t *poutbuf_size)
+@@ -873,7 +886,7 @@
+ bool CBitstreamConverter::BitstreamConvert(uint8_t* pData,
+                                            int iSize,
+                                            uint8_t** poutbuf,
+-                                           int* poutbuf_size)
++                                           uint32_t* poutbuf_size)
  {
    // based on h264_mp4toannexb_bsf.c (ffmpeg)
    // which is Copyright (c) 2007 Benoit Fouet <benoit.fouet@free.fr>
-@@ -908,7 +921,7 @@ bool CBitstreamConverter::BitstreamConvert(uint8_t* pData, int iSize, uint8_t **
-   uint8_t *buf = pData;
+@@ -883,7 +896,7 @@
+   uint8_t* buf = pData;
    uint32_t buf_size = iSize;
-   uint8_t  unit_type, nal_sps, nal_pps, nal_sei;
--  int32_t  nal_size;
-+  uint32_t  nal_size;
+   uint8_t unit_type, nal_sps, nal_pps, nal_sei;
+-  int32_t nal_size;
++  uint32_t nal_size;
    uint32_t cumul_size = 0;
-   const uint8_t *buf_end = buf + buf_size;
+   const uint8_t* buf_end = buf + buf_size;
  
-@@ -952,7 +965,7 @@ bool CBitstreamConverter::BitstreamConvert(uint8_t* pData, int iSize, uint8_t **
-         unit_type = (*buf >> 1) & 0x3f;
+@@ -927,7 +940,7 @@
+       unit_type = (*buf >> 1) & 0x3f;
      }
  
 -    if (buf + nal_size > buf_end || nal_size <= 0)
@@ -12913,7 +12909,7 @@ index fe08a00a00..30f84a7db8 100644
        goto fail;
  
      // Don't add sps/pps if the unit already contain them
-@@ -1056,7 +1069,7 @@ fail:
+@@ -1032,7 +1045,7 @@
  }
  
  void CBitstreamConverter::BitstreamAllocAndCopy(uint8_t** poutbuf,
@@ -12922,22 +12918,23 @@ index fe08a00a00..30f84a7db8 100644
                                                  const uint8_t* sps_pps,
                                                  uint32_t sps_pps_size,
                                                  const uint8_t* in,
+
 diff --git a/xbmc/utils/BitstreamConverter.h b/xbmc/utils/BitstreamConverter.h
 index 6548eae8c3..af84e8dd0d 100644
 --- a/xbmc/utils/BitstreamConverter.h
 +++ b/xbmc/utils/BitstreamConverter.h
-@@ -114,9 +114,9 @@ protected:
-   bool              IsSlice(uint8_t unit_type);
-   bool              BitstreamConvertInitAVC(void *in_extradata, int in_extrasize);
-   bool              BitstreamConvertInitHEVC(void *in_extradata, int in_extrasize);
--  bool              BitstreamConvert(uint8_t* pData, int iSize, uint8_t **poutbuf, int *poutbuf_size);
-+  bool              BitstreamConvert(uint8_t* pData, int iSize, uint8_t **poutbuf, uint32_t *poutbuf_size);
+@@ -123,9 +123,9 @@ protected:
+   bool BitstreamConvertInitAVC(void* in_extradata, int in_extrasize);
+   bool BitstreamConvertInitHEVC(void* in_extradata, int in_extrasize);
+-  bool BitstreamConvert(uint8_t* pData, int iSize, uint8_t** poutbuf, int* poutbuf_size);
++  bool BitstreamConvert(uint8_t* pData, int iSize, uint8_t** poutbuf, uint32_t* poutbuf_size);
    static void BitstreamAllocAndCopy(uint8_t** poutbuf,
 -                                    int* poutbuf_size,
 +                                    uint32_t* poutbuf_size,
                                      const uint8_t* sps_pps,
                                      uint32_t sps_pps_size,
                                      const uint8_t* in,
+
 diff --git a/xbmc/utils/CMakeLists.txt b/xbmc/utils/CMakeLists.txt
 index 87429d34c3..a6b6a0bd3e 100644
 --- a/xbmc/utils/CMakeLists.txt
@@ -12974,6 +12971,7 @@ index 87429d34c3..a6b6a0bd3e 100644
  core_add_library(utils)
  
  if(NOT CORE_SYSTEM_NAME STREQUAL windows AND NOT CORE_SYSTEM_NAME STREQUAL windowsstore)
+
 diff --git a/xbmc/utils/DynamicMemory.cpp b/xbmc/utils/DynamicMemory.cpp
 new file mode 100644
 index 0000000000..2332c350e7
@@ -13038,6 +13036,7 @@ index 0000000000..2332c350e7
 +	memcpy(m_data + m_currentSize, data, size);
 +	m_currentSize += size;
 +}
+
 diff --git a/xbmc/utils/DynamicMemory.h b/xbmc/utils/DynamicMemory.h
 new file mode 100644
 index 0000000000..fc5008e8ef
@@ -13083,19 +13082,20 @@ index 0000000000..fc5008e8ef
 +	void allocate(unsigned newSize);
 +	void append(void *data, unsigned size);
 +};
+
 diff --git a/xbmc/utils/EGLUtils.cpp b/xbmc/utils/EGLUtils.cpp
 index 85f889dc9f..72aaf282b8 100644
 --- a/xbmc/utils/EGLUtils.cpp
 +++ b/xbmc/utils/EGLUtils.cpp
-@@ -84,41 +84,11 @@ std::map<EGLenum, const char*> eglErrors =
+@@ -85,29 +85,11 @@ constexpr auto eglErrors = make_map<EGLenum, std::string_view>({
+ });
  
- std::map<EGLint, const char*> eglErrorType =
- {
--  X(EGL_DEBUG_MSG_CRITICAL_KHR),
--  X(EGL_DEBUG_MSG_ERROR_KHR),
--  X(EGL_DEBUG_MSG_WARN_KHR),
--  X(EGL_DEBUG_MSG_INFO_KHR),
- };
+ constexpr auto eglErrorType = make_map<EGLint, std::string_view>({
+-    X(EGL_DEBUG_MSG_CRITICAL_KHR),
+-    X(EGL_DEBUG_MSG_ERROR_KHR),
+-    X(EGL_DEBUG_MSG_WARN_KHR),
+-    X(EGL_DEBUG_MSG_INFO_KHR),
+ });
  #undef X
  
  } // namespace
@@ -13107,20 +13107,8 @@ index 85f889dc9f..72aaf282b8 100644
 -                      EGLLabelKHR objectLabel,
 -                      const char* message)
 -{
--  std::string errorStr;
--  std::string typeStr;
--
--  auto eglError = eglErrors.find(error);
--  if (eglError != eglErrors.end())
--  {
--    errorStr = eglError->second;
--  }
--
--  auto eglType = eglErrorType.find(messageType);
--  if (eglType != eglErrorType.end())
--  {
--    typeStr = eglType->second;
--  }
+-  const std::string_view errorStr = eglErrors.get(error).value_or("");
+-  const std::string_view typeStr = eglErrorType.get(messageType).value_or("");
 -
 -  CLog::Log(LOGDEBUG, "EGL Debugging:\nError: {}\nCommand: {}\nType: {}\nMessage: {}", errorStr,
 -            command, typeStr, message ? message : "");
@@ -13129,7 +13117,7 @@ index 85f889dc9f..72aaf282b8 100644
  std::set<std::string> CEGLUtils::GetClientExtensions()
  {
    const char* extensions = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
-@@ -172,19 +142,6 @@ void CEGLUtils::Log(int logLevel, const std::string& what)
+@@ -161,19 +143,6 @@ void CEGLUtils::Log(int logLevel, const std::string& what)
  CEGLContextUtils::CEGLContextUtils(EGLenum platform, std::string const& platformExtension)
  : m_platform{platform}
  {
@@ -13146,10 +13134,10 @@ index 85f889dc9f..72aaf282b8 100644
 -    eglDebugMessageControl(EglErrorCallback, eglDebugAttribs);
 -  }
 -
-   m_platformSupported = CEGLUtils::HasClientExtension("EGL_EXT_platform_base") && CEGLUtils::HasClientExtension(platformExtension);
+   m_platformSupported = CEGLUtils::HasClientExtension("EGL_EXT_platform_base") &&
+                         CEGLUtils::HasClientExtension(platformExtension);
  }
- 
-@@ -395,18 +352,9 @@ bool CEGLContextUtils::CreateContext(CEGLAttributesVec contextAttribs)
+@@ -380,18 +349,9 @@ bool CEGLContextUtils::CreateContext(CEGLAttributesVec contextAttribs)
  
    EGLConfig eglConfig{m_eglConfig};
  
@@ -13168,15 +13156,16 @@ index 85f889dc9f..72aaf282b8 100644
    m_eglContext = eglCreateContext(m_eglDisplay, eglConfig,
                                    EGL_NO_CONTEXT, contextAttribs.Get());
  
+
 diff --git a/xbmc/utils/GLUtils.cpp b/xbmc/utils/GLUtils.cpp
 index 6bd1ea4384..af41538c9c 100644
 --- a/xbmc/utils/GLUtils.cpp
 +++ b/xbmc/utils/GLUtils.cpp
-@@ -42,58 +42,12 @@ std::map<GLenum, const char*> glErrors =
- };
+@@ -44,58 +44,12 @@ constexpr auto glErrors = make_map<GLenum, std::string_view>({
  
- std::map<GLenum, const char*> glErrorSource = {
--#if defined(HAS_GLES) && defined(TARGET_LINUX)
+ #ifdef TARGET_LINUX
+ constexpr auto glErrorSource = make_map<GLenum, std::string_view>({
+-#ifdef HAS_GLES
 -    X(GL_DEBUG_SOURCE_API_KHR),
 -    X(GL_DEBUG_SOURCE_WINDOW_SYSTEM_KHR),
 -    X(GL_DEBUG_SOURCE_SHADER_COMPILER_KHR),
@@ -13184,7 +13173,7 @@ index 6bd1ea4384..af41538c9c 100644
 -    X(GL_DEBUG_SOURCE_APPLICATION_KHR),
 -    X(GL_DEBUG_SOURCE_OTHER_KHR),
 -#endif
--#if defined(HAS_GL) && defined(TARGET_LINUX)
+-#ifdef HAS_GL
 -    X(GL_DEBUG_SOURCE_API),
 -    X(GL_DEBUG_SOURCE_WINDOW_SYSTEM),
 -    X(GL_DEBUG_SOURCE_SHADER_COMPILER),
@@ -13192,10 +13181,10 @@ index 6bd1ea4384..af41538c9c 100644
 -    X(GL_DEBUG_SOURCE_APPLICATION),
 -    X(GL_DEBUG_SOURCE_OTHER),
 -#endif
- };
+ });
  
- std::map<GLenum, const char*> glErrorType = {
--#if defined(HAS_GLES) && defined(TARGET_LINUX)
+ constexpr auto glErrorType = make_map<GLenum, std::string_view>({
+-#ifdef HAS_GLES
 -    X(GL_DEBUG_TYPE_ERROR_KHR),
 -    X(GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_KHR),
 -    X(GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_KHR),
@@ -13204,7 +13193,7 @@ index 6bd1ea4384..af41538c9c 100644
 -    X(GL_DEBUG_TYPE_OTHER_KHR),
 -    X(GL_DEBUG_TYPE_MARKER_KHR),
 -#endif
--#if defined(HAS_GL) && defined(TARGET_LINUX)
+-#ifdef HAS_GL
 -    X(GL_DEBUG_TYPE_ERROR),
 -    X(GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR),
 -    X(GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR),
@@ -13213,24 +13202,25 @@ index 6bd1ea4384..af41538c9c 100644
 -    X(GL_DEBUG_TYPE_OTHER),
 -    X(GL_DEBUG_TYPE_MARKER),
 -#endif
- };
+ });
  
- std::map<GLenum, const char*> glErrorSeverity = {
--#if defined(HAS_GLES) && defined(TARGET_LINUX)
+ constexpr auto glErrorSeverity = make_map<GLenum, std::string_view>({
+-#ifdef HAS_GLES
 -    X(GL_DEBUG_SEVERITY_HIGH_KHR),
 -    X(GL_DEBUG_SEVERITY_MEDIUM_KHR),
 -    X(GL_DEBUG_SEVERITY_LOW_KHR),
 -    X(GL_DEBUG_SEVERITY_NOTIFICATION_KHR),
 -#endif
--#if defined(HAS_GL) && defined(TARGET_LINUX)
+-#ifdef HAS_GL
 -    X(GL_DEBUG_SEVERITY_HIGH),
 -    X(GL_DEBUG_SEVERITY_MEDIUM),
 -    X(GL_DEBUG_SEVERITY_LOW),
 -    X(GL_DEBUG_SEVERITY_NOTIFICATION),
 -#endif
- };
+ });
+ #endif
  #undef X
- // clang-format on
+
 diff --git a/xbmc/utils/GLUtils.h b/xbmc/utils/GLUtils.h
 index 5c360300dd..ede094c649 100644
 --- a/xbmc/utils/GLUtils.h
@@ -13243,6 +13233,7 @@ index 5c360300dd..ede094c649 100644
  
  namespace KODI
  {
+
 diff --git a/xbmc/utils/HDRCapabilities.h b/xbmc/utils/HDRCapabilities.h
 index 4802b78e0e..986881e04e 100644
 --- a/xbmc/utils/HDRCapabilities.h
@@ -13269,6 +13260,7 @@ index 4802b78e0e..986881e04e 100644
 -  bool m_dolby_vision = false;
 +  int m_dolby_vision = 0;
  };
+
 diff --git a/xbmc/utils/ScreenshotAML.cpp b/xbmc/utils/ScreenshotAML.cpp
 new file mode 100644
 index 0000000000..a46e01aead
@@ -13360,6 +13352,7 @@ index 0000000000..a46e01aead
 +    delete [] videoBuffer;
 +  }
 +}
+
 diff --git a/xbmc/utils/ScreenshotAML.h b/xbmc/utils/ScreenshotAML.h
 new file mode 100644
 index 0000000000..26176182a0
@@ -13383,6 +13376,7 @@ index 0000000000..26176182a0
 +    // the passed overlay. The buffer format is BGRA (4 byte)
 +    static void CaptureVideoFrame(unsigned char *buffer, int iWidth, int iHeight, bool bBlendToBuffer = true);
 +};
+
 diff --git a/xbmc/utils/SysfsUtils.cpp b/xbmc/utils/SysfsUtils.cpp
 new file mode 100644
 index 0000000000..c25960ac13
@@ -13531,6 +13525,7 @@ index 0000000000..c25960ac13
 +
 +  return false;
 +}
+
 diff --git a/xbmc/utils/SysfsUtils.h b/xbmc/utils/SysfsUtils.h
 new file mode 100644
 index 0000000000..3d9310c39b
@@ -13562,6 +13557,7 @@ index 0000000000..3d9310c39b
 +  static bool HasRW(const std::string &path);
 +  static bool HasRO(const std::string &path);
 +};
+
 diff --git a/xbmc/utils/SystemInfo.cpp b/xbmc/utils/SystemInfo.cpp
 index 4bf6f3f447..12a95c118a 100644
 --- a/xbmc/utils/SystemInfo.cpp
@@ -13576,6 +13572,7 @@ index 4bf6f3f447..12a95c118a 100644
  #endif
  
  /* Platform identification */
+
 diff --git a/xbmc/utils/TimeUtils.cpp b/xbmc/utils/TimeUtils.cpp
 index 95c5069c11..5e02fb376c 100644
 --- a/xbmc/utils/TimeUtils.cpp
@@ -13629,6 +13626,7 @@ index 95c5069c11..5e02fb376c 100644
  }
  
  unsigned int CTimeUtils::GetFrameTime()
+
 diff --git a/xbmc/video/PlayerController.cpp b/xbmc/video/PlayerController.cpp
 index 35025c517b..fa8604682b 100644
 --- a/xbmc/video/PlayerController.cpp
@@ -13643,8 +13641,8 @@ index 35025c517b..fa8604682b 100644
              if (res == currentRes)
                current = idx;
              idx++;
+
 diff --git a/xbmc/windowing/GraphicContext.cpp b/xbmc/windowing/GraphicContext.cpp
-index e3300e925c..6801245fa9 100644
 --- a/xbmc/windowing/GraphicContext.cpp
 +++ b/xbmc/windowing/GraphicContext.cpp
 @@ -14,6 +14,7 @@
@@ -13655,21 +13653,21 @@ index e3300e925c..6801245fa9 100644
  #include "guilib/TextureManager.h"
  #include "guilib/gui3d.h"
  #include "input/InputManager.h"
-@@ -258,6 +259,13 @@ CPoint CGraphicContext::StereoCorrection(const CPoint &point) const
-     if(m_stereoView == RENDER_STEREO_VIEW_RIGHT)
-       res.y += info.iHeight + info.iBlanking;
+@@ -267,6 +268,13 @@
+     if (m_stereoView == RenderStereoView::RIGHT)
+       res.x += info.iWidth  + info.iBlanking;
    }
-+  if (m_stereoMode == RENDER_STEREO_MODE_HARDWAREBASED)
++  if (m_stereoMode == RenderStereoMode::HARDWAREBASED)
 +  {
 +    const RESOLUTION_INFO info = GetResInfo();
 +
-+    if(m_stereoView == RENDER_STEREO_VIEW_RIGHT)
++    if (m_stereoView == RenderStereoView::RIGHT)
 +      res.y += info.iHeight + info.iBlanking;
 +  }
-   if(m_stereoMode == RENDER_STEREO_MODE_SPLIT_VERTICAL)
-   {
-     const RESOLUTION_INFO info = GetResInfo();
-@@ -354,7 +362,7 @@ void CGraphicContext::SetFullScreenVideo(bool bOnOff)
+   return res;
+ }
+ 
+@@ -356,7 +364,7 @@
      }
    }
    else
@@ -13678,35 +13676,35 @@ index e3300e925c..6801245fa9 100644
  }
  
  bool CGraphicContext::IsFullScreenVideo() const
-@@ -382,6 +390,36 @@ bool CGraphicContext::IsValidResolution(RESOLUTION res)
+@@ -384,6 +392,36 @@
    return false;
  }
  
-+uint32_t CGraphicContext::ConvertRenderStereoModeToMode3dFlags(RENDER_STEREO_MODE stereo_mode) const
++uint32_t CGraphicContext::ConvertRenderStereoModeToMode3dFlags(RenderStereoMode stereo_mode) const
 +{
-+  if (stereo_mode == RENDER_STEREO_MODE_SPLIT_HORIZONTAL)
++  if (stereo_mode == RenderStereoMode::SPLIT_HORIZONTAL)
 +    return D3DPRESENTFLAG_MODE3DTB;
-+  else if (stereo_mode == RENDER_STEREO_MODE_SPLIT_VERTICAL)
++  else if (stereo_mode == RenderStereoMode::SPLIT_VERTICAL)
 +    return D3DPRESENTFLAG_MODE3DSBS;
-+  else if (stereo_mode == RENDER_STEREO_MODE_HARDWAREBASED)
++  else if (stereo_mode == RenderStereoMode::HARDWAREBASED)
 +    return D3DPRESENTFLAG_MODE3DFP;
 +
 +  return 0;
 +}
 +
-+RENDER_STEREO_MODE CGraphicContext::ConvertMode3dFlagsToRenderStereoMode(uint32_t mode3dFlags) const
++RenderStereoMode CGraphicContext::ConvertMode3dFlagsToRenderStereoMode(uint32_t mode3dFlags) const
 +{
 +  if (mode3dFlags & D3DPRESENTFLAG_MODE3DTB)
-+    return RENDER_STEREO_MODE_SPLIT_HORIZONTAL;
++    return RenderStereoMode::SPLIT_HORIZONTAL;
 +  else if (mode3dFlags & D3DPRESENTFLAG_MODE3DSBS)
-+    return RENDER_STEREO_MODE_SPLIT_VERTICAL;
++    return RenderStereoMode::SPLIT_VERTICAL;
 +  else if (mode3dFlags & D3DPRESENTFLAG_MODE3DFP)
-+    return RENDER_STEREO_MODE_HARDWAREBASED;
++    return RenderStereoMode::HARDWAREBASED;
 +
-+  return RENDER_STEREO_MODE_OFF;
++  return RenderStereoMode::OFF;
 +}
 +
-+RENDER_STEREO_MODE CGraphicContext::GetRenderStereoModeFromResolution(RESOLUTION resolution) const
++RenderStereoMode CGraphicContext::GetRenderStereoModeFromResolution(RESOLUTION resolution) const
 +{
 +  RESOLUTION_INFO info = GetResInfo(resolution);
 +  return ConvertMode3dFlagsToRenderStereoMode(info.dwFlags);
@@ -13715,48 +13713,49 @@ index e3300e925c..6801245fa9 100644
  // call SetVideoResolutionInternal and ensure its done from mainthread
  void CGraphicContext::SetVideoResolution(RESOLUTION res, bool forceUpdate)
  {
-@@ -406,7 +444,9 @@ void CGraphicContext::SetVideoResolutionInternal(RESOLUTION res, bool forceUpdat
+@@ -408,7 +446,9 @@
    }
  
    // If we are switching to the same resolution and same window/full-screen, no need to do anything
 -  if (!forceUpdate && res == lastRes && m_bFullScreenRoot == CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_fullScreen)
 +  if (!forceUpdate && res == lastRes
-+		  && m_bFullScreenRoot == CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_fullScreen
-+		  && m_dvOutput == CServiceBroker::GetWinSystem()->IsDolbyVisionOutput())
++      && m_bFullScreenRoot == CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_fullScreen
++      && m_dvOutput == CServiceBroker::GetWinSystem()->IsDolbyVisionOutput())
    {
      return;
    }
-@@ -424,6 +464,8 @@ void CGraphicContext::SetVideoResolutionInternal(RESOLUTION res, bool forceUpdat
+@@ -426,6 +466,8 @@
  
-   std::unique_lock<CCriticalSection> lock(*this);
+   std::unique_lock lock(*this);
  
 +  m_dvOutput = CServiceBroker::GetWinSystem()->IsDolbyVisionOutput();
 +
    // FIXME Wayland windowing needs some way to "deny" resolution updates since what Kodi
    // requests might not get actually set by the compositor.
    // So in theory, m_iScreenWidth etc. would not need to be updated at all before the
-@@ -433,10 +475,19 @@ void CGraphicContext::SetVideoResolutionInternal(RESOLUTION res, bool forceUpdat
+@@ -435,10 +477,20 @@
    int origScreenWidth = m_iScreenWidth;
    int origScreenHeight = m_iScreenHeight;
    float origFPSOverride = m_fFPSOverride;
-+  RENDER_STEREO_MODE origStereoMode = m_stereoMode;
++  RenderStereoMode origStereoMode = m_stereoMode;
  
    UpdateInternalStateWithResolution(res);
    RESOLUTION_INFO info_org  = CDisplaySettings::GetInstance().GetResolutionInfo(res);
  
 +  // Get render stereo mode from flags
 +  m_stereoMode = ConvertMode3dFlagsToRenderStereoMode(info_org.dwFlags);
-+  if (m_stereoMode == RENDER_STEREO_MODE_OFF
-+	  && CServiceBroker::GetGUI() != nullptr && CServiceBroker::GetGUI()->GetStereoscopicsManager().GetStereoMode() != RENDER_STEREO_MODE_OFF) {
-+    // Stereoscopics manager has asked for a 3D mode but we've got a 2D resolution => switch to mono
-+    m_stereoMode = RENDER_STEREO_MODE_MONO;
++  if (m_stereoMode == RenderStereoMode::OFF && CServiceBroker::GetGUI() != nullptr &&
++      CServiceBroker::GetGUI()->GetStereoscopicsManager().GetStereoMode() != RenderStereoMode::OFF)
++  {
++    // Stereoscopics manager has asked for a 3D mode but we got a 2D resolution => switch to mono
++    m_stereoMode = RenderStereoMode::MONO;
 +  }
 +
    bool switched = false;
    if (CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_fullScreen)
    {
-@@ -460,7 +511,7 @@ void CGraphicContext::SetVideoResolutionInternal(RESOLUTION res, bool forceUpdat
-     SetStereoView(RENDER_STEREO_VIEW_OFF);
+@@ -462,7 +514,7 @@
+     SetStereoView(RenderStereoView::OFF);
  
      // update anyone that relies on sizing information
 -    CServiceBroker::GetInputManager().SetMouseResolution(info_org.iWidth, info_org.iHeight, 1, 1);
@@ -13764,16 +13763,15 @@ index e3300e925c..6801245fa9 100644
  
      CGUIComponent *gui = CServiceBroker::GetGUI();
      if (gui)
-@@ -472,6 +523,8 @@ void CGraphicContext::SetVideoResolutionInternal(RESOLUTION res, bool forceUpdat
+@@ -474,6 +526,7 @@
      m_iScreenWidth = origScreenWidth;
      m_iScreenHeight = origScreenHeight;
      m_fFPSOverride = origFPSOverride;
 +    m_stereoMode = origStereoMode;
-+
      if (IsValidResolution(lastRes))
      {
        m_Resolution = lastRes;
-@@ -573,10 +626,18 @@ void CGraphicContext::ResetScreenParameters(RESOLUTION res)
+@@ -575,10 +628,18 @@
  {
    RESOLUTION_INFO& info = CDisplaySettings::GetInstance().GetResolutionInfo(res);
  
@@ -13792,15 +13790,15 @@ index e3300e925c..6801245fa9 100644
 +  }
 +
 +  CLog::Log(LOGWARNING, "CGraphicContext::ResetScreenParameters: Should reset resolutions? {}/{} vs. {}/{}",
-+		  info.iWidth, info.iHeight, info.iScreenWidth, info.iScreenHeight);
++            info.iWidth, info.iHeight, info.iScreenWidth, info.iScreenHeight);
    ResetOverscan(res, info.Overscan);
  }
  
-@@ -599,33 +660,6 @@ const RESOLUTION_INFO CGraphicContext::GetResInfo(RESOLUTION res) const
+@@ -606,33 +667,6 @@
  {
    RESOLUTION_INFO info = CDisplaySettings::GetInstance().GetResolutionInfo(res);
  
--  if(m_stereoMode == RENDER_STEREO_MODE_SPLIT_HORIZONTAL)
+-  if (m_stereoMode == RenderStereoMode::SPLIT_HORIZONTAL)
 -  {
 -    if((info.dwFlags & D3DPRESENTFLAG_MODE3DTB) == 0)
 -    {
@@ -13814,7 +13812,7 @@ index e3300e925c..6801245fa9 100644
 -    info.iSubtitles       = (info.iSubtitles      - info.iBlanking) / 2;
 -  }
 -
--  if(m_stereoMode == RENDER_STEREO_MODE_SPLIT_VERTICAL)
+-  if (m_stereoMode == RenderStereoMode::SPLIT_VERTICAL)
 -  {
 -    if((info.dwFlags & D3DPRESENTFLAG_MODE3DSBS) == 0)
 -    {
@@ -13830,11 +13828,10 @@ index e3300e925c..6801245fa9 100644
    if (res == m_Resolution && m_fFPSOverride != 0)
    {
      info.fRefreshRate = m_fFPSOverride;
-@@ -985,13 +1019,6 @@ const std::string& CGraphicContext::GetMediaDir() const
- void CGraphicContext::Flip(bool rendered, bool videoLayer)
+@@ -1008,12 +1042,6 @@
  {
    CServiceBroker::GetRenderSystem()->PresentRender(rendered, videoLayer);
--
+ 
 -  if(m_stereoMode != m_nextStereoMode)
 -  {
 -    m_stereoMode = m_nextStereoMode;
@@ -13844,11 +13841,11 @@ index e3300e925c..6801245fa9 100644
  }
  
  void CGraphicContext::GetAllowedResolutions(std::vector<RESOLUTION> &res)
+
 diff --git a/xbmc/windowing/GraphicContext.h b/xbmc/windowing/GraphicContext.h
-index 0c5201f1e7..cb8bf71bd4 100644
 --- a/xbmc/windowing/GraphicContext.h
 +++ b/xbmc/windowing/GraphicContext.h
-@@ -29,11 +29,19 @@
+@@ -24,11 +24,19 @@
  #define D3DPRESENTFLAG_PROGRESSIVE  4
  #define D3DPRESENTFLAG_MODE3DSBS    8
  #define D3DPRESENTFLAG_MODE3DTB    16
@@ -13869,7 +13866,7 @@ index 0c5201f1e7..cb8bf71bd4 100644
  
  enum VIEW_TYPE { VIEW_TYPE_NONE = 0,
                   VIEW_TYPE_LIST,
-@@ -82,7 +90,6 @@ public:
+@@ -84,7 +92,6 @@
  
    void Flip(bool rendered, bool videoLayer);
  
@@ -13877,17 +13874,17 @@ index 0c5201f1e7..cb8bf71bd4 100644
    int GetWidth() const;
    int GetHeight() const;
    bool SetViewPort(float fx, float fy , float fwidth, float fheight, bool intersectPrevious = false);
-@@ -101,6 +108,9 @@ public:
-   void ApplyStateBlock();
-   void Clear(UTILS::COLOR::Color color = 0);
+@@ -112,6 +119,9 @@
+    */
+   void Clear(KODI::UTILS::COLOR::Color color);
    void GetAllowedResolutions(std::vector<RESOLUTION> &res);
-+  uint32_t ConvertRenderStereoModeToMode3dFlags(RENDER_STEREO_MODE stereo_mode) const;
-+  RENDER_STEREO_MODE ConvertMode3dFlagsToRenderStereoMode(uint32_t mode3dFlags) const;
-+  RENDER_STEREO_MODE GetRenderStereoModeFromResolution(RESOLUTION resolution) const;
- 
-   /* \brief Get UI scaling information from a given resolution to the screen resolution.
-    Takes account of overscan and UI zooming.
-@@ -198,6 +208,7 @@ protected:
++  uint32_t ConvertRenderStereoModeToMode3dFlags(RenderStereoMode stereo_mode) const;
++  RenderStereoMode ConvertMode3dFlagsToRenderStereoMode(uint32_t mode3dFlags) const;
++  RenderStereoMode GetRenderStereoModeFromResolution(RESOLUTION resolution) const;
+   /*! \brief Sets the direction of the current rendering pass.
+    \param renderOrder direction of the pass
+    */
+@@ -235,6 +245,7 @@
    bool m_bCalibrating = false;
    RESOLUTION m_Resolution = RES_INVALID;
    float m_fFPSOverride = 0.0f;
@@ -13895,11 +13892,10 @@ index 0c5201f1e7..cb8bf71bd4 100644
  
    RESOLUTION_INFO m_windowResolution;
    std::stack<CPoint> m_cameras;
-diff --git a/xbmc/windowing/Resolution.cpp b/xbmc/windowing/Resolution.cpp
-index 270392c163..0009a8ab5c 100644
+
 --- a/xbmc/windowing/Resolution.cpp
 +++ b/xbmc/windowing/Resolution.cpp
-@@ -68,16 +68,16 @@ float RESOLUTION_INFO::DisplayRatio() const
+@@ -54,16 +54,16 @@
    return iWidth * fPixelRatio / iHeight;
  }
  
@@ -13920,8 +13916,8 @@ index 270392c163..0009a8ab5c 100644
      }
    }
  
-@@ -91,12 +91,12 @@ static inline bool ModeSort(CVariant i, CVariant j)
-   return (i < j);
+@@ -72,12 +72,12 @@
+   return res;
  }
  
 -void CResolutionUtils::FindResolutionFromWhitelist(float fps, int width, int height, bool is3D, RESOLUTION &resolution)
@@ -13936,7 +13932,7 @@ index 270392c163..0009a8ab5c 100644
  
    std::vector<CVariant> indexList = CServiceBroker::GetSettingsComponent()->GetSettings()->GetList(CSettings::SETTING_VIDEOSCREEN_WHITELIST);
  
-@@ -114,7 +114,7 @@ void CResolutionUtils::FindResolutionFromWhitelist(float fps, int width, int hei
+@@ -94,7 +94,7 @@
      {
        info = CServiceBroker::GetWinSystem()->GetGfxContext().GetResInfo(c);
        if (info.iScreenHeight >= curr.iScreenHeight && info.iScreenWidth >= curr.iScreenWidth &&
@@ -13945,193 +13941,140 @@ index 270392c163..0009a8ab5c 100644
        {
          // do not add half refreshrates (25, 29.97 by default) as kodi cannot cope with
          // them on playback start. Especially interlaced content is not properly detected
-@@ -131,6 +131,13 @@ void CResolutionUtils::FindResolutionFromWhitelist(float fps, int width, int hei
- 
-   std::sort(indexList.begin(), indexList.end(), ModeSort);
- 
+@@ -106,0 +107,6 @@
 +  if (modeflag3d)
 +  {
 +    if (Find3dResolution(fps, width, height, modeflag3d, indexList, resolution))
 +      return;
-+	CLog::Log(LOGDEBUG, "[WHITELIST 3D] No match for a 3D resolution");
 +  }
 +
-   CLog::Log(LOGDEBUG, "[WHITELIST] Searching for an exact resolution with an exact refresh rate");
- 
-   unsigned int penalty = std::numeric_limits<unsigned int>::max();
-@@ -145,7 +152,7 @@ void CResolutionUtils::FindResolutionFromWhitelist(float fps, int width, int hei
-     // allow macroblock alignment / padding errors (e.g. 1080 mod16 == 8)
+@@ -121,7 +127,7 @@
+     // note: height has greater tolerance due to 32/64px boundaries e.g. 1080->1088 or 2160->2176
      if (((height == info.iScreenHeight && width <= info.iScreenWidth + 8) ||
-          (width == info.iScreenWidth && height <= info.iScreenHeight + 8)) &&
+          (width == info.iScreenWidth && height <= info.iScreenHeight + 32)) &&
 -        (info.dwFlags & D3DPRESENTFLAG_MODEMASK) == (curr.dwFlags & D3DPRESENTFLAG_MODEMASK) &&
-+        ! (info.dwFlags & D3DPRESENTFLAG_MODEMASK) &&
++        !(info.dwFlags & D3DPRESENTFLAG_MODEMASK) &&
          MathUtils::FloatEquals(info.fRefreshRate, fps, 0.01f))
      {
        CLog::Log(LOGDEBUG,
-@@ -179,7 +186,7 @@ void CResolutionUtils::FindResolutionFromWhitelist(float fps, int width, int hei
-       // allow macroblock alignment / padding errors (e.g. 1080 mod16 == 8)
+@@ -156,7 +162,7 @@
+       // note: height has greater tolerance due to 32/64px boundaries e.g. 1080->1088 or 2160->2176
        if (((height == info.iScreenHeight && width <= info.iScreenWidth + 8) ||
-            (width == info.iScreenWidth && height <= info.iScreenHeight + 8)) &&
+            (width == info.iScreenWidth && height <= info.iScreenHeight + 32)) &&
 -          (info.dwFlags & D3DPRESENTFLAG_MODEMASK) == (curr.dwFlags & D3DPRESENTFLAG_MODEMASK) &&
-+        ! (info.dwFlags & D3DPRESENTFLAG_MODEMASK) &&
++          !(info.dwFlags & D3DPRESENTFLAG_MODEMASK) &&
            MathUtils::FloatEquals(info.fRefreshRate, fps * 2, 0.01f))
        {
          CLog::Log(LOGDEBUG,
-@@ -218,7 +225,7 @@ void CResolutionUtils::FindResolutionFromWhitelist(float fps, int width, int hei
-       // allow macroblock alignment / padding errors (e.g. 1080 mod16 == 8)
+@@ -196,7 +202,7 @@
+       // note: height has greater tolerance due to 32/64px boundaries e.g. 1080->1088 or 2160->2176
        if (((height == info.iScreenHeight && width <= info.iScreenWidth + 8) ||
-            (width == info.iScreenWidth && height <= info.iScreenHeight + 8)) &&
+            (width == info.iScreenWidth && height <= info.iScreenHeight + 32)) &&
 -          (info.dwFlags & D3DPRESENTFLAG_MODEMASK) == (curr.dwFlags & D3DPRESENTFLAG_MODEMASK) &&
-+          ! (info.dwFlags & D3DPRESENTFLAG_MODEMASK) &&
++          !(info.dwFlags & D3DPRESENTFLAG_MODEMASK) &&
            MathUtils::FloatEquals(info.fRefreshRate, fps * 2.5f, 0.01f))
        {
          CLog::Log(
-@@ -253,8 +260,8 @@ void CResolutionUtils::FindResolutionFromWhitelist(float fps, int width, int hei
-       const RESOLUTION_INFO info = CServiceBroker::GetWinSystem()->GetGfxContext().GetResInfo(i);
- 
-       // pick the lowest resolution that has a matching refresh rate
--      if ((info.iScreenHeight >= height || info.iScreenWidth >= width) &&
--        (info.dwFlags & D3DPRESENTFLAG_MODEMASK) == (curr.dwFlags & D3DPRESENTFLAG_MODEMASK) &&
-+      if ((info.iScreenHeight >= height && info.iScreenWidth >= width) &&
-+        ! (info.dwFlags & D3DPRESENTFLAG_MODEMASK) &&
-           MathUtils::FloatEquals(info.fRefreshRate, fps, 0.01f))
-       {
-         resolution = i;
-@@ -277,7 +284,7 @@ void CResolutionUtils::FindResolutionFromWhitelist(float fps, int width, int hei
+@@ -230,7 +236,7 @@
  
      // allow resolutions that are desktop resolution but have the correct refresh rate
      if (info.iScreenWidth == desktop_info.iScreenWidth &&
 -        (info.dwFlags & D3DPRESENTFLAG_MODEMASK) == (desktop_info.dwFlags & D3DPRESENTFLAG_MODEMASK) &&
-+        ! (info.dwFlags & D3DPRESENTFLAG_MODEMASK) &&
++        !(info.dwFlags & D3DPRESENTFLAG_MODEMASK) &&
          MathUtils::FloatEquals(info.fRefreshRate, fps, 0.01f))
      {
        CLog::Log(LOGDEBUG,
-@@ -303,8 +310,7 @@ void CResolutionUtils::FindResolutionFromWhitelist(float fps, int width, int hei
+@@ -256,8 +262,7 @@
  
        // allow resolutions that are desktop resolution but have double the refresh rate
        if (info.iScreenWidth == desktop_info.iScreenWidth &&
 -          (info.dwFlags & D3DPRESENTFLAG_MODEMASK) ==
 -              (desktop_info.dwFlags & D3DPRESENTFLAG_MODEMASK) &&
-+        ! (info.dwFlags & D3DPRESENTFLAG_MODEMASK) &&
++          !(info.dwFlags & D3DPRESENTFLAG_MODEMASK) &&
            MathUtils::FloatEquals(info.fRefreshRate, fps * 2, 0.01f))
        {
          CLog::Log(LOGDEBUG,
-@@ -332,8 +338,7 @@ void CResolutionUtils::FindResolutionFromWhitelist(float fps, int width, int hei
+@@ -285,8 +290,7 @@
  
        // allow resolutions that are desktop resolution but have 2.5 times the refresh rate
        if (info.iScreenWidth == desktop_info.iScreenWidth &&
 -          (info.dwFlags & D3DPRESENTFLAG_MODEMASK) ==
 -              (desktop_info.dwFlags & D3DPRESENTFLAG_MODEMASK) &&
-+        ! (info.dwFlags & D3DPRESENTFLAG_MODEMASK) &&
++          !(info.dwFlags & D3DPRESENTFLAG_MODEMASK) &&
            MathUtils::FloatEquals(info.fRefreshRate, fps * 2.5f, 0.01f))
        {
          CLog::Log(
-@@ -349,10 +354,19 @@ void CResolutionUtils::FindResolutionFromWhitelist(float fps, int width, int hei
-               "[WHITELIST] No match for a desktop resolution with a 3:2 pulldown refresh rate");
-   }
- 
+@@ -302,0 +307,7 @@
 +  if (!(modeflag3d & D3DPRESENTFLAG_MODE3DMASK) && (curr.dwFlags & D3DPRESENTFLAG_MODE3DMASK))
 +  {
 +    CLog::Log(LOGDEBUG, "[WHITELIST] No resolution matched, use RES_DESKTOP as 2D resolution fallback");
-+    // we're searching for a 2D resolution but the current one is 3D, so we need to use a 2D
-+    // fallback now
 +    resolution = RES_DESKTOP;
 +    return;
 +  }
 +
-   CLog::Log(LOGDEBUG, "[WHITELIST] No resolution matched");
- }
- 
+@@ -307 +319 @@
 -bool CResolutionUtils::FindResolutionFromOverride(float fps, int width, bool is3D, RESOLUTION &resolution, float& weight, bool fallback)
 +bool CResolutionUtils::FindResolutionFromOverride(float fps, int width, uint32_t modeflag3d, RESOLUTION &resolution, float& weight, bool fallback)
- {
-   RESOLUTION_INFO curr = CServiceBroker::GetWinSystem()->GetGfxContext().GetResInfo(resolution);
- 
-@@ -504,3 +518,84 @@ void CResolutionUtils::GetMaxAllowedScreenResolution(unsigned int& width, unsign
+@@ -457,3 +469,58 @@
    width = maxWidth;
    height = maxHeight;
  }
 +
 +bool CResolutionUtils::Find3dResolution(float fps, int width, int height, uint32_t modeflag3d, std::vector<CVariant> &indexList, RESOLUTION &resolution)
 +{
-+  CLog::Log(LOGDEBUG, "[WHITELIST 3D] Searching for an exact 3D resolution with an exact refresh rate");
-+
 +  for (const auto &mode : indexList)
 +  {
-+	RESOLUTION i = CDisplaySettings::GetInstance().GetResFromString(mode.asString());
-+	const RESOLUTION_INFO info = CServiceBroker::GetWinSystem()->GetGfxContext().GetResInfo(i);
-+
-+	// allow resolutions that are exact and have the correct refresh rate
-+	// allow macroblock alignement / padding errors (e.g. 1080 mod16 == 8)
-+	if (((height == info.iScreenHeight && width <= info.iScreenWidth + 8) ||
-+		 (width == info.iScreenWidth && height <= info.iScreenHeight + 8)) &&
-+		 (info.dwFlags & modeflag3d) &&
-+		MathUtils::FloatEquals(info.fRefreshRate, fps, 0.01f))
-+	{
-+	  CLog::Log(LOGDEBUG, "[WHITELIST 3D] Matched an exact 3D resolution with an exact refresh rate {} ({})", info.strMode, i);
-+	  resolution = i;
-+	  return true;
-+	}
++    RESOLUTION i = CDisplaySettings::GetInstance().GetResFromString(mode.asString());
++    const RESOLUTION_INFO info = CServiceBroker::GetWinSystem()->GetGfxContext().GetResInfo(i);
++    if (((height == info.iScreenHeight && width <= info.iScreenWidth + 8) ||
++         (width == info.iScreenWidth && height <= info.iScreenHeight + 8)) &&
++        (info.dwFlags & modeflag3d) && MathUtils::FloatEquals(info.fRefreshRate, fps, 0.01f))
++    {
++      resolution = i;
++      return true;
++    }
 +  }
 +
-+  CLog::Log(LOGDEBUG, "[WHITELIST 3D] No match for an exact 3D resolution with an exact refresh rate, searching for double refresh rate now");
-+
 +  for (const auto &mode : indexList)
 +  {
-+	RESOLUTION i = CDisplaySettings::GetInstance().GetResFromString(mode.asString());
-+	const RESOLUTION_INFO info = CServiceBroker::GetWinSystem()->GetGfxContext().GetResInfo(i);
-+
-+	// allow resolutions that are exact and have the double refresh rate
-+	// allow macroblock alignement / padding errors (e.g. 1080 mod16 == 8)
-+	if (((height == info.iScreenHeight && width <= info.iScreenWidth + 8) ||
-+		 (width == info.iScreenWidth && height <= info.iScreenHeight + 8)) &&
-+		 (info.dwFlags & modeflag3d) &&
-+		MathUtils::FloatEquals(info.fRefreshRate, fps * 2, 0.01f))
-+	{
-+	  CLog::Log(LOGDEBUG, "[WHITELIST 3D] Matched an exact 3D resolution with double refresh rate {} ({})", info.strMode, i);
-+	  resolution = i;
-+	  return true;
-+	}
++    RESOLUTION i = CDisplaySettings::GetInstance().GetResFromString(mode.asString());
++    const RESOLUTION_INFO info = CServiceBroker::GetWinSystem()->GetGfxContext().GetResInfo(i);
++    if (((height == info.iScreenHeight && width <= info.iScreenWidth + 8) ||
++         (width == info.iScreenWidth && height <= info.iScreenHeight + 8)) &&
++        (info.dwFlags & modeflag3d) && MathUtils::FloatEquals(info.fRefreshRate, fps * 2, 0.01f))
++    {
++      resolution = i;
++      return true;
++    }
 +  }
 +
-+  CLog::Log(LOGDEBUG, "[WHITELIST 3D] No match for an exact 3D resolution with double refresh rate, searching for higher resolution with exact refresh rate now");
-+
 +  for (const auto &mode : indexList)
 +  {
-+	RESOLUTION i = CDisplaySettings::GetInstance().GetResFromString(mode.asString());
-+	const RESOLUTION_INFO info = CServiceBroker::GetWinSystem()->GetGfxContext().GetResInfo(i);
-+
-+	// allow resolutions that are higher and have the correct refresh rate
-+	if ((height <= info.iScreenHeight || width <= info.iScreenWidth) &&
-+		 (info.dwFlags & modeflag3d) &&
-+		MathUtils::FloatEquals(info.fRefreshRate, fps, 0.01f))
-+	{
-+	  CLog::Log(LOGDEBUG, "[WHITELIST 3D] Matched a higher 3D resolution with exact refresh rate {} ({})", info.strMode, i);
-+	  resolution = i;
-+	  return true;
-+	}
++    RESOLUTION i = CDisplaySettings::GetInstance().GetResFromString(mode.asString());
++    const RESOLUTION_INFO info = CServiceBroker::GetWinSystem()->GetGfxContext().GetResInfo(i);
++    if ((height <= info.iScreenHeight || width <= info.iScreenWidth) &&
++        (info.dwFlags & modeflag3d) && MathUtils::FloatEquals(info.fRefreshRate, fps, 0.01f))
++    {
++      resolution = i;
++      return true;
++    }
 +  }
 +
-+  CLog::Log(LOGDEBUG, "[WHITELIST 3D] No match for a higher 3D resolution with exact refresh rate, searching for higher resolution with double refresh rate now");
-+
 +  for (const auto &mode : indexList)
 +  {
-+	RESOLUTION i = CDisplaySettings::GetInstance().GetResFromString(mode.asString());
-+	const RESOLUTION_INFO info = CServiceBroker::GetWinSystem()->GetGfxContext().GetResInfo(i);
-+
-+	// allow resolutions that are higher and have the double refresh rate
-+	if ((height <= info.iScreenHeight || width <= info.iScreenWidth) &&
-+		 (info.dwFlags & modeflag3d) &&
-+		MathUtils::FloatEquals(info.fRefreshRate, fps * 2, 0.01f))
-+	{
-+	  CLog::Log(LOGDEBUG, "[WHITELIST 3D] Matched a higher 3D resolution with double refresh rate {} ({})", info.strMode, i);
-+	  resolution = i;
-+	  return true;
-+	}
++    RESOLUTION i = CDisplaySettings::GetInstance().GetResFromString(mode.asString());
++    const RESOLUTION_INFO info = CServiceBroker::GetWinSystem()->GetGfxContext().GetResInfo(i);
++    if ((height <= info.iScreenHeight || width <= info.iScreenWidth) &&
++        (info.dwFlags & modeflag3d) && MathUtils::FloatEquals(info.fRefreshRate, fps * 2, 0.01f))
++    {
++      resolution = i;
++      return true;
++    }
 +  }
 +
 +  return false;
 +}
+
 diff --git a/xbmc/windowing/Resolution.h b/xbmc/windowing/Resolution.h
 index 0edf0ffe81..3692befc12 100644
 --- a/xbmc/windowing/Resolution.h
@@ -14166,6 +14109,7 @@ index 0edf0ffe81..3692befc12 100644
 +  static bool Find3dResolution(float fps, int width, int height, uint32_t modeflag3d, std::vector<CVariant> &indexList, RESOLUTION &resolution);
    static float RefreshWeight(float refresh, float fps);
  };
+
 diff --git a/xbmc/windowing/WinSystem.cpp b/xbmc/windowing/WinSystem.cpp
 index f1d40bf2f0..0ba9b62ba5 100644
 --- a/xbmc/windowing/WinSystem.cpp
@@ -14192,6 +14136,7 @@ index f1d40bf2f0..0ba9b62ba5 100644
  }
  
  std::vector<RESOLUTION_WHR> CWinSystemBase::ScreenResolutions(float refreshrate)
+
 diff --git a/xbmc/windowing/WinSystem.h b/xbmc/windowing/WinSystem.h
 index 88218db9e0..a119ccd2d7 100644
 --- a/xbmc/windowing/WinSystem.h
@@ -14215,6 +14160,7 @@ index 88218db9e0..a119ccd2d7 100644
    /*!
     * \brief Return true when HDR display is available and enabled in settings
     *
+
 diff --git a/xbmc/windowing/amlogic/CMakeLists.txt b/xbmc/windowing/amlogic/CMakeLists.txt
 new file mode 100644
 index 0000000000..5df7176c70
@@ -14233,6 +14179,7 @@ index 0000000000..5df7176c70
 +endif()
 +
 +core_add_library(windowing_Amlogic)
+
 diff --git a/xbmc/windowing/amlogic/VideoSyncAML.cpp b/xbmc/windowing/amlogic/VideoSyncAML.cpp
 new file mode 100644
 index 0000000000..1624799065
@@ -14334,6 +14281,7 @@ index 0000000000..1624799065
 +{
 +  m_abort = true;
 +}
+
 diff --git a/xbmc/windowing/amlogic/VideoSyncAML.h b/xbmc/windowing/amlogic/VideoSyncAML.h
 new file mode 100644
 index 0000000000..55b23d9927
@@ -14366,6 +14314,7 @@ index 0000000000..55b23d9927
 +private:
 +  volatile bool m_abort;
 +};
+
 diff --git a/xbmc/windowing/amlogic/WinSystemAmlogic.cpp b/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
 new file mode 100755
 index 0000000000..b65b0fe3e4
@@ -14883,6 +14832,7 @@ index 0000000000..b65b0fe3e4
 +
 +  return 1000. / m_fRefreshRate * (CServiceBroker::GetWinSystem()->GetGfxContext().IsTransferPQ() ? 4. : 3.);
 +}
+
 diff --git a/xbmc/windowing/amlogic/WinSystemAmlogic.h b/xbmc/windowing/amlogic/WinSystemAmlogic.h
 new file mode 100644
 index 0000000000..135be28fc1
@@ -14974,6 +14924,7 @@ index 0000000000..135be28fc1
 +  float GetGuiSdrPeakLuminance() const override;
 +  bool IsDolbyVisionOutput() const override;
 +};
+
 diff --git a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp
 new file mode 100644
 index 0000000000..2ca3535845
@@ -15143,6 +15094,7 @@ index 0000000000..2ca3535845
 +
 +  return CRenderSystemGLES::SupportsStereo(mode);
 +}
+
 diff --git a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h
 new file mode 100644
 index 0000000000..84a7bc22f2
