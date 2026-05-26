@@ -63,11 +63,11 @@ sed -n '/if \[ "\$1" == "vero5" \]/,/^        fi/p' "${build_sh}" | grep -E 'PKG
 
 if [ -d "${kodi_src_dir}/kodi-build" ]; then
     echo "Removing stale Kodi CMake build directory"
-    rm -rf "${kodi_src_dir}/kodi-build"
+    sudo rm -rf "${kodi_src_dir}/kodi-build"
 fi
 
-find "${mediacenter_dir}/src" -path '*/kodi-build/CMakeCache.txt' -print -delete 2>/dev/null || true
-find "${mediacenter_dir}/src" -path '*/kodi-build/CMakeFiles' -type d -print -exec rm -rf {} + 2>/dev/null || true
+find "${mediacenter_dir}/src" -path '*/kodi-build/CMakeCache.txt' -print -exec sudo rm -f {} \; 2>/dev/null || true
+find "${mediacenter_dir}/src" -path '*/kodi-build/CMakeFiles' -type d -print -exec sudo rm -rf {} + 2>/dev/null || true
 
 cd "${mediacenter_dir}"
 make vero5
