@@ -11,16 +11,16 @@ Also selects double refreshrate if available at correct res (fix
 for change of mode 1-2 secs after video starts).
 ---
  xbmc/settings/DisplaySettings.cpp |  2 +-
- xbmc/utils/Variant.cpp            | 24 ++++++++++++++++++++++
+ xbmc/utils/Variant.cpp            | 24 ++++++++++++++++++++++++
  xbmc/utils/Variant.h              |  1 +
- xbmc/windowing/Resolution.cpp     | 37 ++++++++++++++++++++++++++++++++++++-
- 4 files changed, 62 insertions(+), 2 deletions(-)
+ xbmc/windowing/Resolution.cpp     | 35 ++++++++++++++++++++++++++++++++++-
+ 4 files changed, 60 insertions(+), 2 deletions(-)
 
 diff --git a/xbmc/settings/DisplaySettings.cpp b/xbmc/settings/DisplaySettings.cpp
-index 031ca0be96..75ce481a6c 100644
 --- a/xbmc/settings/DisplaySettings.cpp
 +++ b/xbmc/settings/DisplaySettings.cpp
-@@ -711,7 +711,7 @@ void CDisplaySettings::SettingOptionsModesFiller(const std::shared_ptr<const CSe
+@@ -733,7 +733,7 @@
+   }
  
    std::ranges::sort(list, [](const StringSettingOption& i, const StringSettingOption& j)
 -                    { return (i.value > j.value); });
@@ -28,11 +28,11 @@ index 031ca0be96..75ce481a6c 100644
  }
  
  void CDisplaySettings::SettingOptionsRefreshChangeDelaysFiller(
+
 diff --git a/xbmc/utils/Variant.cpp b/xbmc/utils/Variant.cpp
-index 45ab7e19d7..260afe607d 100644
 --- a/xbmc/utils/Variant.cpp
 +++ b/xbmc/utils/Variant.cpp
-@@ -551,6 +551,30 @@ bool CVariant::operator==(const CVariant &rhs) const
+@@ -548,6 +548,30 @@
    return m_data == rhs.m_data;
  }
  
@@ -63,11 +63,11 @@ index 45ab7e19d7..260afe607d 100644
  void CVariant::reserve(size_t length)
  {
    if (type() == VariantTypeNull)
+
 diff --git a/xbmc/utils/Variant.h b/xbmc/utils/Variant.h
-index 0332048126..4f36821d8e 100644
 --- a/xbmc/utils/Variant.h
 +++ b/xbmc/utils/Variant.h
-@@ -115,6 +115,7 @@ public:
+@@ -111,6 +111,7 @@
    CVariant& operator=(CVariant&& rhs) noexcept;
    bool operator==(const CVariant &rhs) const;
    bool operator!=(const CVariant &rhs) const { return !(*this == rhs); }
@@ -75,11 +75,11 @@ index 0332048126..4f36821d8e 100644
  
    void reserve(size_t length);
    void push_back(const CVariant &variant);
+
 diff --git a/xbmc/windowing/Resolution.cpp b/xbmc/windowing/Resolution.cpp
-index 951ec08035..270392c163 100644
 --- a/xbmc/windowing/Resolution.cpp
 +++ b/xbmc/windowing/Resolution.cpp
-@@ -21,6 +21,7 @@
+@@ -20,6 +20,7 @@
  #include "windowing/WinSystem.h"
  
  #include <cstdlib>
@@ -87,19 +87,7 @@ index 951ec08035..270392c163 100644
  #include <limits>
  
  namespace
-@@ -75,6 +76,11 @@ RESOLUTION CResolutionUtils::ChooseBestResolution(float fps, int width, int heig
-   return res;
- }
- 
-+static inline bool ModeSort(CVariant i, CVariant j)
-+{
-+  return (i < j);
-+}
-+
- void CResolutionUtils::FindResolutionFromWhitelist(float fps, int width, int height, bool is3D, RESOLUTION &resolution)
- {
-   RESOLUTION_INFO curr = CServiceBroker::GetWinSystem()->GetGfxContext().GetResInfo(resolution);
-@@ -119,6 +125,8 @@ void CResolutionUtils::FindResolutionFromWhitelist(float fps, int width, int hei
+@@ -106,6 +107,8 @@
      }
    }
  
@@ -108,7 +96,7 @@ index 951ec08035..270392c163 100644
    CLog::Log(LOGDEBUG, "[WHITELIST] Searching for an exact resolution with an exact refresh rate");
  
    unsigned int penalty = std::numeric_limits<unsigned int>::max();
-@@ -181,7 +189,7 @@ void CResolutionUtils::FindResolutionFromWhitelist(float fps, int width, int hei
+@@ -163,7 +166,7 @@
                    "[WHITELIST] Matched an exact resolution with double the refresh rate {} ({})",
                    info.strMode, i);
          unsigned int pen = abs(info.iScreenHeight - height) + abs(info.iScreenWidth - width);
@@ -117,7 +105,7 @@ index 951ec08035..270392c163 100644
          {
            resolution = i;
            found = true;
-@@ -241,6 +249,31 @@ void CResolutionUtils::FindResolutionFromWhitelist(float fps, int width, int hei
+@@ -219,6 +222,31 @@
    }
  
  
