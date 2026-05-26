@@ -7,35 +7,28 @@ Subject: [PATCH] Ensure that add-ons can run before shutdown / reboot. This
 
 Signed-off-by: Sam Nazarko <email@samnazarko.co.uk>
 ---
- xbmc/application/ApplicationMessageHandling.cpp | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ xbmc/application/ApplicationMessageHandling.cpp | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/xbmc/application/ApplicationMessageHandling.cpp b/xbmc/application/ApplicationMessageHandling.cpp
-index eeb099e6ae..8a76c229cb 100644
 --- a/xbmc/application/ApplicationMessageHandling.cpp
 +++ b/xbmc/application/ApplicationMessageHandling.cpp
-@@ -119,7 +119,10 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
-   {
-     case TMSG_POWERDOWN:
+@@ -120,6 +120,7 @@
        if (m_app.Stop(EXITCODE_POWERDOWN))
-+      {
+       {
+         m_app.m_ShuttingDown = true;
 +        CServiceBroker::GetAppMessenger()->PostMsg(TMSG_SETOSMCWALKTHROUGHSTATE, 2);
          CServiceBroker::GetPowerManager().Powerdown();
-+      }
+       }
        break;
- 
-     case TMSG_QUIT:
-@@ -134,7 +137,10 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
-     case TMSG_RESTART:
-     case TMSG_RESET:
+@@ -149,6 +150,7 @@
        if (m_app.Stop(EXITCODE_REBOOT))
-+      {
+       {
+         m_app.m_ShuttingDown = true;
 +        CServiceBroker::GetAppMessenger()->PostMsg(TMSG_SETOSMCWALKTHROUGHSTATE, 2);
          CServiceBroker::GetPowerManager().Reboot();
-+      }
+       }
        break;
- 
-     case TMSG_RESTARTAPP:
 -- 
 2.34.1
 
