@@ -14,8 +14,8 @@ patch --batch --forward -p1 < split.patch
 Only patches that passed dry-run were applied before testing the next split patch. This preserves order as much as possible.
 
 Total split patches: 173
-Working split patches: 171
-Needs work: 2
+Working split patches: 173
+Needs work: 0
 
 ## Fixed after initial split test
 
@@ -52,12 +52,22 @@ Needs work: 2
   - Updated for Kodi 22 `CDemuxStreamSubtitle` constructor style.
   - Dry-run passed locally.
 
+- `vero5-split-076-xbmc-cores-VideoPlayer-DVDDemuxers-DVDDemuxFFmpeg.cpp.patch`
+  - Updated remaining failed hunks for Kodi 22 demuxer layout.
+  - Keeps MVC/Dolby Vision muxer setup, 3D subtitle plane handling, safer FPS handling, and chapter seek behavior.
+  - Dry-run passed locally.
+
 - `vero5-split-085-xbmc-cores-VideoPlayer-DVDInputStreams-CMakeLists.txt.patch`
   - Updated Bluray condition from `BLURAY_FOUND` to `TARGET ${APP_NAME_LC}::Bluray`.
   - Dry-run passed locally.
 
 - `vero5-split-086-xbmc-cores-VideoPlayer-DVDInputStreams-DVDInputStream.h.patch`
   - Updated hunk context for Kodi 22 forward declarations.
+  - Dry-run passed locally.
+
+- `vero5-split-096-xbmc-cores-VideoPlayer-VideoPlayer.cpp.patch`
+  - Updated remaining failed hunks for Kodi 22 VideoPlayer layout.
+  - Keeps subtitle-plane propagation, adjusted start seek behavior, caching log changes, 3D resolution handling, and tempo disabled for Vero playback.
   - Dry-run passed locally.
 
 - `vero5-split-100-xbmc-cores-VideoPlayer-VideoRenderers-BaseRenderer.cpp.patch`
@@ -148,12 +158,8 @@ Needs work: 2
 
 ## Needs work
 
-- `vero5-split-076-xbmc-cores-VideoPlayer-DVDDemuxers-DVDDemuxFFmpeg.cpp.patch`
-  - Fails 2 of 26 hunks.
-
-- `vero5-split-096-xbmc-cores-VideoPlayer-VideoPlayer.cpp.patch`
-  - Fails 3 of 16 hunks.
+None.
 
 ## Working split patches
 
-The remaining 171 split patches either applied during the initial full split test or were fixed afterward and dry-run validated locally.
+All 173 split patches apply in order against Kodi 22 Alpha 3.
