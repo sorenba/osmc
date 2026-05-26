@@ -14,8 +14,8 @@ patch --batch --forward -p1 < split.patch
 Only patches that passed dry-run were applied before testing the next split patch. This preserves order as much as possible.
 
 Total split patches: 173
-Working split patches: 170
-Needs work: 3
+Working split patches: 171
+Needs work: 2
 
 ## Fixed after initial split test
 
@@ -112,6 +112,11 @@ Needs work: 3
   - Updated hunk context for Kodi 22 `GetStringFromRes(...)` helper.
   - Dry-run passed locally.
 
+- `vero5-split-145-xbmc-utils-BitstreamConverter.cpp.patch`
+  - Updated all remaining hunks for Kodi 22 bitstream converter layout.
+  - Keeps MVC extradata handling and safer unsigned NAL size handling.
+  - Dry-run passed locally.
+
 - `vero5-split-146-xbmc-utils-BitstreamConverter.h.patch`
   - Updated hunk context for Kodi 22 bitstream converter declarations.
   - Dry-run passed locally.
@@ -149,9 +154,6 @@ Needs work: 3
 - `vero5-split-096-xbmc-cores-VideoPlayer-VideoPlayer.cpp.patch`
   - Fails 3 of 16 hunks.
 
-- `vero5-split-145-xbmc-utils-BitstreamConverter.cpp.patch`
-  - Fails 5 of 8 hunks.
-
 ## Working split patches
 
-The remaining 170 split patches either applied during the initial full split test or were fixed afterward and dry-run validated locally.
+The remaining 171 split patches either applied during the initial full split test or were fixed afterward and dry-run validated locally.
