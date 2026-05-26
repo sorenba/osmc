@@ -12,14 +12,14 @@ devs can correct if necessary.
 A translation file will now overwrite a string entry that has only a
 (matching) en_gb string (was previously ignored).
 ---
- xbmc/guilib/LocalizeStrings.cpp | 55 ++++++++++++++++++++++++---------
+ xbmc/resources/LocalizeStrings.cpp | 55 ++++++++++++++++++++++++---------
  1 file changed, 40 insertions(+), 15 deletions(-)
 
-diff --git a/xbmc/guilib/LocalizeStrings.cpp b/xbmc/guilib/LocalizeStrings.cpp
+diff --git a/xbmc/resources/LocalizeStrings.cpp b/xbmc/resources/LocalizeStrings.cpp
 index 5c2ecf2e0f..f3445bedc4 100644
---- a/xbmc/guilib/LocalizeStrings.cpp
-+++ b/xbmc/guilib/LocalizeStrings.cpp
-@@ -49,25 +49,50 @@ static bool LoadPO(const std::string &filename, std::map<uint32_t, LocStr>& stri
+--- a/xbmc/resources/LocalizeStrings.cpp
++++ b/xbmc/resources/LocalizeStrings.cpp
+@@ -51,25 +51,50 @@ static bool LoadPO(const std::string& filename,
  
        if (bSourceLanguage && !PODoc.GetMsgid().empty())
        {
@@ -83,11 +83,10 @@ index 5c2ecf2e0f..f3445bedc4 100644
      else if (PODoc.GetEntryType() == MSGID_FOUND)
      {
        //! @todo implement reading of non-id based string entries from the PO files.
-@@ -116,10 +141,10 @@ static bool LoadStr2Mem(const std::string &pathname_in, const std::string &langu
+@@ -128,10 +153,10 @@ static bool LoadStr2Mem(const std::string& pathname_in,
+                    useSourceLang);
  
-   bool useSourceLang = StringUtils::EqualsNoCase(language, LANGUAGE_DEFAULT) || StringUtils::EqualsNoCase(language, LANGUAGE_OLD_DEFAULT);
- 
--  int ret = LoadPO(URIUtils::AddFileToFolder(pathname, "strings.po"), strings, encoding, offset, useSourceLang);
+-  LoadPO(URIUtils::AddFileToFolder(pathname, "strings-osmc.po"), strings, encoding, offset, useSourceLang);
 -
    LoadPO(URIUtils::AddFileToFolder(pathname, "strings-osmc.po"), strings, encoding, offset, useSourceLang);
  
