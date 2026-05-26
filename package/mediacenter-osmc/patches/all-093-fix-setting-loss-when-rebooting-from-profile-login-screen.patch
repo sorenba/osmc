@@ -7,29 +7,29 @@ Subject: [PATCH] Ensure that add-ons can run before shutdown / reboot. This
 
 Signed-off-by: Sam Nazarko <email@samnazarko.co.uk>
 ---
- xbmc/application/Application.cpp | 2 ++
+ xbmc/application/ApplicationMessageHandling.cpp | 2 ++
  1 file changed, 2 insertions(+)
 
-diff --git a/xbmc/application/Application.cpp b/xbmc/application/Application.cpp
-index 443a9add76..6496ac754e 100644
---- a/xbmc/application/Application.cpp
-+++ b/xbmc/application/Application.cpp
-@@ -1484,6 +1484,7 @@ void CApplication::OnApplicationMessage(ThreadMessage* pMsg)
-   case TMSG_POWERDOWN:
-     if (Stop(EXITCODE_POWERDOWN)) {
-       m_ShuttingDown = true;
-+      CServiceBroker::GetAppMessenger()->PostMsg(TMSG_SETOSMCWALKTHROUGHSTATE, 2);
-       CServiceBroker::GetPowerManager().Powerdown();
-     }
-     break;
-@@ -1512,6 +1513,7 @@ void CApplication::OnApplicationMessage(ThreadMessage* pMsg)
-   case TMSG_RESET:
-     if (Stop(EXITCODE_REBOOT)) {
-       m_ShuttingDown = true;
-+      CServiceBroker::GetAppMessenger()->PostMsg(TMSG_SETOSMCWALKTHROUGHSTATE, 2);
-       CServiceBroker::GetPowerManager().Reboot();
-     }
-     break;
+diff --git a/xbmc/application/ApplicationMessageHandling.cpp b/xbmc/application/ApplicationMessageHandling.cpp
+index eeb099e6ae..8a76c229cb 100644
+--- a/xbmc/application/ApplicationMessageHandling.cpp
++++ b/xbmc/application/ApplicationMessageHandling.cpp
+@@ -119,6 +119,7 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
+   {
+     case TMSG_POWERDOWN:
+       if (m_app.Stop(EXITCODE_POWERDOWN))
++        CServiceBroker::GetAppMessenger()->PostMsg(TMSG_SETOSMCWALKTHROUGHSTATE, 2);
+         CServiceBroker::GetPowerManager().Powerdown();
+       break;
+ 
+@@ -134,6 +135,7 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
+     case TMSG_RESTART:
+     case TMSG_RESET:
+       if (m_app.Stop(EXITCODE_REBOOT))
++        CServiceBroker::GetAppMessenger()->PostMsg(TMSG_SETOSMCWALKTHROUGHSTATE, 2);
+         CServiceBroker::GetPowerManager().Reboot();
+       break;
+ 
 -- 
-2.25.1
+2.34.1
 
