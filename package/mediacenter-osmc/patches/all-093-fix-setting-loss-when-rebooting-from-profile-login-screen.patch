@@ -7,29 +7,37 @@ Subject: [PATCH] Ensure that add-ons can run before shutdown / reboot. This
 
 Signed-off-by: Sam Nazarko <email@samnazarko.co.uk>
 ---
- xbmc/application/ApplicationMessageHandling.cpp | 2 ++
- 1 file changed, 2 insertions(+)
+ xbmc/application/ApplicationMessageHandling.cpp | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/xbmc/application/ApplicationMessageHandling.cpp b/xbmc/application/ApplicationMessageHandling.cpp
 index eeb099e6ae..8a76c229cb 100644
 --- a/xbmc/application/ApplicationMessageHandling.cpp
 +++ b/xbmc/application/ApplicationMessageHandling.cpp
-@@ -119,6 +119,7 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
+@@ -118,8 +118,10 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
+   switch (msg)
    {
      case TMSG_POWERDOWN:
++    {
        if (m_app.Stop(EXITCODE_POWERDOWN))
 +        CServiceBroker::GetAppMessenger()->PostMsg(TMSG_SETOSMCWALKTHROUGHSTATE, 2);
          CServiceBroker::GetPowerManager().Powerdown();
++    }
        break;
  
-@@ -134,6 +135,7 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
+     case TMSG_QUIT:
+@@ -133,8 +135,10 @@ void CApplicationMessageHandling::OnApplicationMessage(MESSAGING::ThreadMessage*
+ 
      case TMSG_RESTART:
      case TMSG_RESET:
++    {
        if (m_app.Stop(EXITCODE_REBOOT))
 +        CServiceBroker::GetAppMessenger()->PostMsg(TMSG_SETOSMCWALKTHROUGHSTATE, 2);
          CServiceBroker::GetPowerManager().Reboot();
++    }
        break;
  
+     case TMSG_RESTARTAPP:
 -- 
 2.34.1
 
