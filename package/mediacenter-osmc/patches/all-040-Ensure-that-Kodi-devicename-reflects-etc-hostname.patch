@@ -11,26 +11,24 @@ Do not worry about /etc/hosts as libnss-myhostname should handle this.
 
 Signed-off-by: Sam Nazarko <email@samnazarko.co.uk>
 ---
- xbmc/guilib/guiinfo/SystemGUIInfo.cpp | 10 +++++++++-
+ xbmc/guilib/guiinfo/SystemGUIInfo.cpp | 7 ++++++-
  xbmc/network/NetworkServices.cpp      | 20 +++++++++++++++++++-
- 2 files changed, 28 insertions(+), 2 deletions(-)
+ 2 files changed, 25 insertions(+), 2 deletions(-)
 
 diff --git a/xbmc/guilib/guiinfo/SystemGUIInfo.cpp b/xbmc/guilib/guiinfo/SystemGUIInfo.cpp
-index b28e39c99a..4efb7d8994 100644
 --- a/xbmc/guilib/guiinfo/SystemGUIInfo.cpp
 +++ b/xbmc/guilib/guiinfo/SystemGUIInfo.cpp
 @@ -23,6 +23,7 @@
+ #include "guilib/guiinfo/GUIInfo.h"
  #include "guilib/guiinfo/GUIInfoHelper.h"
  #include "guilib/guiinfo/GUIInfoLabels.h"
 +#include "network/Network.h"
  #include "powermanagement/PowerManager.h"
  #include "profiles/ProfileManager.h"
  #include "rendering/RenderSystem.h"
-@@ -275,8 +276,15 @@ bool CSystemGUIInfo::GetLabel(std::string& value,
-     case SYSTEM_TEMPERATURE_UNITS:
+@@ -307,8 +308,12 @@
        value = g_langInfo.GetTemperatureUnitString();
        return true;
-+
      case SYSTEM_FRIENDLY_NAME:
 -      value = CSysInfo::GetDeviceName();
 +    {
@@ -39,15 +37,14 @@ index b28e39c99a..4efb7d8994 100644
 +      value = hostname;
        return true;
 +    }
-+
      case SYSTEM_STEREOSCOPIC_MODE:
      {
        int iStereoMode = CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(
+
 diff --git a/xbmc/network/NetworkServices.cpp b/xbmc/network/NetworkServices.cpp
-index 12c4d63e74..b69404d754 100644
 --- a/xbmc/network/NetworkServices.cpp
 +++ b/xbmc/network/NetworkServices.cpp
-@@ -129,7 +129,8 @@ CNetworkServices::CNetworkServices()
+@@ -141,7 +141,8 @@
               CSettings::SETTING_SMB_MINPROTOCOL,
               CSettings::SETTING_SMB_MAXPROTOCOL,
               CSettings::SETTING_SMB_LEGACYSECURITY,
@@ -57,7 +54,8 @@ index 12c4d63e74..b69404d754 100644
  }
  
  CNetworkServices::~CNetworkServices()
-@@ -554,6 +555,23 @@ void CNetworkServices::OnSettingChanged(const std::shared_ptr<const CSetting>& s
+@@ -505,6 +506,23 @@
+       CServiceBroker::GetAppMessenger()->PostMsg(TMSG_RESTARTAPP);
      }
    }
 +
