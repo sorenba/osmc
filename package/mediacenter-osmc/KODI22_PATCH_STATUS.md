@@ -147,6 +147,11 @@ These patches were validated with Linux `patch` against Kodi 22 Alpha 3.
 - `all-112-allow-sharing-for-mounted-disks.patch`
   - Applies cleanly.
 
+- `all-113-add-support-to-mix-LFE.patch`
+  - Rebased for Kodi 22's existing `audiooutput.mixsublevel` / `sublevel` path.
+  - Keeps Kodi 22 resampler code unchanged and changes the existing setting to OSMC's 0-100 spinner UI.
+  - Dry-run validation still needed in a clean Kodi 22 Alpha 3 tree.
+
 - `all-114-set-system-defaults-for-osmc.patch`
   - Applies cleanly.
 
@@ -208,24 +213,7 @@ These patches were validated with Linux `patch` against Kodi 22 Alpha 3.
 
 ## Remaining failures / needs rebase
 
-These patches still need work for Kodi 22 Alpha 3.
-
-- `all-007-sync-timezone-from-mediacenter.patch`
-  - Fails because `xbmc/platform/posix/PosixTimezone.cpp` no longer exists in Kodi 22.
-  - Need to identify the new timezone handling path, or skip if obsolete.
-
-- `all-086-add-osmc-privacy-policy.patch`
-  - Fails because `privacy-policy.txt` already exists before the add half of the patch.
-  - Needs review as a two-part delete/add patch.
-
-- `all-094-fix-setting-loss-when-rebooting-from-Kodi.patch`
-  - Reported as reversed or previously applied during the current sequence.
-  - Needs review after `all-093` is rebased.
-  - May be obsolete because Kodi 22 already gates settings saves during shutdown via `CApplication::OnSettingsSaving()`.
-
-- `all-113-add-support-to-mix-LFE.patch`
-  - Settings hunk applies with fuzz.
-  - Fails in `ActiveAEResampleFFMPEG.cpp`.
+No active normal text patches are currently listed as remaining failures for Kodi 22 Alpha 3.
 
 ## Binary patches needing git-aware validation
 
@@ -238,6 +226,17 @@ These fail under plain Linux `patch` because git binary diffs are not supported 
 ## Skipped by scope
 
 These are out of scope for this Kodi 22 Vero 5 build.
+
+- `all-007-sync-timezone-from-mediacenter.patch`
+  - Skipped and moved to `package/mediacenter-osmc/patches_skipped/`.
+  - Kodi 22 no longer has `xbmc/platform/posix/PosixTimezone.cpp`.
+
+- `all-086-add-osmc-privacy-policy.patch`
+  - Skipped and moved to `package/mediacenter-osmc/patches_skipped/`.
+
+- `all-094-fix-setting-loss-when-rebooting-from-Kodi.patch`
+  - Skipped and moved to `package/mediacenter-osmc/patches_skipped/`.
+  - Kodi 22 already gates settings saves during shutdown via `CApplication::OnSettingsSaving()`.
 
 - `rbp-*.patch`
   - Skipped. Raspberry Pi is not a target.
