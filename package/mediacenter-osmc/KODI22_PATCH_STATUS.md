@@ -141,6 +141,15 @@ These patches were validated with Linux `patch` against Kodi 22 Alpha 3.
   - Updated for Kodi 22 `Piers` binary add-on branch.
   - Dry-run validation still needed in a clean Kodi 22 Alpha 3 tree.
 
+- `all-119-fix-playback-of-m3u-internet-streams.patch`
+  - Updated for Kodi 22 `NETWORK::IsInternetStream(item)` usage.
+  - Dry-run validation still needed in a clean Kodi 22 Alpha 3 tree.
+
+- `all-121-prefer-higher-res-at-framerate.patch`
+  - Updated `DisplaySettings.cpp` hunk for Kodi 22 `std::ranges::sort` usage.
+  - Updated `Resolution.cpp` hunk for Kodi 22 whitelist handling.
+  - Dry-run validation still needed in a clean Kodi 22 Alpha 3 tree.
+
 - `all-122-add-support-for-osmc-long-press.patch`
   - Applies cleanly.
 
@@ -158,6 +167,10 @@ These patches were validated with Linux `patch` against Kodi 22 Alpha 3.
 
 - `all-131-change-input-delay.patch`
   - Applies cleanly.
+
+- `all-132-fix-skin-reloading-crash.patch`
+  - Updated `ApplicationSkinHandling.cpp` and `.h` hunk context for Kodi 22.
+  - Dry-run validation still needed in a clean Kodi 22 Alpha 3 tree.
 
 - `all-134-add-bdj-keymap.patch`
   - Applies cleanly.
@@ -201,23 +214,12 @@ These patches still need work for Kodi 22 Alpha 3.
   - Settings hunk applies with fuzz.
   - Fails in `ActiveAEResampleFFMPEG.cpp`.
 
-- `all-119-fix-playback-of-m3u-internet-streams.patch`
-  - Fails in `PlayListFactory.cpp`.
-
-- `all-121-prefer-higher-res-at-framerate.patch`
-  - Fails in `DisplaySettings.cpp`.
-  - Other hunks in `Variant.*` and `Resolution.cpp` apply.
-
 - `all-128-allow-downstream-strings.patch`
   - Fails in `LanguageResource.cpp`.
   - Also references `xbmc/guilib/LocalizeStrings.cpp`, which no longer exists at that path.
 
 - `all-129-support-string-override.patch`
   - References `xbmc/guilib/LocalizeStrings.cpp`, which no longer exists at that path.
-
-- `all-132-fix-skin-reloading-crash.patch`
-  - Fails first hunk in `ApplicationSkinHandling.cpp`.
-  - Other hunk applies.
 
 ## Binary patches needing git-aware validation
 
