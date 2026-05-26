@@ -2,7 +2,7 @@ diff --git a/xbmc/messaging/ApplicationMessenger.h b/xbmc/messaging/ApplicationM
 index 72cb0a8..058b740 100644
 --- a/xbmc/messaging/ApplicationMessenger.h
 +++ b/xbmc/messaging/ApplicationMessenger.h
-@@ -94,6 +94,9 @@
+@@ -94,4 +94,7 @@
  
 +#define TMSG_SETOSMCWALKTHROUGHSTATE      TMSG_MASK_APPLICATION + 40
 +#define TMSG_AML_RESIZE                   TMSG_MASK_APPLICATION + 41
