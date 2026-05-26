@@ -50,7 +50,7 @@ echo "${OSMC_REPO_LINE}" | sudo tee "${OSMC_LIST}" > /dev/null
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys "${OSMC_KEY}"
 
 sudo apt update
-sudo apt install -y ca-certificates gnupg dirmngr wget git build-essential fakeroot devscripts equivs rsync texinfo libncurses-dev whois bc cpio python3 python-is-python3 bison flex libssl-dev unzip xz-utils subversion qemu-user qemu-user-static binfmt-support
+sudo apt install -y ca-certificates gnupg dirmngr wget git build-essential fakeroot devscripts equivs rsync texinfo libncurses-dev whois bc cpio python3 python-is-python3 bison flex libssl-dev pkg-config unzip xz-utils subversion qemu-user qemu-user-static binfmt-support
 
 if apt-cache policy qemu | grep -q 'Candidate: (none)'; then
     echo "Creating local dummy qemu package."
