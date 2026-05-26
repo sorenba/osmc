@@ -7,15 +7,15 @@ Subject: [PATCH] Add support for local strings for each language. This allows
 
 Signed-off-by: Sam Nazarko <email@samnazarko.co.uk>
 ---
- xbmc/addons/LanguageResource.cpp | 3 ++-
- xbmc/resources/LocalizeStrings.cpp  | 6 +++++-
+ xbmc/addons/LanguageResource.cpp  | 3 ++-
+ xbmc/resources/LocalizeStrings.cpp | 6 +++++-
  2 files changed, 7 insertions(+), 2 deletions(-)
 
 diff --git a/xbmc/addons/LanguageResource.cpp b/xbmc/addons/LanguageResource.cpp
-index c9ec0c8afc..2a0a0143b0 100644
 --- a/xbmc/addons/LanguageResource.cpp
 +++ b/xbmc/addons/LanguageResource.cpp
-@@ -116,7 +116,8 @@ bool CLanguageResource::IsAllowed(const std::string &file) const
+@@ -117,7 +117,8 @@
+ bool CLanguageResource::IsAllowed(const std::string &file) const
  {
    return file.empty() || StringUtils::EqualsNoCase(file, "langinfo.xml") ||
 -         StringUtils::EqualsNoCase(file, "strings.po");
@@ -24,11 +24,11 @@ index c9ec0c8afc..2a0a0143b0 100644
  }
  
  std::string CLanguageResource::GetAddonId(const std::string& locale)
+
 diff --git a/xbmc/resources/LocalizeStrings.cpp b/xbmc/resources/LocalizeStrings.cpp
-index 659eb3d7c5..5c2ecf2e0f 100644
 --- a/xbmc/resources/LocalizeStrings.cpp
 +++ b/xbmc/resources/LocalizeStrings.cpp
-@@ -124,8 +124,12 @@ static bool LoadStr2Mem(const std::string& pathname_in,
+@@ -122,8 +122,12 @@
    bool useSourceLang = StringUtils::EqualsNoCase(language, LANGUAGE_DEFAULT) ||
                         StringUtils::EqualsNoCase(language, LANGUAGE_OLD_DEFAULT);
  
