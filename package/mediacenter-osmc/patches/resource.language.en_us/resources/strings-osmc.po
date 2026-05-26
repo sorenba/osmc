@@ -16,7 +16,7 @@ msgstr ""
 
 msgctxt "#10636"
 msgid "Use HDMI AVI signalling"
-msgstr ""
+msgstr "Send 4:3 a/r signal through HDMI"
 
 msgctxt "#13133"
 msgid "Force RGB output"
