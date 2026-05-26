@@ -83,14 +83,17 @@ index 5c2ecf2e0f..f3445bedc4 100644
      else if (PODoc.GetEntryType() == MSGID_FOUND)
      {
        //! @todo implement reading of non-id based string entries from the PO files.
-@@ -128,10 +153,10 @@ static bool LoadStr2Mem(const std::string& pathname_in,
-                    useSourceLang);
+@@ -124,11 +149,11 @@ static bool LoadStr2Mem(const std::string& pathname_in,
+   bool useSourceLang = StringUtils::EqualsNoCase(language, LANGUAGE_DEFAULT) ||
+                        StringUtils::EqualsNoCase(language, LANGUAGE_OLD_DEFAULT);
  
--  LoadPO(URIUtils::AddFileToFolder(pathname, "strings-osmc.po"), strings, encoding, offset, useSourceLang);
+-  int ret = LoadPO(URIUtils::AddFileToFolder(pathname, "strings.po"), strings, encoding, offset,
+-                   useSourceLang);
 -
    LoadPO(URIUtils::AddFileToFolder(pathname, "strings-osmc.po"), strings, encoding, offset, useSourceLang);
  
-+  int ret = LoadPO(URIUtils::AddFileToFolder(pathname, "strings.po"), strings, encoding, offset, useSourceLang);
++  int ret = LoadPO(URIUtils::AddFileToFolder(pathname, "strings.po"), strings, encoding, offset,
++                   useSourceLang);
 +
    return ret;
  }
