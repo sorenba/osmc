@@ -19,7 +19,6 @@ git pull --ff-only
 mediacenter_dir="${repo_root}/package/mediacenter-osmc"
 kodi_src_dir="${mediacenter_dir}/src/xbmc-22.0a3-Piers"
 build_sh="${mediacenter_dir}/build.sh"
-vero5_patch="${mediacenter_dir}/patches/vero5-000-add-vero-support.patch"
 
 echo "Patching local Vero 5 Kodi 22 build dependencies and flags"
 python3 - <<'PY'
@@ -70,22 +69,6 @@ if '-DENABLE_INTERNAL_TAGLIB=ON' not in tail:
 path.write_text(head + tail)
 PY
 
-echo "Patching local Vero 5 FFmpeg source patch list"
-python3 - <<'PY'
-from pathlib import Path
-
-path = Path('package/mediacenter-osmc/patches/vero5-000-add-vero-support.patch')
-text = path.read_text()
-start_marker = 'diff --git a/cmake/modules/FindFFMPEG.cmake b/cmake/modules/FindFFMPEG.cmake\n'
-end_marker = 'diff --git a/cmake/platform/linux/aml.cmake b/cmake/platform/linux/aml.cmake\n'
-
-if '0001-added_upstream_mvc_patches.patch' in text or '0002-MKV-added-basic-block-addition-mapping-support-for-m.patch' in text:
-    start = text.index(start_marker)
-    end = text.index(end_marker, start)
-    text = text[:start] + text[end:]
-    path.write_text(text)
-PY
-
 for dep in libexiv2-dev libharfbuzz-dev libpcre2-dev nlohmann-json3-dev; do
     if ! grep -q -- "handle_dep \"${dep}\"" "${build_sh}"; then
         echo "Failed to add ${dep} to build.sh"
@@ -99,11 +82,6 @@ for flag in ENABLE_INTERNAL_FFMPEG ENABLE_INTERNAL_FMT ENABLE_INTERNAL_TAGLIB; d
         exit 1
     fi
 done
-
-if grep -q -- '0001-added_upstream_mvc_patches.patch\|0002-MKV-added-basic-block-addition-mapping-support-for-m.patch' "${vero5_patch}"; then
-    echo "Failed to remove stale Vero 5 FFmpeg source patch commands"
-    exit 1
-fi
 
 if [ -d "${kodi_src_dir}/kodi-build" ]; then
     echo "Removing stale Kodi CMake build directory"
