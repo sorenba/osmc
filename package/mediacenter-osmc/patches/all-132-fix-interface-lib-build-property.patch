@@ -1,0 +1,62 @@
+From 6a52311b30a962fe147e6bcb615939a482217170 Mon Sep 17 00:00:00 2001
+From: Soren Bjerg Andersen <sba@ifad.dk>
+Date: Wed, 27 May 2026 20:10:00 +0200
+Subject: [PATCH] CMake: avoid LIB_BUILD property on interface libraries
+
+CMake 3.18 rejects custom properties on INTERFACE_LIBRARY targets. Kodi's
+Utfcpp dependency is header-only and creates an interface library, so skip
+LIB_BUILD property handling for interface targets.
+---
+ cmake/modules/FindUtfcpp.cmake           | 8 ++++++--
+ cmake/scripts/common/ModuleHelpers.cmake | 9 +++++++--
+ 2 files changed, 13 insertions(+), 4 deletions(-)
+
+diff --git a/cmake/modules/FindUtfcpp.cmake b/cmake/modules/FindUtfcpp.cmake
+--- a/cmake/modules/FindUtfcpp.cmake
++++ b/cmake/modules/FindUtfcpp.cmake
+@@ -55,9 +55,13 @@ if(NOT TARGET LIBRARY::${CMAKE_FIND_PACKAGE_NAME})
+ 
+       add_dependencies(LIBRARY::${CMAKE_FIND_PACKAGE_NAME} ${${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_BUILD_NAME})
+ 
+       # We are building as a requirement, so set LIB_BUILD property to allow calling
+       # modules to know we will be building, and they will want to rebuild as well.
+       # Property must be set on actual TARGET and not the ALIAS
+-      set_target_properties(LIBRARY::${CMAKE_FIND_PACKAGE_NAME} PROPERTIES LIB_BUILD ON)
++      get_target_property(_utfcpp_target_type LIBRARY::${CMAKE_FIND_PACKAGE_NAME} TYPE)
++      if(NOT _utfcpp_target_type STREQUAL "INTERFACE_LIBRARY")
++        set_target_properties(LIBRARY::${CMAKE_FIND_PACKAGE_NAME} PROPERTIES LIB_BUILD ON)
++      endif()
++      unset(_utfcpp_target_type)
+     endif()
+ 
+     ADD_MULTICONFIG_BUILDMACRO()
+diff --git a/cmake/scripts/common/ModuleHelpers.cmake b/cmake/scripts/common/ModuleHelpers.cmake
+--- a/cmake/scripts/common/ModuleHelpers.cmake
++++ b/cmake/scripts/common/ModuleHelpers.cmake
+@@ -581,18 +581,23 @@ function(check_dependency_build caller dep_list)
+       find_package(${_dep} REQUIRED ${SEARCH_QUIET})
+       if(TARGET LIBRARY::${_dep})
+         # Test if LIB_BUILD property is set on LIBRARY::${_dep} TARGET indicating
+         # if it requires to be build (version update, or even just missing)
+-        get_target_property(${caller}_DEP_BUILD LIBRARY::${_dep} LIB_BUILD)
++        get_target_property(_dep_target_type LIBRARY::${_dep} TYPE)
++
++        if(NOT _dep_target_type STREQUAL "INTERFACE_LIBRARY")
++          get_target_property(${caller}_DEP_BUILD LIBRARY::${_dep} LIB_BUILD)
++        endif()
+ 
+         if(${caller}_DEP_BUILD)
+           # A dependency is to be rebuilt, set this lib to be built, no need to check any
+           # other libs in DEPLIST
+           set(${caller}_FORCE_BUILD ON PARENT_SCOPE)
+           if(VERBOSE)
+             message(WARNING "${caller} alerted to rebuild required by ${_dep}")
+           endif()
+           break()
+         endif()
++        unset(_dep_target_type)
+       endif()
+     endforeach()
+ endfunction()
+-- 
+2.34.1
