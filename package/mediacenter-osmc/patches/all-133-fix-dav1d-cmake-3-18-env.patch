@@ -1,0 +1,26 @@
+From 8fd88a40b28e080890b5746d57d22e45c6150c43 Mon Sep 17 00:00:00 2001
+From: Soren Bjerg Andersen <sba@ifad.dk>
+Date: Wed, 27 May 2026 20:35:00 +0200
+Subject: [PATCH] Dav1d: avoid cmake -E env --modify
+
+CMake 3.18 does not support the --modify option for cmake -E env. Use the
+older-compatible NAME=VALUE form when setting NINJA for the dav1d meson
+configure step.
+---
+ cmake/modules/FindDav1d.cmake | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/cmake/modules/FindDav1d.cmake b/cmake/modules/FindDav1d.cmake
+--- a/cmake/modules/FindDav1d.cmake
++++ b/cmake/modules/FindDav1d.cmake
+@@ -68,7 +68,7 @@ if(NOT TARGET LIBRARY::${CMAKE_FIND_PACKAGE_NAME})
+     endif()
+ 
+     set(CONFIGURE_COMMAND ${${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_dev_env}
+-                          ${CMAKE_COMMAND} -E env --modify NINJA=set:${NINJA_EXECUTABLE}
++                          ${CMAKE_COMMAND} -E env NINJA=${NINJA_EXECUTABLE}
+                           ${MESON_EXECUTABLE} setup ./build
+                           --buildtype=release
+                           --default-library=${${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_libType}
+-- 
+2.34.1
