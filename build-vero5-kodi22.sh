@@ -52,6 +52,13 @@ if '-DENABLE_INTERNAL_FFMPEG=ON' not in tail:
         raise SystemExit('Could not find Vero 5 internal FFmpeg insertion point in build.sh')
     tail = tail.replace(old, new, 1)
 
+if '-DENABLE_INTERNAL_TAGLIB=ON' not in tail:
+    old = '            -DENABLE_INTERNAL_FFMPEG=ON \\\n'
+    new = '            -DENABLE_INTERNAL_FFMPEG=ON \\\n            -DENABLE_INTERNAL_TAGLIB=ON \\\n'
+    if old not in tail:
+        raise SystemExit('Could not find Vero 5 internal TagLib insertion point in build.sh')
+    tail = tail.replace(old, new, 1)
+
 path.write_text(head + tail)
 PY
 
@@ -64,6 +71,11 @@ done
 
 if ! sed -n '/if \[ "\$1" == "vero5" \]/,/^        fi/p' "${build_sh}" | grep -q -- '-DENABLE_INTERNAL_FFMPEG=ON'; then
     echo "Failed to add -DENABLE_INTERNAL_FFMPEG=ON to the Vero 5 CMake block"
+    exit 1
+fi
+
+if ! sed -n '/if \[ "\$1" == "vero5" \]/,/^        fi/p' "${build_sh}" | grep -q -- '-DENABLE_INTERNAL_TAGLIB=ON'; then
+    echo "Failed to add -DENABLE_INTERNAL_TAGLIB=ON to the Vero 5 CMake block"
     exit 1
 fi
 
