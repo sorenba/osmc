@@ -1,0 +1,180 @@
+From 5ed916a0a109a196db579bf31e3d0aa8c46a36a8 Mon Sep 17 00:00:00 2001
+From: Soren Bjerg Andersen <sba@ifad.dk>
+Date: Wed, 27 May 2026 19:20:00 +0200
+Subject: [PATCH] FindASS: use direct system libass discovery
+
+Kodi 22's generic dependency helper does not resolve the system libass
+pkg-config result correctly in the Vero 5 build environment. Use the
+simple direct pkg-config, header, and library lookup used by Kodi 21,
+while keeping Kodi 22's app-local imported target name.
+---
+ cmake/modules/FindASS.cmake | 125 +++++++++----------------------------------
+ 1 file changed, 28 insertions(+), 97 deletions(-)
+
+diff --git a/cmake/modules/FindASS.cmake b/cmake/modules/FindASS.cmake
+@@ -9,125 +9,52 @@
+ #
+ 
+ if(NOT TARGET ${APP_NAME_LC}::${CMAKE_FIND_PACKAGE_NAME})
++  find_package(PkgConfig ${SEARCH_QUIET})
+ 
+-  include(cmake/scripts/common/ModuleHelpers.cmake)
++  if(PKG_CONFIG_FOUND AND NOT WIN32)
++    pkg_check_modules(PC_ASS libass ${SEARCH_QUIET} IMPORTED_TARGET)
+ 
+-  macro(buildmacroASS)
+-
+-    find_package(FreeType REQUIRED ${SEARCH_QUIET})
+-    find_package(HarfBuzz REQUIRED ${SEARCH_QUIET})
+-    find_package(FriBidi REQUIRED ${SEARCH_QUIET})
+-    find_package(Iconv REQUIRED ${SEARCH_QUIET})
+-
+-    if(NOT (WIN32 OR WINDOWS_STORE))
+-      find_package(Fontconfig REQUIRED ${SEARCH_QUIET})
+-    endif()
+-
+-    set(${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_VERSION ${${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_VER})
+-
+-    if(WIN32 OR WINDOWS_STORE)
+-      set(patches "${CMAKE_SOURCE_DIR}/tools/depends/target/libass/01-win-CMakeLists.patch"
+-                  "${CMAKE_SOURCE_DIR}/tools/depends/target/libass/02-win-dwrite-fontload.patch"
+-                  "${CMAKE_SOURCE_DIR}/tools/depends/target/libass/03-win-dwrite-prevent-ass_set_fonts_dir.patch"
+-                  "${CMAKE_SOURCE_DIR}/tools/depends/target/libass/04-win-nullcheck-shared_hdc.patch")
+-
+-      generate_patchcommand("${patches}")
+-      unset(patches)
+-
+-      set(${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_DEBUG_POSTFIX d)
+-    endif()
+-
+-    if(WIN32 OR WINDOWS_STORE)
+-
+-      set(CMAKE_ARGS -DNATIVEPREFIX=${NATIVEPREFIX}
+-                     -DARCH=${ARCH}
+-                     ${LIBASS_ADDITIONAL_ARGS})
+-    else()
+-      find_program(AUTORECONF autoreconf REQUIRED)
+-      if (CMAKE_HOST_SYSTEM_NAME MATCHES "(Free|Net|Open)BSD")
+-        find_program(MAKE_EXECUTABLE gmake)
+-      endif()
+-      find_program(MAKE_EXECUTABLE make REQUIRED)
+-
+-      if(ARCH STREQUAL x86_64)
+-        find_program(NASM nasm HINTS "${NATIVEPREFIX}/bin")
+-        if(NOT NASM_FOUND)
+-          set(DISABLE_ASM "--disable-asm")
+-        endif()
+-      elseif(NOT ARCH STREQUAL aarch64)
+-          set(DISABLE_ASM "--disable-asm")
+-      endif()
+-
+-      set(CONFIGURE_COMMAND ${AUTORECONF} -vif
+-                    COMMAND ./configure
+-                              --prefix=${DEPENDS_PATH}
+-                              --disable-shared
+-                              --disable-libunibreak
+-                              --enable-fontconfig
+-                              ${DISABLE_ASM})
+-
+-      set(BUILD_COMMAND ${MAKE_EXECUTABLE})
+-      set(INSTALL_COMMAND ${MAKE_EXECUTABLE} install)
+-      set(BUILD_IN_SOURCE 1)
+-    endif()
+-
+-    BUILD_DEP_TARGET()
+-
+-    # Link libraries for target interface
+-    set(${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_LINK_LIBRARIES ${APP_NAME_LC}::FriBidi ${APP_NAME_LC}::Iconv ${APP_NAME_LC}::HarfBuzz ${APP_NAME_LC}::FreeType)
+-
+-    if(WIN32 OR WINDOWS_STORE)
+-      # Directwrite dependency
+-      list(APPEND ${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_LINK_LIBRARIES dwrite.lib)
+-    else()
+-      if(CMAKE_SYSTEM_NAME STREQUAL Darwin)
+-        # Coretext dependencies
+-        list(APPEND ${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_LINK_LIBRARIES "-framework CoreText"
+-                                                                        "-framework CoreFoundation")
+-      endif()
+-
+-      list(APPEND ${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_LINK_LIBRARIES Fontconfig::Fontconfig)
+-      add_dependencies(${${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_BUILD_NAME} Fontconfig::Fontconfig)
+-    endif()
+-
+-    # Add dependencies to build target
+-    add_dependencies(${${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_BUILD_NAME} ${APP_NAME_LC}::FriBidi
+-                                                                        ${APP_NAME_LC}::Iconv
+-                                                                        ${APP_NAME_LC}::HarfBuzz
+-                                                                        ${APP_NAME_LC}::FreeType)
+-  endmacro()
+-
+-  set(${CMAKE_FIND_PACKAGE_NAME}_MODULE_LC libass)
+-
+-  SETUP_BUILD_VARS()
+-
+-  SETUP_FIND_SPECS()
+-
+-  SEARCH_EXISTING_PACKAGES()
+-
+-  if(("${${${CMAKE_FIND_PACKAGE_NAME}_SEARCH_NAME}_VERSION}" VERSION_LESS ${${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_VER} AND ENABLE_INTERNAL_ASS) OR
+-    (((CORE_SYSTEM_NAME STREQUAL linux AND NOT "webos" IN_LIST CORE_PLATFORM_NAME_LC) OR CORE_SYSTEM_NAME STREQUAL freebsd) AND ENABLE_INTERNAL_ASS))
+-    message(STATUS "Building ${${CMAKE_FIND_PACKAGE_NAME}_MODULE_LC}: \(version \"${${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_VER}\"\)")
+-    cmake_language(EVAL CODE "
+-      buildmacro${CMAKE_FIND_PACKAGE_NAME}()
+-    ")
++    if(TARGET PkgConfig::PC_ASS)
++      # INTERFACE_LINK_OPTIONS is incorrectly populated when cmake generation is executed
++      # when an existing build generation is already done. Just set this to blank
++      set_target_properties(PkgConfig::PC_ASS PROPERTIES INTERFACE_LINK_OPTIONS "")
++    endif()
++
++    set(ASS_VERSION ${PC_ASS_VERSION})
++  elseif(WIN32)
++    find_package(libass CONFIG QUIET REQUIRED
++                        HINTS ${DEPENDS_PATH}/lib/cmake
++                        ${${CORE_PLATFORM_NAME_LC}_SEARCH_CONFIG})
++    set(ASS_VERSION ${libass_VERSION})
+   endif()
+ 
+-  if(${${CMAKE_FIND_PACKAGE_NAME}_SEARCH_NAME}_FOUND)
+-    if(TARGET PkgConfig::${${CMAKE_FIND_PACKAGE_NAME}_SEARCH_NAME} AND NOT TARGET ${${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_BUILD_NAME})
+-      add_library(${APP_NAME_LC}::${CMAKE_FIND_PACKAGE_NAME} ALIAS PkgConfig::${${CMAKE_FIND_PACKAGE_NAME}_SEARCH_NAME})
+-    elseif(TARGET libass::libass AND NOT TARGET ${${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_BUILD_NAME})
++  find_path(ASS_INCLUDE_DIR NAMES ass/ass.h
++                            HINTS ${DEPENDS_PATH}/include ${PC_ASS_INCLUDEDIR}
++                            ${${CORE_PLATFORM_NAME_LC}_SEARCH_CONFIG}
++                            NO_CACHE)
++  find_library(ASS_LIBRARY NAMES ass libass
++                           HINTS ${DEPENDS_PATH}/lib ${PC_ASS_LIBDIR}
++                           ${${CORE_PLATFORM_NAME_LC}_SEARCH_CONFIG}
++                           NO_CACHE)
++
++  include(FindPackageHandleStandardArgs)
++  find_package_handle_standard_args(ASS
++                                    REQUIRED_VARS ASS_LIBRARY ASS_INCLUDE_DIR
++                                    VERSION_VAR ASS_VERSION)
++
++  if(ASS_FOUND)
++    if(TARGET PkgConfig::PC_ASS)
++      add_library(${APP_NAME_LC}::${CMAKE_FIND_PACKAGE_NAME} ALIAS PkgConfig::PC_ASS)
++    elseif(TARGET libass::libass)
+       # Kodi custom libass target used for windows platforms
+       add_library(${APP_NAME_LC}::${CMAKE_FIND_PACKAGE_NAME} ALIAS libass::libass)
+     else()
+-      SETUP_BUILD_TARGET()
+-      add_dependencies(${APP_NAME_LC}::${CMAKE_FIND_PACKAGE_NAME} ${${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_BUILD_NAME})
++      add_library(${APP_NAME_LC}::${CMAKE_FIND_PACKAGE_NAME} UNKNOWN IMPORTED)
++      set_target_properties(${APP_NAME_LC}::${CMAKE_FIND_PACKAGE_NAME} PROPERTIES
++                            IMPORTED_LOCATION "${ASS_LIBRARY}"
++                            INTERFACE_INCLUDE_DIRECTORIES "${ASS_INCLUDE_DIR}")
+     endif()
+ 
+-    ADD_MULTICONFIG_BUILDMACRO()
+-  else()
+-    if(ASS_FIND_REQUIRED)
+-      message(FATAL_ERROR "Ass libraries were not found.")
+-    endif()
++    set_property(GLOBAL APPEND PROPERTY INTERNAL_DEPS_PROP ${APP_NAME_LC}::${CMAKE_FIND_PACKAGE_NAME})
+   endif()
+ endif()
+-- 
+2.34.1
