@@ -52,9 +52,16 @@ if '-DENABLE_INTERNAL_FFMPEG=ON' not in tail:
         raise SystemExit('Could not find Vero 5 internal FFmpeg insertion point in build.sh')
     tail = tail.replace(old, new, 1)
 
-if '-DENABLE_INTERNAL_TAGLIB=ON' not in tail:
+if '-DENABLE_INTERNAL_FMT=ON' not in tail:
     old = '            -DENABLE_INTERNAL_FFMPEG=ON \\\n'
-    new = '            -DENABLE_INTERNAL_FFMPEG=ON \\\n            -DENABLE_INTERNAL_TAGLIB=ON \\\n'
+    new = '            -DENABLE_INTERNAL_FFMPEG=ON \\\n            -DENABLE_INTERNAL_FMT=ON \\\n'
+    if old not in tail:
+        raise SystemExit('Could not find Vero 5 internal fmt insertion point in build.sh')
+    tail = tail.replace(old, new, 1)
+
+if '-DENABLE_INTERNAL_TAGLIB=ON' not in tail:
+    old = '            -DENABLE_INTERNAL_FMT=ON \\\n'
+    new = '            -DENABLE_INTERNAL_FMT=ON \\\n            -DENABLE_INTERNAL_TAGLIB=ON \\\n'
     if old not in tail:
         raise SystemExit('Could not find Vero 5 internal TagLib insertion point in build.sh')
     tail = tail.replace(old, new, 1)
@@ -69,15 +76,12 @@ for dep in libexiv2-dev libharfbuzz-dev libpcre2-dev nlohmann-json3-dev; do
     fi
 done
 
-if ! sed -n '/if \[ "\$1" == "vero5" \]/,/^        fi/p' "${build_sh}" | grep -q -- '-DENABLE_INTERNAL_FFMPEG=ON'; then
-    echo "Failed to add -DENABLE_INTERNAL_FFMPEG=ON to the Vero 5 CMake block"
-    exit 1
-fi
-
-if ! sed -n '/if \[ "\$1" == "vero5" \]/,/^        fi/p' "${build_sh}" | grep -q -- '-DENABLE_INTERNAL_TAGLIB=ON'; then
-    echo "Failed to add -DENABLE_INTERNAL_TAGLIB=ON to the Vero 5 CMake block"
-    exit 1
-fi
+for flag in ENABLE_INTERNAL_FFMPEG ENABLE_INTERNAL_FMT ENABLE_INTERNAL_TAGLIB; do
+    if ! sed -n '/if \[ "\$1" == "vero5" \]/,/^        fi/p' "${build_sh}" | grep -q -- "-D${flag}=ON"; then
+        echo "Failed to add -D${flag}=ON to the Vero 5 CMake block"
+        exit 1
+    fi
+done
 
 if [ -d "${kodi_src_dir}/kodi-build" ]; then
     echo "Removing stale Kodi CMake build directory"
