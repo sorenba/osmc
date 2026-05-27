@@ -1,0 +1,26 @@
+From 1c264a9f5d9a0da7ac7532e3e583991c721a8aa6 Mon Sep 17 00:00:00 2001
+From: Soren Bjerg Andersen <sba@ifad.dk>
+Date: Wed, 27 May 2026 21:05:00 +0200
+Subject: [PATCH] Vero 5: skip old internal FFmpeg MVC source patches
+
+The Kodi 22 internal FFmpeg build uses FFmpeg 8.0.1. The old Vero 5
+FFmpeg MVC/MKV source patches no longer apply to that source tree, so do
+not run them in the internal FFmpeg patch step.
+---
+ cmake/modules/FindFFMPEG.cmake | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/cmake/modules/FindFFMPEG.cmake b/cmake/modules/FindFFMPEG.cmake
+--- a/cmake/modules/FindFFMPEG.cmake
++++ b/cmake/modules/FindFFMPEG.cmake
+@@ -177,8 +177,6 @@ macro(buildFFMPEG)
+     set(PATCH_COMMAND ${CMAKE_COMMAND} -E copy
+                       ${CMAKE_SOURCE_DIR}/tools/depends/target/ffmpeg/CMakeLists.txt
+                       <SOURCE_DIR>
+-                      COMMAND /bin/bash -c "cd <SOURCE_DIR> && patch -p1 < ${CMAKE_SOURCE_DIR}/tools/depends/target/ffmpeg/0001-added_upstream_mvc_patches.patch"
+-                      COMMAND /bin/bash -c "cd <SOURCE_DIR> && patch -p1 < ${CMAKE_SOURCE_DIR}/tools/depends/target/ffmpeg/0002-MKV-added-basic-block-addition-mapping-support-for-m.patch"
+     )
+ 
+     if(NOT DISABLE_FFMPEG_SOURCE_PLUGINS)
+-- 
+2.34.1
