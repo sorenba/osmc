@@ -3,9 +3,6 @@ From: Soren Bjerg Andersen <sba@ifad.dk>
 Date: Wed, 27 May 2026 20:10:00 +0200
 Subject: [PATCH] CMake: avoid LIB_BUILD property on interface libraries
 
-CMake 3.18 rejects custom properties on INTERFACE_LIBRARY targets. Kodi's
-Utfcpp dependency is header-only and creates an interface library, so skip
-LIB_BUILD property handling for interface targets.
 ---
  cmake/modules/FindUtfcpp.cmake           | 8 ++++++--
  cmake/scripts/common/ModuleHelpers.cmake | 9 +++++++--
@@ -14,10 +11,7 @@ LIB_BUILD property handling for interface targets.
 diff --git a/cmake/modules/FindUtfcpp.cmake b/cmake/modules/FindUtfcpp.cmake
 --- a/cmake/modules/FindUtfcpp.cmake
 +++ b/cmake/modules/FindUtfcpp.cmake
-@@ -55,9 +55,13 @@ if(NOT TARGET LIBRARY::${CMAKE_FIND_PACKAGE_NAME})
- 
-       add_dependencies(LIBRARY::${CMAKE_FIND_PACKAGE_NAME} ${${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_BUILD_NAME})
- 
+@@ -55,7 +55,11 @@
        # We are building as a requirement, so set LIB_BUILD property to allow calling
        # modules to know we will be building, and they will want to rebuild as well.
        # Property must be set on actual TARGET and not the ALIAS
@@ -33,8 +27,7 @@ diff --git a/cmake/modules/FindUtfcpp.cmake b/cmake/modules/FindUtfcpp.cmake
 diff --git a/cmake/scripts/common/ModuleHelpers.cmake b/cmake/scripts/common/ModuleHelpers.cmake
 --- a/cmake/scripts/common/ModuleHelpers.cmake
 +++ b/cmake/scripts/common/ModuleHelpers.cmake
-@@ -581,18 +581,23 @@ function(check_dependency_build caller dep_list)
-       find_package(${_dep} REQUIRED ${SEARCH_QUIET})
+@@ -581,7 +581,11 @@
        if(TARGET LIBRARY::${_dep})
          # Test if LIB_BUILD property is set on LIBRARY::${_dep} TARGET indicating
          # if it requires to be build (version update, or even just missing)
@@ -47,10 +40,7 @@ diff --git a/cmake/scripts/common/ModuleHelpers.cmake b/cmake/scripts/common/Mod
  
          if(${caller}_DEP_BUILD)
            # A dependency is to be rebuilt, set this lib to be built, no need to check any
-           # other libs in DEPLIST
-           set(${caller}_FORCE_BUILD ON PARENT_SCOPE)
-           if(VERBOSE)
-             message(WARNING "${caller} alerted to rebuild required by ${_dep}")
+@@ -592,6 +596,7 @@
            endif()
            break()
          endif()
