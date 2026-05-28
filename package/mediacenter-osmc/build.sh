@@ -305,9 +305,9 @@ then
             -DCORE_PLATFORM_NAME=aml \
             -DCORE_SYSTEM_NAME=linux \
             -DENABLE_APP_AUTONAME=OFF \
-            -DENABLE_INTERNAL_FMT=OFF \
+            -DENABLE_INTERNAL_FMT=ON \
             -DENABLE_INTERNAL_FLATBUFFERS=OFF \
-            -DENABLE_INTERNAL_SPDLOG=OFF \
+            -DENABLE_INTERNAL_SPDLOG=ON \
             -DENABLE_INTERNAL_UDFREAD=OFF \
             -DENABLE_MDNS=OFF \
             -DENABLE_BLUETOOTH=OFF \
@@ -317,7 +317,6 @@ then
             -DENABLE_MARIADBCLIENT=ON \
             -DENABLE_INTERNAL_DAV1D=ON \
             -DENABLE_INTERNAL_FFMPEG=ON \
-            -DENABLE_INTERNAL_FMT=ON \
             -DENABLE_INTERNAL_TAGLIB=ON \
             -DADDONS_CONFIGURE_AT_STARTUP=OFF \
         ../
