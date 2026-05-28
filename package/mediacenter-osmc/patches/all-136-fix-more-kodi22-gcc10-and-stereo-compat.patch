@@ -1,0 +1,180 @@
+From 2f2b0d51a4c2de91897f81ec1d3fb8d686960e5b Mon Sep 17 00:00:00 2001
+From: Soren Bjerg Andersen <sba@ifad.dk>
+Date: Thu, 28 May 2026 07:45:00 +0200
+Subject: [PATCH] Fix more Kodi 22 GCC 10 and stereo mode compatibility
+
+---
+ 8 files changed
+
+diff --git a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemux.h b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemux.h
+--- a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemux.h
++++ b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemux.h
+@@ -4,22 +4,21 @@
+     using namespace std::literals::string_view_literals;
+     switch (type)
+     {
+-      using enum StreamType;
+-      case NONE:
++      case StreamType::NONE:
+         return "none"sv;
+-      case AUDIO:
++      case StreamType::AUDIO:
+         return "audio"sv;
+-      case VIDEO:
++      case StreamType::VIDEO:
+         return "video"sv;
+-      case DATA:
++      case StreamType::DATA:
+         return "data"sv;
+-      case SUBTITLE:
++      case StreamType::SUBTITLE:
+         return "subtitle"sv;
+-      case TELETEXT:
++      case StreamType::TELETEXT:
+         return "teletext"sv;
+-      case RADIO_RDS:
++      case StreamType::RADIO_RDS:
+         return "radio rds"sv;
+-      case AUDIO_ID3:
++      case StreamType::AUDIO_ID3:
+         return "audio id3"sv;
+     }
+     throw std::invalid_argument("no streamtype string found");
+diff --git a/xbmc/filesystem/IFile.h b/xbmc/filesystem/IFile.h
+--- a/xbmc/filesystem/IFile.h
++++ b/xbmc/filesystem/IFile.h
+@@ -7,7 +7,9 @@
+       TRUNCATED, ///< The line is longer than the supplied buffer. The next read continues reading of the line
+       OK, ///< Read a line
+     };
+-    using enum ResultCode;
++    static constexpr ResultCode FAILURE = ResultCode::FAILURE;
++    static constexpr ResultCode TRUNCATED = ResultCode::TRUNCATED;
++    static constexpr ResultCode OK = ResultCode::OK;
+ 
+     ResultCode code; ///< The result of the read operation
+     std::size_t length; ///< length of the read string without null terminator
+diff --git a/xbmc/utils/AMLUtils.cpp b/xbmc/utils/AMLUtils.cpp
+--- a/xbmc/utils/AMLUtils.cpp
++++ b/xbmc/utils/AMLUtils.cpp
+@@ -3,7 +3,7 @@
+     SysfsUtils::SetString("/sys/class/amhdmitx/amhdmitx0/phy", enable ? "1" : "0");
+ }
+ 
+-bool aml_set_native_resolution(const RESOLUTION_INFO &res, std::string framebuffer_name, const int stereo_mode)
++bool aml_set_native_resolution(const RESOLUTION_INFO &res, std::string framebuffer_name, RenderStereoMode stereo_mode)
+ {
+   bool result = false;
+ 
+@@ -23,20 +23,20 @@
+     aml_disable_freeScale();
+ }
+ 
+-void aml_handle_display_stereo_mode(const int stereo_mode)
++void aml_handle_display_stereo_mode(RenderStereoMode stereo_mode)
+ {
+   static std::string lastHdmiTxConfig = "3doff";
+ 
+   std::string command = "3doff";
+   switch (stereo_mode)
+   {
+-    case RENDER_STEREO_MODE_SPLIT_VERTICAL:
++    case RenderStereoMode::SPLIT_VERTICAL:
+       command = "3dlr";
+       break;
+-    case RENDER_STEREO_MODE_SPLIT_HORIZONTAL:
++    case RenderStereoMode::SPLIT_HORIZONTAL:
+       command = "3dtb";
+       break;
+-    case RENDER_STEREO_MODE_HARDWAREBASED:
++    case RenderStereoMode::HARDWAREBASED:
+       command = "3dfp";
+       break;
+     default:
+diff --git a/xbmc/utils/AMLUtils.h b/xbmc/utils/AMLUtils.h
+--- a/xbmc/utils/AMLUtils.h
++++ b/xbmc/utils/AMLUtils.h
+@@ -1,5 +1,6 @@
+ #pragma once
+ 
++#include "rendering/RenderSystemTypes.h"
+ #include "windowing/Resolution.h"
+ 
+ #include <string>
+@@ -10,12 +11,12 @@
+ void aml_set_audio_passthrough(bool passthrough);
+ bool aml_mode_to_resolution(const char *mode, RESOLUTION_INFO *res);
+ bool aml_get_native_resolution(RESOLUTION_INFO *res);
+-bool aml_set_native_resolution(const RESOLUTION_INFO &res, std::string framebuffer_name, const int stereo_mode);
++bool aml_set_native_resolution(const RESOLUTION_INFO &res, std::string framebuffer_name, RenderStereoMode stereo_mode);
+ bool aml_probe_resolutions(std::vector<RESOLUTION_INFO> &resolutions);
+ bool aml_probe_3d_resolutions(std::vector<RESOLUTION_INFO> &resolutions);
+ bool aml_set_display_resolution(const RESOLUTION_INFO &res, std::string framebuffer_name);
+ void aml_handle_scale(const RESOLUTION_INFO &res);
+-void aml_handle_display_stereo_mode(const int stereo_mode);
++void aml_handle_display_stereo_mode(RenderStereoMode stereo_mode);
+ void aml_enable_freeScale(const RESOLUTION_INFO &res);
+ void aml_disable_freeScale();
+ void aml_set_framebuffer_resolution(const RESOLUTION_INFO &res, std::string framebuffer_name);
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogic.cpp b/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
+--- a/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
++++ b/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
+@@ -3,7 +3,7 @@
+   m_displayWidth = 0;
+   m_displayHeight = 0;
+ 
+-  m_stereo_mode = RENDER_STEREO_MODE_OFF;
++  m_stereo_mode = RenderStereoMode::OFF;
+   m_delayDispReset = false;
+ 
+   aml_permissions();
+@@ -12,7 +12,7 @@
+ bool CWinSystemAmlogic::CreateNewWindow(const std::string &name, bool fullScreen, RESOLUTION_INFO &res)
+ {
+   RESOLUTION_INFO current_resolution;
+-  RENDER_STEREO_MODE stereo_mode = CServiceBroker::GetWinSystem()->GetGfxContext().GetStereoMode();
++  RenderStereoMode stereo_mode = CServiceBroker::GetWinSystem()->GetGfxContext().GetStereoMode();
+   bool dvOutput = IsDolbyVisionOutput();
+ 
+   if (m_bWindowCreated && aml_get_native_resolution(&current_resolution)
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogic.h b/xbmc/windowing/amlogic/WinSystemAmlogic.h
+--- a/xbmc/windowing/amlogic/WinSystemAmlogic.h
++++ b/xbmc/windowing/amlogic/WinSystemAmlogic.h
+@@ -2,7 +2,7 @@
+   int m_displayWidth;
+   int m_displayHeight;
+   float m_fRefreshRate;
+-  RENDER_STEREO_MODE m_stereo_mode;
++  RenderStereoMode m_stereo_mode;
+   bool m_dvOutput;
+ 
+   std::string m_framebuffer_name;
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp
+--- a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp
++++ b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp
+@@ -3,9 +3,9 @@
+   return pVSync;
+ }
+ 
+-bool CWinSystemAmlogicGLESContext::SupportsStereo(RENDER_STEREO_MODE mode) const
++bool CWinSystemAmlogicGLESContext::SupportsStereo(RenderStereoMode mode) const
+ {
+-  if (mode == RENDER_STEREO_MODE_HARDWAREBASED) {
++  if (mode == RenderStereoMode::HARDWAREBASED) {
+     // yes, we support hardware based MVC decoding
+     return true;
+   }
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h
+--- a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h
++++ b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h
+@@ -2,7 +2,7 @@
+ 
+   std::unique_ptr<CVideoSync> GetVideoSync(CVideoReferenceClock *clock) override;
+ 
+-  bool SupportsStereo(RENDER_STEREO_MODE mode) const override;
++  bool SupportsStereo(RenderStereoMode mode) const override;
+ };
+ 
+ }
+-- 
+2.34.1
