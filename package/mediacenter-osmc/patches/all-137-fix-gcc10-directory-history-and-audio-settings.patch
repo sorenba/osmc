@@ -1,29 +1,16 @@
 From 12a6fe65df9e1d38358f6407f83d292315f948ec Mon Sep 17 00:00:00 2001
 From: Soren Bjerg Andersen <sba@ifad.dk>
 Date: Thu, 28 May 2026 09:05:00 +0200
-Subject: [PATCH] Fix more GCC 10 Kodi 22 build issues
+Subject: [PATCH] Fix GCC 10 DirectoryHistory build issue
 
 ---
- xbmc/cores/AudioEngine/Engines/ActiveAE/ActiveAEResampleFFMPEG.cpp | 2 ++
- xbmc/filesystem/DirectoryHistory.cpp                               | 4 ++--
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ xbmc/filesystem/DirectoryHistory.cpp | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/xbmc/cores/AudioEngine/Engines/ActiveAE/ActiveAEResampleFFMPEG.cpp b/xbmc/cores/AudioEngine/Engines/ActiveAE/ActiveAEResampleFFMPEG.cpp
---- a/xbmc/cores/AudioEngine/Engines/ActiveAE/ActiveAEResampleFFMPEG.cpp
-+++ b/xbmc/cores/AudioEngine/Engines/ActiveAE/ActiveAEResampleFFMPEG.cpp
-@@ -1,6 +1,8 @@
- #include "cores/AudioEngine/Utils/AEUtil.h"
- #include "ServiceBroker.h"
- #include "ActiveAEResampleFFMPEG.h"
-+#include "settings/Settings.h"
-+#include "settings/SettingsComponent.h"
- #include "utils/log.h"
- 
- extern "C" {
 diff --git a/xbmc/filesystem/DirectoryHistory.cpp b/xbmc/filesystem/DirectoryHistory.cpp
 --- a/xbmc/filesystem/DirectoryHistory.cpp
 +++ b/xbmc/filesystem/DirectoryHistory.cpp
-@@ -8,8 +8,8 @@
+@@ -110,8 +110,8 @@ std::string CDirectoryHistory::GetParentPath(const std::string& currentPath /* =
    if (currentPath.empty())
      return m_vecPathHistory.back().GetPath(filter);
  
