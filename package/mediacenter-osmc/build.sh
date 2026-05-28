@@ -112,6 +112,10 @@ then
 	handle_dep "libfmt-dev"
 	handle_dep "libudfread-dev"
 	handle_dep "libdisplay-info-dev"
+	handle_dep "libexiv2-dev"
+	handle_dep "libharfbuzz-dev"
+	handle_dep "libpcre2-dev"
+	handle_dep "nlohmann-json3-dev"
 	if [ "$1" == "rbp2" ] || [ "$1" == "rbp4" ]
 	then
 		handle_dep "rbp2-libcec-dev-osmc"
@@ -312,6 +316,9 @@ then
             -DENABLE_SNDIO=OFF \
             -DENABLE_MARIADBCLIENT=ON \
             -DENABLE_INTERNAL_DAV1D=ON \
+            -DENABLE_INTERNAL_FFMPEG=ON \
+            -DENABLE_INTERNAL_FMT=ON \
+            -DENABLE_INTERNAL_TAGLIB=ON \
             -DADDONS_CONFIGURE_AT_STARTUP=OFF \
         ../
         fi
