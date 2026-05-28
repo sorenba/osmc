@@ -37,7 +37,7 @@ diff --git a/xbmc/utils/log.h b/xbmc/utils/log.h
  #include <string>
  #include <vector>
  
-@@ -144,11 +143,10 @@ public:
+@@ -144,11 +143,9 @@ public:
  #define LogFC(level, component, format, ...) \
    Log((level), (component), ("{}: " format), __FUNCTION__, ##__VA_ARGS__)
  #else
