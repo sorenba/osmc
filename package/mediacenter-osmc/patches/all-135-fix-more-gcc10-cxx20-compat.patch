@@ -1,0 +1,56 @@
+From 0f6bd506234a8e50d9c051b9feac5d62ee65578e Mon Sep 17 00:00:00 2001
+From: Soren Bjerg Andersen <sba@ifad.dk>
+Date: Thu, 28 May 2026 04:10:00 +0200
+Subject: [PATCH] Fix more GCC 10 C++20 compatibility
+
+GCC 10's libstdc++ does not provide <source_location>, and GCC 10 does
+not handle using-enum declarations used by Kodi 22. Use __FUNCTION__ for
+LogF/LogFC and expose CFile::ReadLineResult enum values with constexpr
+aliases.
+---
+ xbmc/filesystem/File.h |  4 +++-
+ xbmc/utils/log.h       | 10 ++++------
+ 2 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/xbmc/filesystem/File.h b/xbmc/filesystem/File.h
+--- a/xbmc/filesystem/File.h
++++ b/xbmc/filesystem/File.h
+@@ -91,7 +91,9 @@ public:
+       TRUNCATED,
+       OK,
+     };
+-    using enum ResultCode;
++    static constexpr ResultCode FAILURE = ResultCode::FAILURE;
++    static constexpr ResultCode TRUNCATED = ResultCode::TRUNCATED;
++    static constexpr ResultCode OK = ResultCode::OK;
+ 
+     ResultCode code;
+     std::size_t length;
+diff --git a/xbmc/utils/log.h b/xbmc/utils/log.h
+--- a/xbmc/utils/log.h
++++ b/xbmc/utils/log.h
+@@ -32,7 +32,6 @@
+ #include "utils/IPlatformLog.h"
+ #include "utils/logtypes.h"
+ 
+-#include <source_location>
+ #include <string>
+ #include <vector>
+ 
+@@ -144,11 +143,10 @@ public:
+ #define LogFC(level, component, format, ...) \
+   Log((level), (component), ("{}: " format), __FUNCTION__, ##__VA_ARGS__)
+ #else
+-#define LogF(level, format, ...) \
+-  Log((level), ("{}: " format), std::source_location::current().function_name(), ##__VA_ARGS__)
+-#define LogFC(level, component, format, ...) \
+-  Log((level), (component), ("{}: " format), std::source_location::current().function_name(), \
+-      ##__VA_ARGS__)
++#define LogF(level, format, ...) Log((level), ("{}: " format), __FUNCTION__, ##__VA_ARGS__)
++#define LogFC(level, component, format, ...) \
++  Log((level), (component), ("{}: " format), __FUNCTION__, ##__VA_ARGS__)
+ #endif
+ 
+ private:
+-- 
+2.34.1
