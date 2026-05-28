@@ -1,20 +1,22 @@
 From 8f9f58cbd8604bb6757f8b71fc3cb1fba5b7d1bc Mon Sep 17 00:00:00 2001
 From: Soren Bjerg Andersen <sba@ifad.dk>
 Date: Thu, 28 May 2026 12:35:00 +0200
-Subject: [PATCH] Vero 5: add settings includes for audio boost
+Subject: [PATCH] Vero 5: add settings component include for audio boost
 
 ---
- xbmc/cores/AudioEngine/Engines/ActiveAE/ActiveAEResampleFFMPEG.cpp | 2 ++
- 1 file changed, 2 insertions(+)
+ xbmc/cores/AudioEngine/Engines/ActiveAE/ActiveAEResampleFFMPEG.cpp | 1 +
+ 1 file changed, 1 insertion(+)
 
 diff --git a/xbmc/cores/AudioEngine/Engines/ActiveAE/ActiveAEResampleFFMPEG.cpp b/xbmc/cores/AudioEngine/Engines/ActiveAE/ActiveAEResampleFFMPEG.cpp
 --- a/xbmc/cores/AudioEngine/Engines/ActiveAE/ActiveAEResampleFFMPEG.cpp
 +++ b/xbmc/cores/AudioEngine/Engines/ActiveAE/ActiveAEResampleFFMPEG.cpp
-@@ -1,4 +1,6 @@
-+#include "settings/Settings.h"
+@@ -11,6 +11,7 @@
+ #include "cores/AudioEngine/Utils/AEUtil.h"
+ #include "ActiveAEResampleFFMPEG.h"
+ #include "settings/Settings.h"
 +#include "settings/SettingsComponent.h"
+ #include "ServiceBroker.h"
  #include "utils/log.h"
  
- extern "C" {
 -- 
 2.34.1
