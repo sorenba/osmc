@@ -1,0 +1,130 @@
+From a251f8a8c42e00632308e9856c9d0be0a5f4cfa4 Mon Sep 17 00:00:00 2001
+From: Soren Bjerg Andersen <sba@ifad.dk>
+Date: Thu, 28 May 2026 03:45:00 +0200
+Subject: [PATCH] Fix GCC 10 C++20 compatibility
+
+GCC 10's C++20 support does not handle all constructs used by Kodi 22.
+Avoid using-enum declarations in hot headers and avoid atomic_flag::test,
+which is not available in the Vero 5 toolchain libstdc++.
+---
+ xbmc/addons/Scraper.h             | 15 +++++++--------
+ xbmc/guilib/AspectRatio.h         |  6 +++++-
+ xbmc/powermanagement/PowerState.h |  6 +++---
+ xbmc/video/VideoDatabase.h        | 17 ++++++++---------
+ 4 files changed, 23 insertions(+), 21 deletions(-)
+
+diff --git a/xbmc/addons/Scraper.h b/xbmc/addons/Scraper.h
+--- a/xbmc/addons/Scraper.h
++++ b/xbmc/addons/Scraper.h
+@@ -212,21 +212,19 @@ private:
+     using namespace std::literals::string_view_literals;
+     switch (type)
+     {
+-      using enum ADDON::ContentType;
+-
+-      case MOVIES:
++      case ADDON::ContentType::MOVIES:
+         return "movies"sv;
+-      case MOVIE_VERSIONS:
++      case ADDON::ContentType::MOVIE_VERSIONS:
+         return "movie versions"sv;
+-      case TVSHOWS:
++      case ADDON::ContentType::TVSHOWS:
+         return "TV shows"sv;
+-      case MUSICVIDEOS:
++      case ADDON::ContentType::MUSICVIDEOS:
+         return "music videos"sv;
+-      case ALBUMS:
++      case ADDON::ContentType::ALBUMS:
+         return "albums"sv;
+-      case ARTISTS:
++      case ADDON::ContentType::ARTISTS:
+         return "artists"sv;
+-      case NONE:
++      case ADDON::ContentType::NONE:
+         return "none"sv;
+     }
+     throw std::invalid_argument("no content string found");
+diff --git a/xbmc/guilib/AspectRatio.h b/xbmc/guilib/AspectRatio.h
+--- a/xbmc/guilib/AspectRatio.h
++++ b/xbmc/guilib/AspectRatio.h
+@@ -36,9 +36,12 @@ public:
+     // Do not scale image.
+     CENTER
+   };
+-  using enum AspectRatio;
++  static constexpr AspectRatio STRETCH = AspectRatio::STRETCH;
++  static constexpr AspectRatio SCALE = AspectRatio::SCALE;
++  static constexpr AspectRatio KEEP = AspectRatio::KEEP;
++  static constexpr AspectRatio CENTER = AspectRatio::CENTER;
+ 
+-  CAspectRatio(AspectRatio aspect = STRETCH)
++  CAspectRatio(AspectRatio aspect = AspectRatio::STRETCH)
+   {
+     ratio = aspect;
+     align = ASPECT_ALIGN_CENTER | ASPECT_ALIGNY_CENTER;
+diff --git a/xbmc/powermanagement/PowerState.h b/xbmc/powermanagement/PowerState.h
+--- a/xbmc/powermanagement/PowerState.h
++++ b/xbmc/powermanagement/PowerState.h
+@@ -21,17 +21,17 @@ public:
+   /**
+    * Called when system is going to sleep.
+    */
+-  virtual void OnSleep() { m_sleeping.test_and_set(); }
++  virtual void OnSleep() { m_sleeping.store(true); }
+ 
+   /**
+    * Called when system is awakened from sleep.
+    */
+-  virtual void OnWake() { m_sleeping.clear(); }
++  virtual void OnWake() { m_sleeping.store(false); }
+ 
+   /**
+    * Test whether system is sleeping.
+    */
+-  bool IsSleeping() const { return m_sleeping.test(); }
++  bool IsSleeping() const { return m_sleeping.load(); }
+ 
+   /**
+    * Test whether system is awakened from sleep.
+@@ -39,5 +39,5 @@ public:
+   bool IsAwake() const { return !IsSleeping(); }
+ 
+ private:
+-  std::atomic_flag m_sleeping{};
++  std::atomic_bool m_sleeping{false};
+ };
+diff --git a/xbmc/video/VideoDatabase.h b/xbmc/video/VideoDatabase.h
+--- a/xbmc/video/VideoDatabase.h
++++ b/xbmc/video/VideoDatabase.h
+@@ -94,21 +94,19 @@ private:
+     using namespace std::literals::string_view_literals;
+     switch (type)
+     {
+-      using enum VideoDbContentType;
+-
+-      case UNKNOWN:
++      case VideoDbContentType::UNKNOWN:
+         return "unknown"sv;
+-      case MOVIES:
++      case VideoDbContentType::MOVIES:
+         return "movies"sv;
+-      case TVSHOWS:
++      case VideoDbContentType::TVSHOWS:
+         return "TV shows"sv;
+-      case MUSICVIDEOS:
++      case VideoDbContentType::MUSICVIDEOS:
+         return "music videos"sv;
+-      case EPISODES:
++      case VideoDbContentType::EPISODES:
+         return "episodes"sv;
+-      case MOVIE_SETS:
++      case VideoDbContentType::MOVIE_SETS:
+         return "movie sets"sv;
+-      case MUSICALBUMS:
++      case VideoDbContentType::MUSICALBUMS:
+         return "music albums"sv;
+     };
+     throw std::invalid_argument("no videodb content string found");
+-- 
+2.34.1
