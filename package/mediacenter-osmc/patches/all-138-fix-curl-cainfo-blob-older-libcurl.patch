@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OSMC <osmc@osmc.tv>
+Date: Fri, 29 May 2026 13:00:00 +0200
+Subject: [PATCH] CurlFile: guard CURLOPT_CAINFO_BLOB for older libcurl
+
+CURLOPT_CAINFO_BLOB was introduced in libcurl 7.77.0. The Vero build
+toolchain currently provides libcurl 7.74.0, which has curl_blob but not
+the CAINFO_BLOB option.
+---
+ xbmc/filesystem/CurlFile.cpp | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/xbmc/filesystem/CurlFile.cpp b/xbmc/filesystem/CurlFile.cpp
+--- a/xbmc/filesystem/CurlFile.cpp
++++ b/xbmc/filesystem/CurlFile.cpp
+@@ -707,6 +707,8 @@ void CCurlFile::SetCommonOptions(CReadState* state)
++#if LIBCURL_VERSION_NUM >= 0x074d00 // 7.77.0
+   // From OpenSSL 3.0 CURLOPT_CAINFO not works (on UWP), use CURLOPT_CAINFO_BLOB instead
+   if (!cachedCaCertsBlob.empty())
+   {
+     curl_blob blob{cachedCaCertsBlob.data(), cachedCaCertsBlob.size(), CURL_BLOB_NOCOPY};
+     g_curlInterface.easy_setopt(h, CURLOPT_CAINFO_BLOB, &blob);
+   }
++#endif

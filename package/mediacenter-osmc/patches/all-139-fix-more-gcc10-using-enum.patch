@@ -1,0 +1,111 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OSMC <osmc@osmc.tv>
+Date: Fri, 29 May 2026 13:30:00 +0200
+Subject: [PATCH] Fix more GCC 10 using enum compatibility
+
+GCC 10 does not support C++20 using-enum declarations. Qualify the enum
+cases directly in files reached by the Vero 5 build.
+---
+ xbmc/dbwrappers/qry_dat.h             | 21 ++++++++++-----------
+ xbmc/interfaces/AnnouncementManager.cpp |  7 +++----
+ 2 files changed, 13 insertions(+), 15 deletions(-)
+
+diff --git a/xbmc/dbwrappers/qry_dat.h b/xbmc/dbwrappers/qry_dat.h
+--- a/xbmc/dbwrappers/qry_dat.h
++++ b/xbmc/dbwrappers/qry_dat.h
+@@ -158,56 +158,55 @@ public:
+   // class ostream
+   friend std::ostream& operator<<(std::ostream& os, const field_value& fv)
+   {
+-    using enum dbiplus::fType;
+     switch (fv.get_fType())
+     {
+-      case ft_String:
++      case dbiplus::fType::ft_String:
+       {
+         return os << fv.get_asString();
+         break;
+       }
+-      case ft_Boolean:
++      case dbiplus::fType::ft_Boolean:
+       {
+         return os << fv.get_asBool();
+         break;
+       }
+-      case ft_Char:
++      case dbiplus::fType::ft_Char:
+       {
+         return os << fv.get_asChar();
+         break;
+       }
+-      case ft_Short:
++      case dbiplus::fType::ft_Short:
+       {
+         return os << fv.get_asShort();
+         break;
+       }
+-      case ft_UShort:
++      case dbiplus::fType::ft_UShort:
+       {
+         return os << fv.get_asUShort();
+         break;
+       }
+-      case ft_Int:
++      case dbiplus::fType::ft_Int:
+       {
+         return os << fv.get_asInt();
+         break;
+       }
+-      case ft_UInt:
++      case dbiplus::fType::ft_UInt:
+       {
+         return os << fv.get_asUInt();
+         break;
+       }
+-      case ft_Float:
++      case dbiplus::fType::ft_Float:
+       {
+         return os << fv.get_asFloat();
+         break;
+       }
+-      case ft_Double:
++      case dbiplus::fType::ft_Double:
+       {
+         return os << fv.get_asDouble();
+         break;
+       }
+-      case ft_Int64:
++      case dbiplus::fType::ft_Int64:
+       {
+         return os << fv.get_asInt64();
+         break;
+       }
+diff --git a/xbmc/interfaces/AnnouncementManager.cpp b/xbmc/interfaces/AnnouncementManager.cpp
+--- a/xbmc/interfaces/AnnouncementManager.cpp
++++ b/xbmc/interfaces/AnnouncementManager.cpp
+@@ -96,22 +96,21 @@ void CopyVideoTagInfoToObject(CFileItem& item, CVariant& objItem)
+       title = item.GetLabel();
+     objItem["title"] = title;
+ 
+-    using enum VideoDbContentType;
+     switch (item.GetVideoContentType())
+     {
+-      case MOVIES:
++      case VideoDbContentType::MOVIES:
+         if (tag.HasYear())
+           objItem["year"] = tag.GetYear();
+         break;
+-      case EPISODES:
++      case VideoDbContentType::EPISODES:
+         if (tag.m_iEpisode >= 0)
+           objItem["episode"] = tag.m_iEpisode;
+         if (tag.m_iSeason >= 0)
+           objItem["season"] = tag.m_iSeason;
+         if (!tag.m_strShowTitle.empty())
+           objItem["showtitle"] = tag.m_strShowTitle;
+         break;
+-      case MUSICVIDEOS:
++      case VideoDbContentType::MUSICVIDEOS:
+         if (!tag.m_strAlbum.empty())
+           objItem["album"] = tag.m_strAlbum;
+         if (!tag.m_artist.empty())

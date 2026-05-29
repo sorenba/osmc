@@ -1,0 +1,55 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OSMC <osmc@osmc.tv>
+Date: Fri, 29 May 2026 14:50:00 +0200
+Subject: [PATCH] Fix settings GCC 10 and container compatibility
+
+GCC 10 does not support C++20 using-enum declarations. Also use Kodi
+22's SettingsContainer alias for callback registration so the comparator
+matches the SettingsManager API.
+---
+ xbmc/settings/VeroSettings.cpp | 2 +-
+ xbmc/settings/lib/Setting.cpp  | 8 +++-----
+ 2 files changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/xbmc/settings/VeroSettings.cpp b/xbmc/settings/VeroSettings.cpp
+--- a/xbmc/settings/VeroSettings.cpp
++++ b/xbmc/settings/VeroSettings.cpp
+@@ -30,7 +30,7 @@ VeroSettings::VeroSettings()
+   m_settingsMap.insert(std::make_pair(SETTING_VIDEOSCREEN_FORCERGB, &VeroSettings::OnForceRgbChanged));
+   m_settingsMap.insert(std::make_pair(SETTING_VIDEOSCREEN_LOCKHPD, &VeroSettings::OnLockHpdChanged));
+ 
+-  std::set<std::string> settingSet;
++  SettingsContainer settingSet;
+ 
+   for (auto e : m_settingsMap) {
+     settingSet.insert(e.first);
+diff --git a/xbmc/settings/lib/Setting.cpp b/xbmc/settings/lib/Setting.cpp
+--- a/xbmc/settings/lib/Setting.cpp
++++ b/xbmc/settings/lib/Setting.cpp
+@@ -38,9 +38,7 @@ bool CheckSettingOptionsValidity(const SettingOptions& options, const CVariant&
+ 
+ bool DeserializeOptionsSort(const TiXmlElement* optionsElement, SettingOptionsSort& optionsSort)
+ {
+-  using enum SettingOptionsSort;
+-
+-  optionsSort = NoSorting;
++  optionsSort = SettingOptionsSort::NoSorting;
+ 
+   std::string sort;
+   if (optionsElement->QueryStringAttribute("sort", &sort) != TIXML_SUCCESS)
+@@ -48,13 +46,13 @@ bool DeserializeOptionsSort(const TiXmlElement* optionsElement, SettingOptionsSo
+ 
+   if (StringUtils::EqualsNoCase(sort, "false") || StringUtils::EqualsNoCase(sort, "off") ||
+     StringUtils::EqualsNoCase(sort, "no") || StringUtils::EqualsNoCase(sort, "disabled"))
+-    optionsSort = NoSorting;
++    optionsSort = SettingOptionsSort::NoSorting;
+   else if (StringUtils::EqualsNoCase(sort, "asc") || StringUtils::EqualsNoCase(sort, "ascending") ||
+     StringUtils::EqualsNoCase(sort, "true") || StringUtils::EqualsNoCase(sort, "on") ||
+     StringUtils::EqualsNoCase(sort, "yes") || StringUtils::EqualsNoCase(sort, "enabled"))
+-    optionsSort = Ascending;
++    optionsSort = SettingOptionsSort::Ascending;
+   else if (StringUtils::EqualsNoCase(sort, "desc") || StringUtils::EqualsNoCase(sort, "descending"))
+-    optionsSort = Descending;
++    optionsSort = SettingOptionsSort::Descending;
+   else
+     return false;

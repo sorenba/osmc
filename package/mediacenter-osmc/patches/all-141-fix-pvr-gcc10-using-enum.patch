@@ -1,0 +1,362 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OSMC <osmc@osmc.tv>
+Date: Fri, 29 May 2026 14:15:00 +0200
+Subject: [PATCH] Fix PVR GCC 10 using enum compatibility
+
+GCC 10 does not support C++20 using-enum declarations. Qualify the PVR
+enum values directly at the call sites reached by the Vero 5 build.
+---
+ xbmc/pvr/addons/PVRClient.cpp                 | 10 ++++------
+ xbmc/pvr/addons/PVRClients.cpp                | 18 ++++++++----------
+ xbmc/pvr/dialogs/GUIDialogPVRChannelsOSD.cpp  |  9 ++++-----
+ xbmc/pvr/guilib/PVRGUIActionsPlayback.cpp     |  6 ++----
+ xbmc/pvr/guilib/guiinfo/PVRGUIInfo.cpp        |  8 +++-----
+ xbmc/pvr/timers/PVRTimers.cpp                 |  8 +++-----
+ xbmc/pvr/windows/GUIWindowPVRBase.cpp         |  8 +++-----
+ xbmc/pvr/windows/GUIWindowPVRChannels.cpp     | 12 +++++-------
+ xbmc/pvr/windows/GUIWindowPVRGuide.cpp        | 22 +++++++++------------
+ xbmc/pvr/windows/GUIWindowPVRRecordings.cpp   | 11 +++++------
+ xbmc/pvr/windows/GUIWindowPVRTimersBase.cpp   | 10 ++++------
+ 11 files changed, 50 insertions(+), 72 deletions(-)
+
+diff --git a/xbmc/pvr/addons/PVRClient.cpp b/xbmc/pvr/addons/PVRClient.cpp
+--- a/xbmc/pvr/addons/PVRClient.cpp
++++ b/xbmc/pvr/addons/PVRClient.cpp
+@@ -401,18 +401,16 @@ EDL::Edit ConvertAddonEdl(const PVR_EDL_ENTRY& entry)
+ 
+   switch (entry.type)
+   {
+-    using enum EDL::Action;
+-
+     case PVR_EDL_TYPE_CUT:
+-      edit.action = CUT;
++      edit.action = EDL::Action::CUT;
+       break;
+     case PVR_EDL_TYPE_MUTE:
+-      edit.action = MUTE;
++      edit.action = EDL::Action::MUTE;
+       break;
+     case PVR_EDL_TYPE_SCENE:
+-      edit.action = SCENE;
++      edit.action = EDL::Action::SCENE;
+       break;
+     case PVR_EDL_TYPE_COMBREAK:
+-      edit.action = COMM_BREAK;
++      edit.action = EDL::Action::COMM_BREAK;
+       break;
+     default:
+       CLog::LogF(LOGWARNING, "Ignoring entry of unknown EDL type: {}", entry.type);
+diff --git a/xbmc/pvr/addons/PVRClients.cpp b/xbmc/pvr/addons/PVRClients.cpp
+--- a/xbmc/pvr/addons/PVRClients.cpp
++++ b/xbmc/pvr/addons/PVRClients.cpp
+@@ -124,8 +124,6 @@ CPVRClients::UpdateClientAction CPVRClients::GetUpdateClientAction(
+     int clientId,
+     bool instanceEnabled) const
+ {
+-  using enum UpdateClientAction;
+-
+   if (instanceEnabled && (!IsKnownClient(clientId) || !IsCreatedClient(clientId)))
+   {
+     const bool isKnownClient{IsKnownClient(clientId)};
+@@ -143,9 +141,9 @@ CPVRClients::UpdateClientAction CPVRClients::GetUpdateClientAction(
+     }
+ 
+     if (instanceEnabled)
+-      return CREATE;
++      return UpdateClientAction::CREATE;
+     else if (isKnownClient)
+-      return DESTROY;
++      return UpdateClientAction::DESTROY;
+   }
+   else if (IsCreatedClient(clientId))
+   {
+@@ -157,11 +155,11 @@ CPVRClients::UpdateClientAction CPVRClients::GetUpdateClientAction(
+     }
+ 
+     if (instanceEnabled)
+-      return RECREATE;
++      return UpdateClientAction::RECREATE;
+     else
+-      return DESTROY;
++      return UpdateClientAction::DESTROY;
+   }
+-  return NONE;
++  return UpdateClientAction::NONE;
+ }
+ 
+ void CPVRClients::UpdateClients(const std::string& changedAddonId /* = "" */)
+@@ -189,9 +187,7 @@ void CPVRClients::UpdateClients(const std::string& changedAddonId /* = "" */)
+             GetUpdateClientAction(addon, instanceId, clientId, instanceEnabled)};
+         switch (action)
+         {
+-          using enum UpdateClientAction;
+-
+-          case CREATE:
++          case UpdateClientAction::CREATE:
+           {
+             std::shared_ptr<CPVRClient> client;
+             if (IsKnownClient(clientId))
+@@ -205,21 +201,21 @@ void CPVRClients::UpdateClients(const std::string& changedAddonId /* = "" */)
+             clientsToCreate.emplace_back(client);
+             break;
+           }
+-          case RECREATE:
++          case UpdateClientAction::RECREATE:
+           {
+             CLog::Log(LOGINFO, "Recreating PVR client: addonId={}, instanceId={}, clientId={}",
+                       addon->ID(), instanceId, clientId);
+             clientsToReCreate.emplace_back(clientId, addon->Name());
+             break;
+           }
+-          case DESTROY:
++          case UpdateClientAction::DESTROY:
+           {
+             CLog::Log(LOGINFO, "Destroying PVR client: addonId={}, instanceId={}, clientId={}",
+                       addon->ID(), instanceId, clientId);
+             clientsToDestroy.emplace_back(clientId);
+             break;
+           }
+-          case NONE:
++          case UpdateClientAction::NONE:
+           default:
+             break;
+         }
+diff --git a/xbmc/pvr/dialogs/GUIDialogPVRChannelsOSD.cpp b/xbmc/pvr/dialogs/GUIDialogPVRChannelsOSD.cpp
+--- a/xbmc/pvr/dialogs/GUIDialogPVRChannelsOSD.cpp
++++ b/xbmc/pvr/dialogs/GUIDialogPVRChannelsOSD.cpp
+@@ -63,15 +63,13 @@ bool CGUIDialogPVRChannelsOSD::OnMessage(CGUIMessage& message)
+   {
+     switch (static_cast<PVREvent>(message.GetParam1()))
+     {
+-      using enum PVR::PVREvent;
+-
+-      case CurrentItem:
++      case PVR::PVREvent::CurrentItem:
+         m_viewControl.SetItems(*m_vecItems);
+         return true;
+ 
+-      case Epg:
+-      case EpgContainer:
+-      case EpgActiveItem:
++      case PVR::PVREvent::Epg:
++      case PVR::PVREvent::EpgContainer:
++      case PVR::PVREvent::EpgActiveItem:
+         if (IsActive())
+           SetInvalid();
+         return true;
+diff --git a/xbmc/pvr/guilib/PVRGUIActionsPlayback.cpp b/xbmc/pvr/guilib/PVRGUIActionsPlayback.cpp
+--- a/xbmc/pvr/guilib/PVRGUIActionsPlayback.cpp
++++ b/xbmc/pvr/guilib/PVRGUIActionsPlayback.cpp
+@@ -273,9 +273,7 @@ bool CPVRGUIActionsPlayback::SwitchToChannel(PlaybackType type) const
+   // and if not, try to grab the last played channel of this type
+   switch (type)
+   {
+-    using enum PlaybackType;
+-
+-    case TYPE_RADIO:
++    case PlaybackType::TYPE_RADIO:
+     {
+       if (CServiceBroker::GetPVRManager().PlaybackState()->IsPlayingRadio())
+         return true;
+@@ -287,7 +285,7 @@ bool CPVRGUIActionsPlayback::SwitchToChannel(PlaybackType type) const
+       bIsRadio = true;
+       break;
+     }
+-    case TYPE_TV:
++    case PlaybackType::TYPE_TV:
+     {
+       if (CServiceBroker::GetPVRManager().PlaybackState()->IsPlayingTV())
+         return true;
+diff --git a/xbmc/pvr/guilib/guiinfo/PVRGUIInfo.cpp b/xbmc/pvr/guilib/guiinfo/PVRGUIInfo.cpp
+--- a/xbmc/pvr/guilib/guiinfo/PVRGUIInfo.cpp
++++ b/xbmc/pvr/guilib/guiinfo/PVRGUIInfo.cpp
+@@ -668,17 +668,15 @@ bool CPVRGUIInfo::GetListItemAndPlayerLabel(const CFileItem* item,
+           const CPVRChannelGroup::Origin origin{group->GetOrigin()};
+           switch (origin)
+           {
+-            using enum CPVRChannelGroup::Origin;
+-
+-            case CLIENT:
++            case CPVRChannelGroup::Origin::CLIENT:
+               strValue =
+                   CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(856); // Client
+               return true;
+-            case SYSTEM:
++            case CPVRChannelGroup::Origin::SYSTEM:
+               strValue =
+                   CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(857); // System
+               return true;
+-            case USER:
++            case CPVRChannelGroup::Origin::USER:
+               strValue =
+                   CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(858); // User
+               return true;
+diff --git a/xbmc/pvr/timers/PVRTimers.cpp b/xbmc/pvr/timers/PVRTimers.cpp
+--- a/xbmc/pvr/timers/PVRTimers.cpp
++++ b/xbmc/pvr/timers/PVRTimers.cpp
+@@ -185,13 +185,11 @@ void CPVRTimers::Process()
+                          {
+                            switch (event)
+                            {
+-                             using enum PVREvent;
+-
+-                             case EpgContainer:
++                             case PVREvent::EpgContainer:
+                                mgr.TriggerTimersUpdate();
+                                break;
+-                             case Epg:
+-                             case EpgItemUpdate:
++                             case PVREvent::Epg:
++                             case PVREvent::EpgItemUpdate:
+                              {
+                                std::unique_lock lock(m_critSection);
+                                m_bReminderRulesUpdatePending = true;
+diff --git a/xbmc/pvr/windows/GUIWindowPVRBase.cpp b/xbmc/pvr/windows/GUIWindowPVRBase.cpp
+--- a/xbmc/pvr/windows/GUIWindowPVRBase.cpp
++++ b/xbmc/pvr/windows/GUIWindowPVRBase.cpp
+@@ -339,10 +339,8 @@ bool CGUIWindowPVRBase::OnMessage(CGUIMessage& message)
+     {
+       switch (static_cast<PVREvent>(message.GetParam1()))
+       {
+-        using enum PVREvent;
+-
+-        case ManagerStarted:
+-        case ClientsInvalidated:
+-        case ChannelGroupsInvalidated:
++        case PVREvent::ManagerStarted:
++        case PVREvent::ClientsInvalidated:
++        case PVREvent::ChannelGroupsInvalidated:
+         {
+           if (InitChannelGroup())
+diff --git a/xbmc/pvr/windows/GUIWindowPVRChannels.cpp b/xbmc/pvr/windows/GUIWindowPVRChannels.cpp
+--- a/xbmc/pvr/windows/GUIWindowPVRChannels.cpp
++++ b/xbmc/pvr/windows/GUIWindowPVRChannels.cpp
+@@ -279,15 +279,13 @@ bool CGUIWindowPVRChannels::OnMessage(CGUIMessage& message)
+     {
+       switch (static_cast<PVREvent>(message.GetParam1()))
+       {
+-        using enum PVREvent;
+-
+-        case ChannelGroup:
+-        case CurrentItem:
+-        case Epg:
+-        case EpgActiveItem:
+-        case EpgContainer:
+-        case RecordingsInvalidated:
+-        case Timers:
++        case PVREvent::ChannelGroup:
++        case PVREvent::CurrentItem:
++        case PVREvent::Epg:
++        case PVREvent::EpgActiveItem:
++        case PVREvent::EpgContainer:
++        case PVREvent::RecordingsInvalidated:
++        case PVREvent::Timers:
+           SetInvalid();
+           break;
+ 
+diff --git a/xbmc/pvr/windows/GUIWindowPVRGuide.cpp b/xbmc/pvr/windows/GUIWindowPVRGuide.cpp
+--- a/xbmc/pvr/windows/GUIWindowPVRGuide.cpp
++++ b/xbmc/pvr/windows/GUIWindowPVRGuide.cpp
+@@ -172,13 +172,11 @@ void CGUIWindowPVRGuideBase::NotifyEvent(const PVREvent& event)
+ {
+-  using enum PVREvent;
+-
+-  if (event == Epg || event == EpgContainer || event == ChannelGroupInvalidated ||
+-      event == ChannelGroup)
++  if (event == PVREvent::Epg || event == PVREvent::EpgContainer ||
++      event == PVREvent::ChannelGroupInvalidated || event == PVREvent::ChannelGroup)
+   {
+     m_bRefreshTimelineItems = true;
+     // no base class call => do async refresh
+     return;
+   }
+-  else if (event == ChannelPlaybackStopped)
++  else if (event == PVREvent::ChannelPlaybackStopped)
+   {
+     m_bRefreshTimelineItems = false;
+@@ -623,24 +621,22 @@ bool CGUIWindowPVRGuideBase::OnMessage(CGUIMessage& message)
+     {
+       switch (static_cast<PVREvent>(message.GetParam1()))
+       {
+-        using enum PVREvent;
+-
+-        case ManagerStarted:
++        case PVREvent::ManagerStarted:
+           if (InitChannelGroup())
+             InitEpgGridControl();
+           break;
+ 
+-        case ChannelGroup:
+-        case ChannelGroupInvalidated:
+-        case ClientsInvalidated:
+-        case ChannelPlaybackStopped:
+-        case Epg:
+-        case EpgContainer:
++        case PVREvent::ChannelGroup:
++        case PVREvent::ChannelGroupInvalidated:
++        case PVREvent::ClientsInvalidated:
++        case PVREvent::ChannelPlaybackStopped:
++        case PVREvent::Epg:
++        case PVREvent::EpgContainer:
+           if (InitChannelGroup())
+             Refresh(true);
+           break;
+ 
+-        case Timers:
+-        case TimersInvalidated:
++        case PVREvent::Timers:
++        case PVREvent::TimersInvalidated:
+           SetInvalid();
+           break;
+diff --git a/xbmc/pvr/windows/GUIWindowPVRRecordings.cpp b/xbmc/pvr/windows/GUIWindowPVRRecordings.cpp
+--- a/xbmc/pvr/windows/GUIWindowPVRRecordings.cpp
++++ b/xbmc/pvr/windows/GUIWindowPVRRecordings.cpp
+@@ -386,16 +386,14 @@ bool CGUIWindowPVRRecordings::OnMessage(CGUIMessage& message)
+     {
+       switch (static_cast<PVREvent>(message.GetParam1()))
+       {
+-        using enum PVREvent;
+-
+-        case CurrentItem:
+-        case Epg:
+-        case EpgActiveItem:
+-        case EpgContainer:
+-        case Timers:
++        case PVREvent::CurrentItem:
++        case PVREvent::Epg:
++        case PVREvent::EpgActiveItem:
++        case PVREvent::EpgContainer:
++        case PVREvent::Timers:
+           SetInvalid();
+           break;
+ 
+-        case RecordingsInvalidated:
+-        case TimersInvalidated:
++        case PVREvent::RecordingsInvalidated:
++        case PVREvent::TimersInvalidated:
+           Refresh(true);
+diff --git a/xbmc/pvr/windows/GUIWindowPVRTimersBase.cpp b/xbmc/pvr/windows/GUIWindowPVRTimersBase.cpp
+--- a/xbmc/pvr/windows/GUIWindowPVRTimersBase.cpp
++++ b/xbmc/pvr/windows/GUIWindowPVRTimersBase.cpp
+@@ -178,15 +178,13 @@ bool CGUIWindowPVRTimersBase::OnMessage(CGUIMessage& message)
+     {
+       switch (static_cast<PVREvent>(message.GetParam1()))
+       {
+-        using enum PVREvent;
+-
+-        case CurrentItem:
+-        case Epg:
+-        case EpgActiveItem:
+-        case EpgContainer:
+-        case Timers:
++        case PVREvent::CurrentItem:
++        case PVREvent::Epg:
++        case PVREvent::EpgActiveItem:
++        case PVREvent::EpgContainer:
++        case PVREvent::Timers:
+           SetInvalid();
+           break;
+ 
+-        case TimersInvalidated:
++        case PVREvent::TimersInvalidated:
+           Refresh(true);

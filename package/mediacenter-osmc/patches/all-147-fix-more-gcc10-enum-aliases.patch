@@ -1,0 +1,340 @@
+From: OSMC
+Subject: Fix more C++20 using-enum sites for GCC 10
+
+GCC 10 does not support C++20 using-enum declarations. Replace the
+remaining build-hit sites with C++17-compatible enum aliases or explicit
+qualifiers.
+
+--- a/xbmc/rendering/GLExtensions.h
++++ b/xbmc/rendering/GLExtensions.h
+@@ -34,7 +34,27 @@ struct CGLExtensions
+     OES_EGL_image_external,
+     EXTENSION_MAX
+   };
+-  using enum Extension;
++  static constexpr Extension APPLE_texture_format_BGRA8888 =
++      Extension::APPLE_texture_format_BGRA8888;
++  static constexpr Extension ARB_multitexture = Extension::ARB_multitexture;
++  static constexpr Extension ARB_pixel_buffer_object = Extension::ARB_pixel_buffer_object;
++  static constexpr Extension ARB_texture_float = Extension::ARB_texture_float;
++  static constexpr Extension ARB_texture_swizzle = Extension::ARB_texture_swizzle;
++  static constexpr Extension EXT_color_buffer_float = Extension::EXT_color_buffer_float;
++  static constexpr Extension EXT_framebuffer_object = Extension::EXT_framebuffer_object;
++  static constexpr Extension EXT_texture_filter_anisotropic =
++      Extension::EXT_texture_filter_anisotropic;
++  static constexpr Extension EXT_texture_format_BGRA8888 =
++      Extension::EXT_texture_format_BGRA8888;
++  static constexpr Extension EXT_texture_swizzle = Extension::EXT_texture_swizzle;
++  static constexpr Extension EXT_unpack_subimage = Extension::EXT_unpack_subimage;
++  static constexpr Extension IMG_texture_format_BGRA8888 =
++      Extension::IMG_texture_format_BGRA8888;
++  static constexpr Extension KHR_debug = Extension::KHR_debug;
++  static constexpr Extension NVX_gpu_memory_info = Extension::NVX_gpu_memory_info;
++  static constexpr Extension NV_vdpau_interop = Extension::NV_vdpau_interop;
++  static constexpr Extension OES_EGL_image_external = Extension::OES_EGL_image_external;
++  static constexpr Extension EXTENSION_MAX = Extension::EXTENSION_MAX;
+ 
+   static constexpr auto stringMap = make_map<Extension, std::string_view>({
+       {APPLE_texture_format_BGRA8888, "GL_APPLE_texture_format_BGRA8888"},
+--- a/xbmc/TextureDatabase.cpp
++++ b/xbmc/TextureDatabase.cpp
+@@ -17,6 +17,9 @@
+ #include "utils/Variant.h"
+ #include "utils/log.h"
+ 
++static constexpr auto TEXT_FIELD = CDatabaseQueryRule::FieldType::TEXT_FIELD;
++static constexpr auto REAL_FIELD = CDatabaseQueryRule::FieldType::REAL_FIELD;
++
+ enum TextureField
+ {
+   TF_None = 0,
+--- a/xbmc/dbwrappers/Database.cpp
++++ b/xbmc/dbwrappers/Database.cpp
+@@ -636,14 +636,13 @@ CDatabase::ConnectionState CDatabase::Connect(const std::string& dbName,
+   const int state{m_pDB->connect(create)};
+   switch (state)
+   {
+-    using enum ConnectionState;
+     case DB_CONNECTION_OK:
+       break;
+     case DB_CONNECTION_DATABASE_NOT_FOUND:
+-      return STATE_DATABASE_NOT_FOUND;
++      return ConnectionState::STATE_DATABASE_NOT_FOUND;
+     case DB_CONNECTION_NONE:
+-      return STATE_ERROR;
++      return ConnectionState::STATE_ERROR;
+     default:
+       CLog::LogF(LOGERROR, "Unhandled connection status: {}", state);
+-      return STATE_ERROR;
++      return ConnectionState::STATE_ERROR;
+   }
+--- a/xbmc/dbwrappers/DatabaseQuery.cpp
++++ b/xbmc/dbwrappers/DatabaseQuery.cpp
+@@ -24,11 +24,38 @@
+ #include <string>
+ #include <vector>
+ 
+-using enum CDatabaseQueryRule::SearchOperator;
+-using enum CDatabaseQueryRule::FieldType;
+-
+ namespace
+ {
++static constexpr auto OPERATOR_START = CDatabaseQueryRule::SearchOperator::OPERATOR_START;
++static constexpr auto OPERATOR_CONTAINS = CDatabaseQueryRule::SearchOperator::OPERATOR_CONTAINS;
++static constexpr auto OPERATOR_DOES_NOT_CONTAIN =
++    CDatabaseQueryRule::SearchOperator::OPERATOR_DOES_NOT_CONTAIN;
++static constexpr auto OPERATOR_EQUALS = CDatabaseQueryRule::SearchOperator::OPERATOR_EQUALS;
++static constexpr auto OPERATOR_DOES_NOT_EQUAL =
++    CDatabaseQueryRule::SearchOperator::OPERATOR_DOES_NOT_EQUAL;
++static constexpr auto OPERATOR_STARTS_WITH =
++    CDatabaseQueryRule::SearchOperator::OPERATOR_STARTS_WITH;
++static constexpr auto OPERATOR_ENDS_WITH = CDatabaseQueryRule::SearchOperator::OPERATOR_ENDS_WITH;
++static constexpr auto OPERATOR_GREATER_THAN =
++    CDatabaseQueryRule::SearchOperator::OPERATOR_GREATER_THAN;
++static constexpr auto OPERATOR_LESS_THAN = CDatabaseQueryRule::SearchOperator::OPERATOR_LESS_THAN;
++static constexpr auto OPERATOR_AFTER = CDatabaseQueryRule::SearchOperator::OPERATOR_AFTER;
++static constexpr auto OPERATOR_BEFORE = CDatabaseQueryRule::SearchOperator::OPERATOR_BEFORE;
++static constexpr auto OPERATOR_IN_THE_LAST =
++    CDatabaseQueryRule::SearchOperator::OPERATOR_IN_THE_LAST;
++static constexpr auto OPERATOR_NOT_IN_THE_LAST =
++    CDatabaseQueryRule::SearchOperator::OPERATOR_NOT_IN_THE_LAST;
++static constexpr auto OPERATOR_TRUE = CDatabaseQueryRule::SearchOperator::OPERATOR_TRUE;
++static constexpr auto OPERATOR_FALSE = CDatabaseQueryRule::SearchOperator::OPERATOR_FALSE;
++static constexpr auto OPERATOR_BETWEEN = CDatabaseQueryRule::SearchOperator::OPERATOR_BETWEEN;
++static constexpr auto TEXT_FIELD = CDatabaseQueryRule::FieldType::TEXT_FIELD;
++static constexpr auto REAL_FIELD = CDatabaseQueryRule::FieldType::REAL_FIELD;
++static constexpr auto NUMERIC_FIELD = CDatabaseQueryRule::FieldType::NUMERIC_FIELD;
++static constexpr auto DATE_FIELD = CDatabaseQueryRule::FieldType::DATE_FIELD;
++static constexpr auto SECONDS_FIELD = CDatabaseQueryRule::FieldType::SECONDS_FIELD;
++static constexpr auto BOOLEAN_FIELD = CDatabaseQueryRule::FieldType::BOOLEAN_FIELD;
++static constexpr auto TEXTIN_FIELD = CDatabaseQueryRule::FieldType::TEXTIN_FIELD;
++
+ struct OperatorField
+ {
+   std::string name;
+--- a/xbmc/dbwrappers/dataset.cpp
++++ b/xbmc/dbwrappers/dataset.cpp
+@@ -25,7 +25,16 @@
+ 
+ namespace dbiplus
+ {
+-using enum dsStates;
++static constexpr auto dsSelect = dsStates::dsSelect;
++static constexpr auto dsInsert = dsStates::dsInsert;
++static constexpr auto dsEdit = dsStates::dsEdit;
++static constexpr auto dsDelete = dsStates::dsDelete;
++static constexpr auto dsInactive = dsStates::dsInactive;
++static constexpr auto sqlSelect = sqlType::sqlSelect;
++static constexpr auto sqlUpdate = sqlType::sqlUpdate;
++static constexpr auto sqlInsert = sqlType::sqlInsert;
++static constexpr auto sqlDelete = sqlType::sqlDelete;
++static constexpr auto sqlExec = sqlType::sqlExec;
+ 
+ //************* Database implementation ***************
+ 
+@@ -103,7 +112,6 @@ void Dataset::setSqlParams(sqlType t, const char* sqlFrmt, ...)
+ 
+   switch (t)
+   {
+-    using enum sqlType;
+     case sqlSelect:
+       set_select_sql(sqlCmd);
+       break;
+--- a/xbmc/dbwrappers/mysqldataset.cpp
++++ b/xbmc/dbwrappers/mysqldataset.cpp
+@@ -67,7 +67,11 @@ bool IsValidIdentifier(std::string_view id)
+ 
+ namespace dbiplus
+ {
+-using enum dsStates;
++static constexpr auto dsSelect = dsStates::dsSelect;
++static constexpr auto dsInsert = dsStates::dsInsert;
++static constexpr auto dsEdit = dsStates::dsEdit;
++static constexpr auto dsDelete = dsStates::dsDelete;
++static constexpr auto dsInactive = dsStates::dsInactive;
+ 
+ //************* MysqlDatabase implementation ***************
+ 
+--- a/xbmc/dbwrappers/sqlitedataset.cpp
++++ b/xbmc/dbwrappers/sqlitedataset.cpp
+@@ -211,7 +211,11 @@ int busy_callback(void*, int /*busyCount*/)
+ 
+ namespace dbiplus
+ {
+-using enum dsStates;
++static constexpr auto dsSelect = dsStates::dsSelect;
++static constexpr auto dsInsert = dsStates::dsInsert;
++static constexpr auto dsEdit = dsStates::dsEdit;
++static constexpr auto dsDelete = dsStates::dsDelete;
++static constexpr auto dsInactive = dsStates::dsInactive;
+ 
+ //************* SqliteDatabase implementation ***************
+ 
+--- a/xbmc/dialogs/GUIDialogMediaFilter.cpp
++++ b/xbmc/dialogs/GUIDialogMediaFilter.cpp
+@@ -47,7 +47,11 @@ using namespace KODI;
+ #define CHECK_LABEL_NO            106
+ #define CHECK_LABEL_YES           107
+ 
+-using enum CDatabaseQueryRule::SearchOperator;
++static constexpr auto OPERATOR_CONTAINS = CDatabaseQueryRule::SearchOperator::OPERATOR_CONTAINS;
++static constexpr auto OPERATOR_BETWEEN = CDatabaseQueryRule::SearchOperator::OPERATOR_BETWEEN;
++static constexpr auto OPERATOR_FALSE = CDatabaseQueryRule::SearchOperator::OPERATOR_FALSE;
++static constexpr auto OPERATOR_EQUALS = CDatabaseQueryRule::SearchOperator::OPERATOR_EQUALS;
++static constexpr auto OPERATOR_TRUE = CDatabaseQueryRule::SearchOperator::OPERATOR_TRUE;
+ 
+ // clang-format off
+ static const CGUIDialogMediaFilter::Filter filterList[] = {
+--- a/xbmc/dialogs/GUIDialogSmartPlaylistRule.cpp
++++ b/xbmc/dialogs/GUIDialogSmartPlaylistRule.cpp
+@@ -31,7 +31,34 @@
+ 
+ #include <utility>
+ 
+-using enum CDatabaseQueryRule::FieldType;
++static constexpr auto TEXT_FIELD = CDatabaseQueryRule::FieldType::TEXT_FIELD;
++static constexpr auto REAL_FIELD = CDatabaseQueryRule::FieldType::REAL_FIELD;
++static constexpr auto NUMERIC_FIELD = CDatabaseQueryRule::FieldType::NUMERIC_FIELD;
++static constexpr auto DATE_FIELD = CDatabaseQueryRule::FieldType::DATE_FIELD;
++static constexpr auto PLAYLIST_FIELD = CDatabaseQueryRule::FieldType::PLAYLIST_FIELD;
++static constexpr auto SECONDS_FIELD = CDatabaseQueryRule::FieldType::SECONDS_FIELD;
++static constexpr auto BOOLEAN_FIELD = CDatabaseQueryRule::FieldType::BOOLEAN_FIELD;
++static constexpr auto TEXTIN_FIELD = CDatabaseQueryRule::FieldType::TEXTIN_FIELD;
++static constexpr auto OPERATOR_CONTAINS = CDatabaseQueryRule::SearchOperator::OPERATOR_CONTAINS;
++static constexpr auto OPERATOR_DOES_NOT_CONTAIN =
++    CDatabaseQueryRule::SearchOperator::OPERATOR_DOES_NOT_CONTAIN;
++static constexpr auto OPERATOR_EQUALS = CDatabaseQueryRule::SearchOperator::OPERATOR_EQUALS;
++static constexpr auto OPERATOR_DOES_NOT_EQUAL =
++    CDatabaseQueryRule::SearchOperator::OPERATOR_DOES_NOT_EQUAL;
++static constexpr auto OPERATOR_STARTS_WITH =
++    CDatabaseQueryRule::SearchOperator::OPERATOR_STARTS_WITH;
++static constexpr auto OPERATOR_ENDS_WITH = CDatabaseQueryRule::SearchOperator::OPERATOR_ENDS_WITH;
++static constexpr auto OPERATOR_GREATER_THAN =
++    CDatabaseQueryRule::SearchOperator::OPERATOR_GREATER_THAN;
++static constexpr auto OPERATOR_LESS_THAN = CDatabaseQueryRule::SearchOperator::OPERATOR_LESS_THAN;
++static constexpr auto OPERATOR_AFTER = CDatabaseQueryRule::SearchOperator::OPERATOR_AFTER;
++static constexpr auto OPERATOR_BEFORE = CDatabaseQueryRule::SearchOperator::OPERATOR_BEFORE;
++static constexpr auto OPERATOR_IN_THE_LAST =
++    CDatabaseQueryRule::SearchOperator::OPERATOR_IN_THE_LAST;
++static constexpr auto OPERATOR_NOT_IN_THE_LAST =
++    CDatabaseQueryRule::SearchOperator::OPERATOR_NOT_IN_THE_LAST;
++static constexpr auto OPERATOR_TRUE = CDatabaseQueryRule::SearchOperator::OPERATOR_TRUE;
++static constexpr auto OPERATOR_FALSE = CDatabaseQueryRule::SearchOperator::OPERATOR_FALSE;
+ using namespace KODI;
+ 
+ #define CONTROL_FIELD           15
+@@ -411,8 +438,7 @@ CGUIDialogSmartPlaylistRule::GetValidOperators(const PLAYLIST::CSmartPlaylistRul
+ {
+   std::vector<std::pair<std::string, CDatabaseQueryRule::SearchOperator>> labels;
+   switch (rule.GetFieldType(rule.m_field))
+   {
+-    using enum CDatabaseQueryRule::SearchOperator;
+     case TEXT_FIELD:
+       // text fields - add the usual comparisons
+       labels.push_back(OperatorLabel(OPERATOR_EQUALS));
+--- a/xbmc/dialogs/GUIDialogSmartPlaylistEditor.cpp
++++ b/xbmc/dialogs/GUIDialogSmartPlaylistEditor.cpp
+@@ -275,10 +275,9 @@ void CGUIDialogSmartPlaylistEditor::OnCancel()
+ void CGUIDialogSmartPlaylistEditor::OnMatch()
+ {
+   // toggle between AND and OR setting
+-  using enum CDatabaseQueryRuleCombination::Type;
+-  if (m_playlist.m_ruleCombination.GetType() == COMBINATION_OR)
+-    m_playlist.m_ruleCombination.SetType(COMBINATION_AND);
++  if (m_playlist.m_ruleCombination.GetType() == CDatabaseQueryRuleCombination::Type::COMBINATION_OR)
++    m_playlist.m_ruleCombination.SetType(CDatabaseQueryRuleCombination::Type::COMBINATION_AND);
+   else
+-    m_playlist.m_ruleCombination.SetType(COMBINATION_OR);
++    m_playlist.m_ruleCombination.SetType(CDatabaseQueryRuleCombination::Type::COMBINATION_OR);
+   UpdateButtons();
+ }
+--- a/xbmc/favourites/FavouritesURL.cpp
++++ b/xbmc/favourites/FavouritesURL.cpp
+@@ -31,19 +31,17 @@ std::string GetActionString(CFavouritesURL::Action action)
+ {
+   switch (action)
+   {
+-    using enum CFavouritesURL::Action;
+-
+-    case ACTIVATE_WINDOW:
++    case CFavouritesURL::Action::ACTIVATE_WINDOW:
+       return "activatewindow";
+-    case PLAY_MEDIA:
++    case CFavouritesURL::Action::PLAY_MEDIA:
+       return "playmedia";
+-    case SHOW_PICTURE:
++    case CFavouritesURL::Action::SHOW_PICTURE:
+       return "showpicture";
+-    case RUN_SCRIPT:
++    case CFavouritesURL::Action::RUN_SCRIPT:
+       return "runscript";
+-    case RUN_ADDON:
++    case CFavouritesURL::Action::RUN_ADDON:
+       return "runaddon";
+-    case START_ANDROID_ACTIVITY:
++    case CFavouritesURL::Action::START_ANDROID_ACTIVITY:
+       return "startandroidactivity";
+     default:
+       return {};
+@@ -52,21 +50,19 @@ std::string GetActionString(CFavouritesURL::Action action)
+ 
+ CFavouritesURL::Action GetActionId(std::string_view actionString)
+ {
+-  using enum CFavouritesURL::Action;
+-
+   if (actionString == "activatewindow")
+-    return ACTIVATE_WINDOW;
++    return CFavouritesURL::Action::ACTIVATE_WINDOW;
+   else if (actionString == "playmedia")
+-    return PLAY_MEDIA;
++    return CFavouritesURL::Action::PLAY_MEDIA;
+   else if (actionString == "showpicture")
+-    return SHOW_PICTURE;
++    return CFavouritesURL::Action::SHOW_PICTURE;
+   else if (actionString == "runscript")
+-    return RUN_SCRIPT;
++    return CFavouritesURL::Action::RUN_SCRIPT;
+   else if (actionString == "runaddon")
+-    return RUN_ADDON;
++    return CFavouritesURL::Action::RUN_ADDON;
+   else if (actionString == "startandroidactivity")
+-    return START_ANDROID_ACTIVITY;
++    return CFavouritesURL::Action::START_ANDROID_ACTIVITY;
+   else
+-    return UNKNOWN;
++    return CFavouritesURL::Action::UNKNOWN;
+ }
+ } // namespace
+--- a/xbmc/playlists/SmartPlayList.cpp
++++ b/xbmc/playlists/SmartPlayList.cpp
+@@ -37,8 +37,28 @@
+ #include <string_view>
+ #include <vector>
+ 
+-using enum CDatabaseQueryRule::FieldType;
+-using enum CDatabaseQueryRule::SearchOperator;
++static constexpr auto TEXT_FIELD = CDatabaseQueryRule::FieldType::TEXT_FIELD;
++static constexpr auto REAL_FIELD = CDatabaseQueryRule::FieldType::REAL_FIELD;
++static constexpr auto NUMERIC_FIELD = CDatabaseQueryRule::FieldType::NUMERIC_FIELD;
++static constexpr auto DATE_FIELD = CDatabaseQueryRule::FieldType::DATE_FIELD;
++static constexpr auto PLAYLIST_FIELD = CDatabaseQueryRule::FieldType::PLAYLIST_FIELD;
++static constexpr auto SECONDS_FIELD = CDatabaseQueryRule::FieldType::SECONDS_FIELD;
++static constexpr auto BOOLEAN_FIELD = CDatabaseQueryRule::FieldType::BOOLEAN_FIELD;
++static constexpr auto TEXTIN_FIELD = CDatabaseQueryRule::FieldType::TEXTIN_FIELD;
++static constexpr auto OPERATOR_CONTAINS = CDatabaseQueryRule::SearchOperator::OPERATOR_CONTAINS;
++static constexpr auto OPERATOR_DOES_NOT_CONTAIN =
++    CDatabaseQueryRule::SearchOperator::OPERATOR_DOES_NOT_CONTAIN;
++static constexpr auto OPERATOR_EQUALS = CDatabaseQueryRule::SearchOperator::OPERATOR_EQUALS;
++static constexpr auto OPERATOR_DOES_NOT_EQUAL =
++    CDatabaseQueryRule::SearchOperator::OPERATOR_DOES_NOT_EQUAL;
++static constexpr auto OPERATOR_GREATER_THAN =
++    CDatabaseQueryRule::SearchOperator::OPERATOR_GREATER_THAN;
++static constexpr auto OPERATOR_LESS_THAN = CDatabaseQueryRule::SearchOperator::OPERATOR_LESS_THAN;
++static constexpr auto OPERATOR_BEFORE = CDatabaseQueryRule::SearchOperator::OPERATOR_BEFORE;
++static constexpr auto OPERATOR_IN_THE_LAST =
++    CDatabaseQueryRule::SearchOperator::OPERATOR_IN_THE_LAST;
++static constexpr auto OPERATOR_NOT_IN_THE_LAST =
++    CDatabaseQueryRule::SearchOperator::OPERATOR_NOT_IN_THE_LAST;
+ using namespace XFILE;
+ 
+ namespace KODI::PLAYLIST

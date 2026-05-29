@@ -1,0 +1,162 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OSMC <osmc@osmc.tv>
+Date: Fri, 29 May 2026 15:25:00 +0200
+Subject: [PATCH] Fix scraper/NFO GCC 10 and fmt compatibility
+
+GCC 10 does not support C++20 using-enum declarations. Qualify the enum
+values directly in scraper/NFO code. Also pass dynamic Secure OS log text
+through a literal fmt format string for fmt v12.
+---
+ xbmc/NfoFile.cpp        | 27 +++++++++++----------------
+ xbmc/OSMCSecureOS.cpp   |  2 +-
+ xbmc/addons/Scraper.cpp | 29 ++++++++++++-----------------
+ 3 files changed, 24 insertions(+), 34 deletions(-)
+
+diff --git a/xbmc/NfoFile.cpp b/xbmc/NfoFile.cpp
+--- a/xbmc/NfoFile.cpp
++++ b/xbmc/NfoFile.cpp
+@@ -36,26 +36,24 @@
+ 
+ CInfoScanner::InfoType CNfoFile::TryParsing(ADDON::AddonType addonType) const
+ {
+-  using enum CInfoScanner::InfoType;
+-  using enum ADDON::AddonType;
+-
+-  if (addonType == SCRAPER_ALBUMS)
++  if (addonType == ADDON::AddonType::SCRAPER_ALBUMS)
+   {
+     CAlbum album;
+-    return GetDetails(album) ? FULL : NONE;
++    return GetDetails(album) ? CInfoScanner::InfoType::FULL : CInfoScanner::InfoType::NONE;
+   }
+-  if (addonType == SCRAPER_ARTISTS)
++  if (addonType == ADDON::AddonType::SCRAPER_ARTISTS)
+   {
+     CArtist artist;
+-    return GetDetails(artist) ? FULL : NONE;
++    return GetDetails(artist) ? CInfoScanner::InfoType::FULL : CInfoScanner::InfoType::NONE;
+   }
+-  if (addonType == SCRAPER_MOVIES || addonType == SCRAPER_TVSHOWS ||
+-      addonType == SCRAPER_MUSICVIDEOS)
++  if (addonType == ADDON::AddonType::SCRAPER_MOVIES ||
++      addonType == ADDON::AddonType::SCRAPER_TVSHOWS ||
++      addonType == ADDON::AddonType::SCRAPER_MUSICVIDEOS)
+   {
+     if (CVideoInfoTag details; GetDetails(details))
+-      return details.GetOverride() ? OVERRIDE : FULL;
++      return details.GetOverride() ? CInfoScanner::InfoType::OVERRIDE : CInfoScanner::InfoType::FULL;
+   }
+-  return NONE;
++  return CInfoScanner::InfoType::NONE;
+ }
+ 
+ bool CNfoFile::SeekToMovieIndex(int index)
+@@ -121,8 +117,6 @@ bool CNfoFile::SeekToMovieIndex(int index)
+ CInfoScanner::InfoType CNfoFile::SearchNfoForScraperUrls(CInfoScanner::InfoType parseResult,
+                                                          const ScraperPtr& info)
+ {
+-  using enum CInfoScanner::InfoType;
+-
+   SetScraperInfo(info); // assume we can use these settings
+   const AddonType addonType = ScraperTypeFromContent(info->Content());
+ 
+@@ -144,13 +140,15 @@ CInfoScanner::InfoType CNfoFile::SearchNfoForScraperUrls(CInfoScanner::InfoType
+       CVideoInfoDownloader::ShowErrorDialog(sce);
+       if (!sce.FAborted())
+-        return ERROR_NFO;
++        return CInfoScanner::InfoType::ERROR_NFO;
+     }
+ 
+     if (m_scurl.HasUrls())
+-      return (parseResult == FULL || parseResult == OVERRIDE) ? COMBINED : URL;
++      return (parseResult == CInfoScanner::InfoType::FULL ||
++              parseResult == CInfoScanner::InfoType::OVERRIDE) ? CInfoScanner::InfoType::COMBINED
++                                                               : CInfoScanner::InfoType::URL;
+   }
+ 
+-  if (parseResult == FULL && m_doc.find("[scrape url]") != std::string::npos)
+-    return OVERRIDE;
++  if (parseResult == CInfoScanner::InfoType::FULL && m_doc.find("[scrape url]") != std::string::npos)
++    return CInfoScanner::InfoType::OVERRIDE;
+ 
+   return parseResult;
+diff --git a/xbmc/OSMCSecureOS.cpp b/xbmc/OSMCSecureOS.cpp
+--- a/xbmc/OSMCSecureOS.cpp
++++ b/xbmc/OSMCSecureOS.cpp
+@@ -88,7 +88,7 @@ extern "C" void osmcsecureos_logf(const char *format, ...)
+   vsnprintf(buf, sizeof(buf), format, arglist);
+   va_end(arglist);
+ 
+-  CLog::Log(LOGINFO, buf);
++  CLog::Log(LOGINFO, "{}", buf);
+ }
+ 
+ OSMCSecureOS::OSMCSecureOS()
+diff --git a/xbmc/addons/Scraper.cpp b/xbmc/addons/Scraper.cpp
+--- a/xbmc/addons/Scraper.cpp
++++ b/xbmc/addons/Scraper.cpp
+@@ -116,20 +116,18 @@ AddonType ScraperTypeFromContent(ContentType content)
+ {
+   switch (content)
+   {
+-    using enum ADDON::AddonType;
+-    using enum ContentType;
+-    case ALBUMS:
+-      return SCRAPER_ALBUMS;
+-    case ARTISTS:
+-      return SCRAPER_ARTISTS;
+-    case MOVIES:
+-      return SCRAPER_MOVIES;
+-    case MUSICVIDEOS:
+-      return SCRAPER_MUSICVIDEOS;
+-    case TVSHOWS:
+-      return SCRAPER_TVSHOWS;
++    case ContentType::ALBUMS:
++      return ADDON::AddonType::SCRAPER_ALBUMS;
++    case ContentType::ARTISTS:
++      return ADDON::AddonType::SCRAPER_ARTISTS;
++    case ContentType::MOVIES:
++      return ADDON::AddonType::SCRAPER_MOVIES;
++    case ContentType::MUSICVIDEOS:
++      return ADDON::AddonType::SCRAPER_MUSICVIDEOS;
++    case ContentType::TVSHOWS:
++      return ADDON::AddonType::SCRAPER_TVSHOWS;
+     default:
+-      return UNKNOWN;
++      return ADDON::AddonType::UNKNOWN;
+   }
+ }
+ 
+@@ -145,22 +141,20 @@ CScraper::CScraper(const AddonInfoPtr& addonInfo, AddonType addonType)
+ 
+   switch (addonType)
+   {
+-    using enum ADDON::AddonType;
+-    using enum ContentType;
+-    case SCRAPER_ALBUMS:
+-      m_pathContent = ALBUMS;
++    case ADDON::AddonType::SCRAPER_ALBUMS:
++      m_pathContent = ContentType::ALBUMS;
+       break;
+-    case SCRAPER_ARTISTS:
+-      m_pathContent = ARTISTS;
++    case ADDON::AddonType::SCRAPER_ARTISTS:
++      m_pathContent = ContentType::ARTISTS;
+       break;
+-    case SCRAPER_MOVIES:
+-      m_pathContent = MOVIES;
++    case ADDON::AddonType::SCRAPER_MOVIES:
++      m_pathContent = ContentType::MOVIES;
+       break;
+-    case SCRAPER_MUSICVIDEOS:
+-      m_pathContent = MUSICVIDEOS;
++    case ADDON::AddonType::SCRAPER_MUSICVIDEOS:
++      m_pathContent = ContentType::MUSICVIDEOS;
+       break;
+-    case SCRAPER_TVSHOWS:
+-      m_pathContent = TVSHOWS;
++    case ADDON::AddonType::SCRAPER_TVSHOWS:
++      m_pathContent = ContentType::TVSHOWS;
+       break;
+     default:
+       break;

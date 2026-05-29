@@ -1,0 +1,195 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OSMC <osmc@osmc.tv>
+Date: Fri, 29 May 2026 15:45:00 +0200
+Subject: [PATCH] Fix more GCC 10 and stereo compatibility
+
+Qualify more enum values for GCC 10, and update a downstream stereo mode
+type reference to Kodi 22's RenderStereoMode name.
+---
+ xbmc/TextureDatabase.cpp                         | 25 ++++++++++++-----------
+ xbmc/addons/ShaderPreset.cpp                     | 20 ++++++++----------
+ xbmc/application/Application.cpp                 |  7 +++----
+ xbmc/application/ApplicationPlay.cpp             | 12 +++++------
+ xbmc/application/ApplicationPlayerCallback.cpp   |  4 ++--
+ 5 files changed, 33 insertions(+), 35 deletions(-)
+
+diff --git a/xbmc/TextureDatabase.cpp b/xbmc/TextureDatabase.cpp
+--- a/xbmc/TextureDatabase.cpp
++++ b/xbmc/TextureDatabase.cpp
+@@ -17,7 +17,5 @@
+ #include "utils/Variant.h"
+ #include "utils/log.h"
+ 
+-using enum CDatabaseQueryRule::FieldType;
+-
+ enum TextureField
+ {
+   TF_None = 0,
+@@ -43,15 +41,15 @@ typedef struct
+ 
+ // clang-format off
+ static const translateField fields[] = {
+-  { "none",          TF_None,          TEXT_FIELD },
+-  { "textureid",     TF_Id,            REAL_FIELD },
+-  { "url",           TF_Url,           TEXT_FIELD },
+-  { "cachedurl",     TF_CachedUrl,     TEXT_FIELD },
+-  { "lasthashcheck", TF_LastHashCheck, TEXT_FIELD },
+-  { "imagehash",     TF_ImageHash,     TEXT_FIELD },
+-  { "width",         TF_Width,         REAL_FIELD },
+-  { "height",        TF_Height,        REAL_FIELD },
+-  { "usecount",      TF_UseCount,      REAL_FIELD },
+-  { "lastused",      TF_LastUsed,      TEXT_FIELD }
++  { "none",          TF_None,          CDatabaseQueryRule::FieldType::TEXT_FIELD },
++  { "textureid",     TF_Id,            CDatabaseQueryRule::FieldType::REAL_FIELD },
++  { "url",           TF_Url,           CDatabaseQueryRule::FieldType::TEXT_FIELD },
++  { "cachedurl",     TF_CachedUrl,     CDatabaseQueryRule::FieldType::TEXT_FIELD },
++  { "lasthashcheck", TF_LastHashCheck, CDatabaseQueryRule::FieldType::TEXT_FIELD },
++  { "imagehash",     TF_ImageHash,     CDatabaseQueryRule::FieldType::TEXT_FIELD },
++  { "width",         TF_Width,         CDatabaseQueryRule::FieldType::REAL_FIELD },
++  { "height",        TF_Height,        CDatabaseQueryRule::FieldType::REAL_FIELD },
++  { "usecount",      TF_UseCount,      CDatabaseQueryRule::FieldType::REAL_FIELD },
++  { "lastused",      TF_LastUsed,      CDatabaseQueryRule::FieldType::TEXT_FIELD }
+ };
+ // clang-format on
+@@ -90,7 +88,7 @@ CDatabaseQueryRule::FieldType CTextureRule::GetFieldType(int field) const
+ {
+   for (const translateField& f : fields)
+     if (field == f.field) return f.type;
+-  return TEXT_FIELD;
++  return CDatabaseQueryRule::FieldType::TEXT_FIELD;
+ }
+ 
+ std::string CTextureRule::FormatParameter(const std::string &operatorString,
+diff --git a/xbmc/addons/ShaderPreset.cpp b/xbmc/addons/ShaderPreset.cpp
+--- a/xbmc/addons/ShaderPreset.cpp
++++ b/xbmc/addons/ShaderPreset.cpp
+@@ -245,11 +245,10 @@ SHADER::FilterType CShaderPresetAddon::TranslateFilterType(SHADER_FILTER_TYPE t
+ {
+   switch (type)
+   {
+-    using enum KODI::SHADER::FilterType;
+     case SHADER_FILTER_TYPE_LINEAR:
+-      return LINEAR;
++      return KODI::SHADER::FilterType::LINEAR;
+     case SHADER_FILTER_TYPE_NEAREST:
+-      return NEAREST;
++      return KODI::SHADER::FilterType::NEAREST;
+     default:
+       break;
+   }
+@@ -261,15 +260,14 @@ SHADER::WrapType CShaderPresetAddon::TranslateWrapType(SHADER_WRAP_TYPE type)
+ {
+   switch (type)
+   {
+-    using enum KODI::SHADER::WrapType;
+     case SHADER_WRAP_TYPE_BORDER:
+-      return BORDER;
++      return KODI::SHADER::WrapType::BORDER;
+     case SHADER_WRAP_TYPE_EDGE:
+-      return EDGE;
++      return KODI::SHADER::WrapType::EDGE;
+     case SHADER_WRAP_TYPE_REPEAT:
+-      return REPEAT;
++      return KODI::SHADER::WrapType::REPEAT;
+     case SHADER_WRAP_TYPE_MIRRORED_REPEAT:
+-      return MIRRORED_REPEAT;
++      return KODI::SHADER::WrapType::MIRRORED_REPEAT;
+     default:
+       break;
+   }
+@@ -281,13 +279,12 @@ SHADER::ScaleType CShaderPresetAddon::TranslateScaleType(SHADER_SCALE_TYPE type
+ {
+   switch (type)
+   {
+-    using enum KODI::SHADER::ScaleType;
+     case SHADER_SCALE_TYPE_INPUT:
+-      return INPUT;
++      return KODI::SHADER::ScaleType::INPUT;
+     case SHADER_SCALE_TYPE_ABSOLUTE:
+-      return ABSOLUTE_SCALE;
++      return KODI::SHADER::ScaleType::ABSOLUTE_SCALE;
+     case SHADER_SCALE_TYPE_VIEWPORT:
+-      return VIEWPORT;
++      return KODI::SHADER::ScaleType::VIEWPORT;
+     default:
+       break;
+   }
+diff --git a/xbmc/application/Application.cpp b/xbmc/application/Application.cpp
+--- a/xbmc/application/Application.cpp
++++ b/xbmc/application/Application.cpp
+@@ -2018,13 +2018,12 @@ bool CApplication::PlayFile(CFileItem item, const std::string& player, bool bRes
+       CUtil::ClearSubtitles();
+   }
+ 
+-  using enum CApplicationPlay::GatherPlaybackDetailsResult;
+-
+   CApplicationPlay appPlay{*stackHelper};
+   if (const auto result{appPlay.GatherPlaybackDetails(item, player, bRestart)};
+-      result == RESULT_ERROR)
++      result == CApplicationPlay::GatherPlaybackDetailsResult::RESULT_ERROR)
+     return false;
+-  else if (result == RESULT_NO_PLAYLIST_SELECTED)
++  else if (result ==
++           CApplicationPlay::GatherPlaybackDetailsResult::RESULT_NO_PLAYLIST_SELECTED)
+   {
+     m_cancelPlayback = true;
+     return true; // Special case; not to be treated as error.
+diff --git a/xbmc/application/ApplicationPlay.cpp b/xbmc/application/ApplicationPlay.cpp
+--- a/xbmc/application/ApplicationPlay.cpp
++++ b/xbmc/application/ApplicationPlay.cpp
+@@ -237,15 +237,14 @@ bool ShouldGoFullScreen(PlayMediaType mediaType)
+   const bool fullScreenOnMovieStart{settings->GetAdvancedSettings()->m_fullScreenOnMovieStart};
+   const bool hasPlayedFirstFile{CServiceBroker::GetPlaylistPlayer().HasPlayedFirstFile()};
+ 
+-  using enum PlayMediaType;
+   switch (mediaType)
+   {
+-    case VIDEO_PLAYLIST:
++    case PlayMediaType::VIDEO_PLAYLIST:
+       return !hasPlayedFirstFile && fullScreenOnMovieStart;
+-    case MUSIC_PLAYLIST:
++    case PlayMediaType::MUSIC_PLAYLIST:
+       return !hasPlayedFirstFile &&
+              settings->GetSettings()->GetBool(CSettings::SETTING_MUSICFILES_SELECTACTION);
+-    case VIDEO:
++    case PlayMediaType::VIDEO:
+       return fullScreenOnMovieStart;
+     default:
+       break;
+@@ -261,16 +260,15 @@ void CApplicationPlay::DetermineFullScreen()
+   const auto playlistId{CServiceBroker::GetPlaylistPlayer().GetCurrentPlaylist()};
+ 
+   // Determine fullscreen status based on media type and playlist
+-  using enum PlayMediaType;
+   if (MUSIC::IsAudio(m_item) && playlistId == PLAYLIST::Id::TYPE_MUSIC)
+-    m_options.fullscreen = ShouldGoFullScreen(MUSIC_PLAYLIST);
++    m_options.fullscreen = ShouldGoFullScreen(PlayMediaType::MUSIC_PLAYLIST);
+   else if (VIDEO::IsVideo(m_item) && playlistId == PLAYLIST::Id::TYPE_VIDEO &&
+            CServiceBroker::GetPlaylistPlayer().GetPlaylist(playlistId).size() > 1)
+   {
+-    m_options.fullscreen = ShouldGoFullScreen(VIDEO_PLAYLIST);
++    m_options.fullscreen = ShouldGoFullScreen(PlayMediaType::VIDEO_PLAYLIST);
+   }
+   else
+-    m_options.fullscreen = ShouldGoFullScreen(VIDEO);
++    m_options.fullscreen = ShouldGoFullScreen(PlayMediaType::VIDEO);
+ }
+ 
+ CApplicationPlay::GatherPlaybackDetailsResult CApplicationPlay::GatherPlaybackDetails(
+diff --git a/xbmc/application/ApplicationPlayerCallback.cpp b/xbmc/application/ApplicationPlayerCallback.cpp
+--- a/xbmc/application/ApplicationPlayerCallback.cpp
++++ b/xbmc/application/ApplicationPlayerCallback.cpp
+@@ -476,11 +476,11 @@ void CApplicationPlayerCallback::OnAVChange()
+ {
+   CLog::LogF(LOGDEBUG, "call");
+ 
+-  RENDER_STEREO_MODE oldRsm = CServiceBroker::GetGUI()->GetStereoscopicsManager().GetStereoMode();
++  RenderStereoMode oldRsm = CServiceBroker::GetGUI()->GetStereoscopicsManager().GetStereoMode();
+ 
+   CServiceBroker::GetGUI()->GetStereoscopicsManager().OnStreamChange();
+ 
+-  RENDER_STEREO_MODE newRsm = CServiceBroker::GetGUI()->GetStereoscopicsManager().GetStereoMode();
++  RenderStereoMode newRsm = CServiceBroker::GetGUI()->GetStereoscopicsManager().GetStereoMode();
+ 
+   if (oldRsm != newRsm) {
+     // stereo mode changed

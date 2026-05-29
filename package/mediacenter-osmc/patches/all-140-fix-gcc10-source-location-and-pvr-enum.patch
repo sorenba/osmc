@@ -1,0 +1,92 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OSMC <osmc@osmc.tv>
+Date: Fri, 29 May 2026 13:45:00 +0200
+Subject: [PATCH] Fix GCC 10 source_location and PVR enum compatibility
+
+GCC 10 provides source_location under the experimental header. Use it as
+a fallback for the Kodi 22 call sites, and qualify another using-enum
+switch that GCC 10 cannot parse.
+---
+ xbmc/addons/interfaces/gui/Window.cpp | 6 +++++-
+ xbmc/pvr/PVRManager.cpp               | 10 ++++------
+ xbmc/pvr/addons/PVRClient.cpp         | 6 +++++-
+ xbmc/pvr/addons/PVRClients.cpp        | 6 +++++-
+ 4 files changed, 22 insertions(+), 9 deletions(-)
+
+diff --git a/xbmc/addons/interfaces/gui/Window.cpp b/xbmc/addons/interfaces/gui/Window.cpp
+--- a/xbmc/addons/interfaces/gui/Window.cpp
++++ b/xbmc/addons/interfaces/gui/Window.cpp
+@@ -34,7 +34,12 @@
+ #include "utils/log.h"
+ #include "windowing/WinSystem.h"
+ 
+-#include <source_location>
++#if __has_include(<source_location>)
++#include <source_location>
++#else
++#include <experimental/source_location>
++namespace std { using source_location = experimental::source_location; }
++#endif
+ 
+ namespace ADDON
+ {
+diff --git a/xbmc/pvr/PVRManager.cpp b/xbmc/pvr/PVRManager.cpp
+--- a/xbmc/pvr/PVRManager.cpp
++++ b/xbmc/pvr/PVRManager.cpp
+@@ -447,18 +447,16 @@ void CPVRManager::SetState(CPVRManager::ManagerState state)
+   PVREvent event;
+   switch (state)
+   {
+-    using enum ManagerState;
+-
+-    case STATE_STOPPED:
++    case ManagerState::STATE_STOPPED:
+       event = PVREvent::ManagerStopped;
+       break;
+-    case STATE_STARTING:
++    case ManagerState::STATE_STARTING:
+       event = PVREvent::ManagerStarting;
+       break;
+-    case STATE_STOPPING:
++    case ManagerState::STATE_STOPPING:
+       event = PVREvent::ManagerStopped;
+       break;
+-    case STATE_STARTED:
++    case ManagerState::STATE_STARTED:
+       event = PVREvent::ManagerStarted;
+       break;
+     default:
+diff --git a/xbmc/pvr/addons/PVRClient.cpp b/xbmc/pvr/addons/PVRClient.cpp
+--- a/xbmc/pvr/addons/PVRClient.cpp
++++ b/xbmc/pvr/addons/PVRClient.cpp
+@@ -53,7 +53,12 @@
+ #include <map>
+ #include <memory>
+ #include <mutex>
+-#include <source_location>
++#if __has_include(<source_location>)
++#include <source_location>
++#else
++#include <experimental/source_location>
++namespace std { using source_location = experimental::source_location; }
++#endif
+ #include <string>
+ #include <type_traits>
+ #include <utility>
+diff --git a/xbmc/pvr/addons/PVRClients.cpp b/xbmc/pvr/addons/PVRClients.cpp
+--- a/xbmc/pvr/addons/PVRClients.cpp
++++ b/xbmc/pvr/addons/PVRClients.cpp
+@@ -31,7 +31,12 @@
+ #include <functional>
+ #include <memory>
+ #include <mutex>
+-#include <source_location>
++#if __has_include(<source_location>)
++#include <source_location>
++#else
++#include <experimental/source_location>
++namespace std { using source_location = experimental::source_location; }
++#endif
+ #include <string>
+ #include <utility>
+ #include <vector>

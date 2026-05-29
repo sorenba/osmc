@@ -1,0 +1,265 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OSMC <osmc@osmc.tv>
+Date: Fri, 29 May 2026 13:00:00 +0200
+Subject: [PATCH] Vero 5: update Amlogic stereo mode types for Kodi 22
+
+Kodi 22 uses the RenderStereoMode and RenderStereoView enum classes.
+The downstream Vero 5 Amlogic code still referenced the removed
+RENDER_STEREO_* names.
+---
+ .../Video/amlogic/AMLInsecureVideoCodec.cpp  | 36 +++++++++----------
+ .../Video/amlogic/AMLInsecureVideoCodec.h    |  6 ++--
+ xbmc/utils/AMLUtils.cpp                       | 10 +++---
+ xbmc/utils/AMLUtils.h                         |  5 +--
+ xbmc/windowing/amlogic/WinSystemAmlogic.cpp   |  4 +--
+ xbmc/windowing/amlogic/WinSystemAmlogic.h     |  2 +-
+ .../amlogic/WinSystemAmlogicGLESContext.cpp   |  4 +--
+ .../amlogic/WinSystemAmlogicGLESContext.h     |  2 +-
+ 8 files changed, 35 insertions(+), 34 deletions(-)
+
+diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLInsecureVideoCodec.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLInsecureVideoCodec.cpp
+--- a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLInsecureVideoCodec.cpp
++++ b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLInsecureVideoCodec.cpp
+@@ -1185,12 +1185,12 @@ bool AMLInsecureVideoCodec::setVideoRect(const CRect &DestRect, const std::stri
+ 	}
+ 
+ 	// GUI stereo mode/view.
+-	RENDER_STEREO_MODE guiStereoMode = CServiceBroker::GetGUI()->GetStereoscopicsManager().GetStereoMode();
++	RenderStereoMode guiStereoMode = CServiceBroker::GetGUI()->GetStereoscopicsManager().GetStereoMode();
+ 	if (m_guiStereoMode != guiStereoMode) {
+ 		m_guiStereoMode = guiStereoMode;
+ 		update = true;
+ 	}
+-	RENDER_STEREO_VIEW guiStereoView = CServiceBroker::GetWinSystem()->GetGfxContext().GetStereoView();
++	RenderStereoView guiStereoView = CServiceBroker::GetWinSystem()->GetGfxContext().GetStereoView();
+ 	if (m_guiStereoView != guiStereoView) {
+ 		// left/right/top/bottom eye,
+ 		// this might change every other frame.
+@@ -1232,11 +1232,11 @@ bool AMLInsecureVideoCodec::setVideoRect(const CRect &DestRect, const std::stri
+ 	gui = CRect(0, 0, video_res_info.iWidth, video_res_info.iHeight);
+ 
+ 	if (gui != display) {
+ 		float xscale = display.Width() / gui.Width();
+ 		float yscale = display.Height() / gui.Height();
+-		if (m_guiStereoMode == RENDER_STEREO_MODE_SPLIT_VERTICAL)
++		if (m_guiStereoMode == RenderStereoMode::SPLIT_VERTICAL)
+ 			xscale /= 2.0;
+-		else if (m_guiStereoMode == RENDER_STEREO_MODE_SPLIT_HORIZONTAL)
++		else if (m_guiStereoMode == RenderStereoMode::SPLIT_HORIZONTAL)
+ 			yscale /= 2.0;
+ 		dst_rect.x1 *= xscale;
+ 		dst_rect.x2 *= xscale;
+@@ -1244,15 +1244,15 @@ bool AMLInsecureVideoCodec::setVideoRect(const CRect &DestRect, const std::stri
+ 		dst_rect.y2 *= yscale;
+ 	}
+ 
+-	if (m_guiStereoMode == RENDER_STEREO_MODE_MONO) {
++	if (m_guiStereoMode == RenderStereoMode::MONO) {
+ 		if (videoStereoMode == "left_right" || videoStereoMode == "right_left")
+ 			dst_rect.x2 *= 2.0;
+ 		else if (videoStereoMode == "top_bottom" || videoStereoMode == "bottom_top")
+ 			dst_rect.y2 *= 2.0;
+-	} else if (m_guiStereoMode == RENDER_STEREO_MODE_SPLIT_VERTICAL) {
++	} else if (m_guiStereoMode == RenderStereoMode::SPLIT_VERTICAL) {
+ 		dst_rect.x2 *= 2.0;
+-	} else if (m_guiStereoMode == RENDER_STEREO_MODE_SPLIT_HORIZONTAL) {
++	} else if (m_guiStereoMode == RenderStereoMode::SPLIT_HORIZONTAL) {
+ 		dst_rect.y2 *= 2.0;
+-	} else if (m_guiStereoMode == RENDER_STEREO_MODE_HARDWAREBASED) {
++	} else if (m_guiStereoMode == RenderStereoMode::HARDWAREBASED) {
+ 		// 3D frame packed output: get the screen height from the graphic context
+ 		// (will work in fullscreen mode only)
+ 		RESOLUTION_INFO info = CServiceBroker::GetWinSystem()->GetGfxContext().GetResInfo();
+@@ -1269,15 +1269,15 @@ bool AMLInsecureVideoCodec::setVideoRect(const CRect &DestRect, const std::stri
+ 	std::string s_gui = StringUtils::Format("{},{},{},{}", (int) gui.x1, (int) gui.y1, (int) gui.Width(), (int) gui.Height());
+ 	CLog::Log(LOGDEBUG, "AMLInsecureVideoCodec::setVideoRect:display({})", s_display);
+ 	CLog::Log(LOGDEBUG, "AMLInsecureVideoCodec::setVideoRect:gui({})", s_gui);
+ 	CLog::Log(LOGDEBUG, "AMLInsecureVideoCodec::setVideoRect:m_dst_rect({})", s_m_dst_rect);
+ 	CLog::Log(LOGDEBUG, "AMLInsecureVideoCodec::setVideoRect:dst_rect({})", s_dst_rect);
+-	CLog::Log(LOGDEBUG, "AMLInsecureVideoCodec::setVideoRect:m_guiStereoMode({})", m_guiStereoMode);
+-	CLog::Log(LOGDEBUG, "AMLInsecureVideoCodec::setVideoRect:m_guiStereoView({})", m_guiStereoView);
++	CLog::Log(LOGDEBUG, "AMLInsecureVideoCodec::setVideoRect:m_guiStereoMode({})", static_cast<int>(m_guiStereoMode));
++	CLog::Log(LOGDEBUG, "AMLInsecureVideoCodec::setVideoRect:m_guiStereoView({})", static_cast<int>(m_guiStereoView));
+ 	CLog::Log(LOGDEBUG, "AMLInsecureVideoCodec::setVideoRect video rotation {} user rotation {}", m_am_private->video_rotation_degree * 90, m_orientation * 90);
+ 
+ 	// goofy 0/1 based difference in aml axis coordinates.
+ 	// fix them.
+@@ -1297,7 +1297,7 @@ bool AMLInsecureVideoCodec::setVideoRect(const CRect &DestRect, const std::stri
+ 
+ 	return true;
+ }
+ 
+-void AMLInsecureVideoCodec::setVideoMode(std::string videoInputMode, RENDER_STEREO_MODE videoOutputMode)
++void AMLInsecureVideoCodec::setVideoMode(std::string videoInputMode, RenderStereoMode videoOutputMode)
+ {
+ 	video_input_mode vimode = VIDEO_INPUT_MODE_2D;
+ 	video_output_mode vomode = VIDEO_OUTPUT_MODE_2D;
+ 	bool leftEyeFirst = true;
+@@ -1329,15 +1329,15 @@ void AMLInsecureVideoCodec::setVideoMode(std::string videoInputMode, RENDER_STE
+ 
+ 	if (vimode != VIDEO_INPUT_MODE_2D) {
+ 		switch (videoOutputMode) {
+-			case RENDER_STEREO_MODE_SPLIT_VERTICAL:
++			case RenderStereoMode::SPLIT_VERTICAL:
+ 				vomode = VIDEO_OUTPUT_MODE_HSBS;
+ 				break;
+ 
+-			case RENDER_STEREO_MODE_SPLIT_HORIZONTAL:
++			case RenderStereoMode::SPLIT_HORIZONTAL:
+ 				vomode = VIDEO_OUTPUT_MODE_HTAB;
+ 				break;
+ 
+-			case RENDER_STEREO_MODE_HARDWAREBASED:
++			case RenderStereoMode::HARDWAREBASED:
+ 				vomode = VIDEO_OUTPUT_MODE_FP;
+ 				break;
+ 
+diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLInsecureVideoCodec.h b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLInsecureVideoCodec.h
+--- a/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLInsecureVideoCodec.h
++++ b/xbmc/cores/VideoPlayer/DVDCodecs/Video/amlogic/AMLInsecureVideoCodec.h
+@@ -79,8 +79,8 @@ protected:
+ 	CDVDStreamInfo	 m_hints;
+ 
+ 	int					 m_view_mode = -1;
+-	RENDER_STEREO_MODE	 m_guiStereoMode = RENDER_STEREO_MODE_OFF;
+-	RENDER_STEREO_VIEW	 m_guiStereoView = RENDER_STEREO_VIEW_OFF;
++	RenderStereoMode	 m_guiStereoMode = RenderStereoMode::OFF;
++	RenderStereoView	 m_guiStereoView = RenderStereoView::OFF;
+ 	RESOLUTION			 m_video_res = RES_INVALID;
+ 	std::string			 m_video_stereo_mode;
+ 
+@@ -122,7 +122,7 @@ protected:
+ 	virtual void playbackPause();
+ 	virtual void playbackResume();
+ 	virtual void playbackResume(int speed);
+ 
+-	virtual void setVideoMode(std::string videoInputMode, RENDER_STEREO_MODE videoOutputMode);
++	virtual void setVideoMode(std::string videoInputMode, RenderStereoMode videoOutputMode);
+ 	virtual void setPictureStereoMode(VideoPicture *pVideoPicture);
+ 
+ public:
+diff --git a/xbmc/utils/AMLUtils.cpp b/xbmc/utils/AMLUtils.cpp
+--- a/xbmc/utils/AMLUtils.cpp
++++ b/xbmc/utils/AMLUtils.cpp
+@@ -536,7 +536,7 @@ static void aml_enable_PHY(bool enable)
+     SysfsUtils::SetString("/sys/class/amhdmitx/amhdmitx0/phy", enable ? "1" : "0");
+ }
+ 
+-bool aml_set_native_resolution(const RESOLUTION_INFO &res, std::string framebuffer_name, const int stereo_mode)
++bool aml_set_native_resolution(const RESOLUTION_INFO &res, std::string framebuffer_name, RenderStereoMode stereo_mode)
+ {
+   bool result = false;
+ 
+@@ -738,19 +738,19 @@ void aml_handle_scale(const RESOLUTION_INFO &res)
+     aml_disable_freeScale();
+ }
+ 
+-void aml_handle_display_stereo_mode(const int stereo_mode)
++void aml_handle_display_stereo_mode(RenderStereoMode stereo_mode)
+ {
+   static std::string lastHdmiTxConfig = "3doff";
+ 
+   std::string command = "3doff";
+   switch (stereo_mode)
+   {
+-    case RENDER_STEREO_MODE_SPLIT_VERTICAL:
++    case RenderStereoMode::SPLIT_VERTICAL:
+       command = "3dlr";
+       break;
+-    case RENDER_STEREO_MODE_SPLIT_HORIZONTAL:
++    case RenderStereoMode::SPLIT_HORIZONTAL:
+       command = "3dtb";
+       break;
+-    case RENDER_STEREO_MODE_HARDWAREBASED:
++    case RenderStereoMode::HARDWAREBASED:
+       command = "3dfp";
+       break;
+     default:
+diff --git a/xbmc/utils/AMLUtils.h b/xbmc/utils/AMLUtils.h
+--- a/xbmc/utils/AMLUtils.h
++++ b/xbmc/utils/AMLUtils.h
+@@ -7,6 +7,7 @@
+ 
+ #pragma once
+ 
++#include "rendering/RenderSystemTypes.h"
+ #include "windowing/Resolution.h"
+ 
+ #include <string>
+@@ -53,12 +54,12 @@ bool aml_support_av1();
+ bool aml_has_frac_rate_policy();
+ void aml_set_audio_passthrough(bool passthrough);
+ bool aml_mode_to_resolution(const char *mode, RESOLUTION_INFO *res);
+ bool aml_get_native_resolution(RESOLUTION_INFO *res);
+-bool aml_set_native_resolution(const RESOLUTION_INFO &res, std::string framebuffer_name, const int stereo_mode);
++bool aml_set_native_resolution(const RESOLUTION_INFO &res, std::string framebuffer_name, RenderStereoMode stereo_mode);
+ bool aml_probe_resolutions(std::vector<RESOLUTION_INFO> &resolutions);
+ bool aml_probe_3d_resolutions(std::vector<RESOLUTION_INFO> &resolutions);
+ bool aml_set_display_resolution(const RESOLUTION_INFO &res, std::string framebuffer_name);
+ void aml_handle_scale(const RESOLUTION_INFO &res);
+-void aml_handle_display_stereo_mode(const int stereo_mode);
++void aml_handle_display_stereo_mode(RenderStereoMode stereo_mode);
+ void aml_enable_freeScale(const RESOLUTION_INFO &res);
+ void aml_disable_freeScale();
+ void aml_set_framebuffer_resolution(const RESOLUTION_INFO &res, std::string framebuffer_name);
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogic.cpp b/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
+--- a/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
++++ b/xbmc/windowing/amlogic/WinSystemAmlogic.cpp
+@@ -53,7 +53,7 @@ CWinSystemAmlogic::CWinSystemAmlogic()
+   m_displayWidth = 0;
+   m_displayHeight = 0;
+ 
+-  m_stereo_mode = RENDER_STEREO_MODE_OFF;
++  m_stereo_mode = RenderStereoMode::OFF;
+   m_delayDispReset = false;
+ 
+   aml_permissions();
+@@ -178,6 +178,6 @@ bool CWinSystemAmlogic::CreateNewWindow(const std::string &name, bool fullScree
+ {
+   RESOLUTION_INFO current_resolution;
+-  RENDER_STEREO_MODE stereo_mode = CServiceBroker::GetWinSystem()->GetGfxContext().GetStereoMode();
++  RenderStereoMode stereo_mode = CServiceBroker::GetWinSystem()->GetGfxContext().GetStereoMode();
+   bool dvOutput = IsDolbyVisionOutput();
+ 
+   if (m_bWindowCreated && aml_get_native_resolution(&current_resolution)
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogic.h b/xbmc/windowing/amlogic/WinSystemAmlogic.h
+--- a/xbmc/windowing/amlogic/WinSystemAmlogic.h
++++ b/xbmc/windowing/amlogic/WinSystemAmlogic.h
+@@ -39,9 +39,9 @@ private:
+   bool m_monitorEvents;
+   std::string m_lastEdid;
+ 
+   std::unique_ptr<CLibInputHandler> m_libinput;
+ 
+-  RENDER_STEREO_MODE m_stereo_mode;
++  RenderStereoMode m_stereo_mode;
+   std::vector<RESOLUTION_INFO> resolutions3d;
+ 
+   bool m_dvOutput = false;
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp
+--- a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp
++++ b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.cpp
+@@ -152,9 +152,9 @@ std::unique_ptr<CVideoSync> CWinSystemAmlogicGLESContext::GetVideoSync(CVideoRe
+   return pVSync;
+ }
+ 
+-bool CWinSystemAmlogicGLESContext::SupportsStereo(RENDER_STEREO_MODE mode) const
++bool CWinSystemAmlogicGLESContext::SupportsStereo(RenderStereoMode mode) const
+ {
+-  if (mode == RENDER_STEREO_MODE_HARDWAREBASED) {
++  if (mode == RenderStereoMode::HARDWAREBASED) {
+     // yes, we support hardware based MVC decoding
+     return true;
+   }
+diff --git a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h
+--- a/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h
++++ b/xbmc/windowing/amlogic/WinSystemAmlogicGLESContext.h
+@@ -44,7 +44,7 @@ public:
+ 
+   std::unique_ptr<CVideoSync> GetVideoSync(CVideoReferenceClock *clock) override;
+ 
+-  bool SupportsStereo(RENDER_STEREO_MODE mode) const override;
++  bool SupportsStereo(RenderStereoMode mode) const override;
+ };
+ 
+ }

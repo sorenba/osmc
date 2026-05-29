@@ -1,0 +1,104 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OSMC <osmc@osmc.tv>
+Date: Fri, 29 May 2026 15:05:00 +0200
+Subject: [PATCH] Fix addon and FileItem GCC 10 using enum compatibility
+
+GCC 10 does not support C++20 using-enum declarations. Qualify the enum
+values directly in add-on and FileItem code reached by the build.
+---
+ xbmc/FileItem.cpp                    | 16 +++++++---------
+ xbmc/addons/PluginSource.cpp         | 14 ++++++--------
+ xbmc/addons/addoninfo/AddonInfo.cpp  |  9 ++++-----
+ 3 files changed, 17 insertions(+), 22 deletions(-)
+
+diff --git a/xbmc/FileItem.cpp b/xbmc/FileItem.cpp
+--- a/xbmc/FileItem.cpp
++++ b/xbmc/FileItem.cpp
+@@ -2335,29 +2335,27 @@ std::shared_ptr<CPVRChannel> CFileItem::GetPVRChannelInfoTag() const
+ 
+ VideoDbContentType CFileItem::GetVideoContentType() const
+ {
+-  using enum VideoDbContentType;
+-
+-  VideoDbContentType type = MOVIES;
++  VideoDbContentType type = VideoDbContentType::MOVIES;
+   if (HasVideoInfoTag())
+   {
+     const auto& tag{GetVideoInfoTag()};
+     if (tag->m_type == MediaTypeTvShow)
+-      type = TVSHOWS;
++      type = VideoDbContentType::TVSHOWS;
+     if (tag->m_type == MediaTypeEpisode)
+-      return EPISODES;
++      return VideoDbContentType::EPISODES;
+     if (tag->m_type == MediaTypeMusicVideo)
+-      return MUSICVIDEOS;
++      return VideoDbContentType::MUSICVIDEOS;
+     if (tag->m_type == MediaTypeAlbum)
+-      return MUSICALBUMS;
++      return VideoDbContentType::MUSICALBUMS;
+     if (tag->m_strFileNameAndPath.starts_with("bluray://removable"))
+       // cannot tell if a removable bluray is a movie or a tv show
+-      return UNKNOWN;
++      return VideoDbContentType::UNKNOWN;
+   }
+ 
+   VIDEODATABASEDIRECTORY::CQueryParams params;
+   CVideoDatabaseDirectory::GetQueryParams(m_strPath, params);
+   if (params.GetSetId() != -1 && params.GetMovieId() == -1) // movie set
+-    return MOVIE_SETS;
++    return VideoDbContentType::MOVIE_SETS;
+ 
+   return type;
+ }
+diff --git a/xbmc/addons/PluginSource.cpp b/xbmc/addons/PluginSource.cpp
+--- a/xbmc/addons/PluginSource.cpp
++++ b/xbmc/addons/PluginSource.cpp
+@@ -59,19 +59,18 @@ CPluginSource::CPluginSource(const cp_extension_t* ext)
+ 
+ CPluginSource::Content CPluginSource::Translate(std::string_view content)
+ {
+-  using enum ADDON::CPluginSource::Content;
+   if (content == "audio")
+-    return AUDIO;
++    return ADDON::CPluginSource::Content::AUDIO;
+   else if (content == "image")
+-    return IMAGE;
++    return ADDON::CPluginSource::Content::IMAGE;
+   else if (content == "executable")
+-    return EXECUTABLE;
++    return ADDON::CPluginSource::Content::EXECUTABLE;
+   else if (content == "video")
+-    return VIDEO;
++    return ADDON::CPluginSource::Content::VIDEO;
+   else if (content == "game")
+-    return GAME;
++    return ADDON::CPluginSource::Content::GAME;
+   else
+-    return UNKNOWN;
++    return ADDON::CPluginSource::Content::UNKNOWN;
+ }
+ 
+ std::string CPluginSource::Translate(CPluginSource::Content content, bool pretty /* = false */)
+diff --git a/xbmc/addons/addoninfo/AddonInfo.cpp b/xbmc/addons/addoninfo/AddonInfo.cpp
+--- a/xbmc/addons/addoninfo/AddonInfo.cpp
++++ b/xbmc/addons/addoninfo/AddonInfo.cpp
+@@ -269,14 +269,12 @@ bool CAddonInfo::SupportsMultipleInstances() const
+ {
+   switch (m_addonInstanceSupportType)
+   {
+-    using enum AddonInstanceSupport;
+-
+-    case SUPPORT_MANDATORY:
+-    case SUPPORT_OPTIONAL:
++    case AddonInstanceSupport::SUPPORT_MANDATORY:
++    case AddonInstanceSupport::SUPPORT_OPTIONAL:
+       return true;
+-    case SUPPORT_SETTINGS:
++    case AddonInstanceSupport::SUPPORT_SETTINGS:
+       return m_supportsInstanceSettings;
+-    case SUPPORT_NONE:
++    case AddonInstanceSupport::SUPPORT_NONE:
+     default:
+       return false;
+   }

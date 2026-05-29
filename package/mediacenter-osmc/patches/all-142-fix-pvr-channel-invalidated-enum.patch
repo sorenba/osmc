@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OSMC <osmc@osmc.tv>
+Date: Fri, 29 May 2026 14:35:00 +0200
+Subject: [PATCH] Fix remaining PVR channel event enum qualifier
+
+Qualify a remaining PVREvent case after the GCC 10 using-enum cleanup.
+---
+ xbmc/pvr/windows/GUIWindowPVRChannels.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/xbmc/pvr/windows/GUIWindowPVRChannels.cpp b/xbmc/pvr/windows/GUIWindowPVRChannels.cpp
+--- a/xbmc/pvr/windows/GUIWindowPVRChannels.cpp
++++ b/xbmc/pvr/windows/GUIWindowPVRChannels.cpp
+@@ -288,7 +288,7 @@ bool CGUIWindowPVRChannels::OnMessage(CGUIMessage& message)
+           SetInvalid();
+           break;
+ 
+-        case ChannelGroupInvalidated:
++        case PVREvent::ChannelGroupInvalidated:
+           Refresh(true);
+           break;
